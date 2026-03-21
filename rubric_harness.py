@@ -2195,6 +2195,9 @@ class RubricGenerator:
         self.verbose = verbose
         self.learning_integrator = learning_integrator
         self.enable_research = enable_research
+        self.auto_improve_interval = auto_improve_interval
+        self.auto_improve_min_uses = auto_improve_min_uses
+        self.auto_improve_max_edits = auto_improve_max_edits
         self.research_model = research_model
 
     def _log(self, msg: str):
@@ -2484,6 +2487,9 @@ class RubricLoop:
         repo_path: str = ".",
         enable_self_improve: bool = True,
         enable_research: bool = True,
+        auto_improve_interval: int = 10,
+        auto_improve_min_uses: int = 20,
+        auto_improve_max_edits: int = 2,
     ):
         if Anthropic is None:
             raise ImportError("anthropic package is required: pip install anthropic")
@@ -2843,7 +2849,7 @@ class RubricLoop:
         return result
 
     def _post_run(self, result: LoopResult):
-        """Post-run hook: persist scored rubric and scan for outcome signals."""
+        """Post-run hook: persist scored rubric, scan outcomes, improve generation, auto-edit."""
         if not self.enable_self_improve:
             return
 
@@ -2891,6 +2897,118 @@ class RubricLoop:
 
         except Exception as e:
             self._log(f"[Loop3] Post-run hook error (non-fatal): {e}")
+
+        # Analyze rubric generation quality and store improvement signals
+        self._post_run_improve_generation(result)
+
+        # Auto self-improvement: propose and apply code edits when enough data
+        if self._should_auto_improve():
+            self._run_auto_improve()
+
+    def _post_run_improve_generation(self, result: LoopResult):
+        """Analyze rubric generation quality and log improvement signals.
+
+        Detects non-discriminating criteria (always pass) and stuck criteria
+        (never improve), writes them as feedback so LearningIntegrator picks
+        them up on the next rubric generation.
+        """
+        if not result.history:
+            return
+
+        try:
+            final_scores = result.history[-1].criterion_scores
+
+            # Criteria that max-score on first attempt (too easy / not discriminating)
+            always_pass = [
+                cs for cs in final_scores
+                if cs.percentage >= 0.95
+            ]
+
+            # Criteria that never improve across iterations (possibly unmeasurable)
+            never_improve = []
+            if len(result.history) >= 2:
+                first_scores = {cs.criterion_id: cs.percentage for cs in result.history[0].criterion_scores}
+                final_scores_map = {cs.criterion_id: cs.percentage for cs in final_scores}
+                for cid, first_pct in first_scores.items():
+                    final_pct = final_scores_map.get(cid, 0)
+                    if final_pct <= first_pct and final_pct < 0.7:
+                        never_improve.append(cid)
+
+            # Store as feedback for future rubric generation
+            if always_pass:
+                ids = [cs.criterion_id for cs in always_pass]
+                self.feedback_store.add(
+                    "rubric",
+                    f"These criteria scored 95%+ on first attempt and don't discriminate quality "
+                    f"— consider making them harder or removing: {', '.join(ids)}",
+                    task=result.rubric.task,
+                    domain=result.rubric.domain,
+                )
+                self._log(f"[Loop3] Flagged {len(always_pass)} non-discriminating criteria")
+
+            if never_improve:
+                self.feedback_store.add(
+                    "rubric",
+                    f"These criteria never improved across {result.iterations} iterations and scored "
+                    f"<70% — may be unmeasurable or need clearer measurements: {', '.join(never_improve)}",
+                    task=result.rubric.task,
+                    domain=result.rubric.domain,
+                )
+                self._log(f"[Loop3] Flagged {len(never_improve)} stuck criteria")
+
+        except Exception as e:
+            self._log(f"[Loop3] Generation improvement analysis error (non-fatal): {e}")
+
+    def _should_auto_improve(self) -> bool:
+        """Decide whether to trigger automatic self-improvement.
+
+        Triggers every N runs (auto_improve_interval), but only if:
+        - At least 10 scored rubrics exist in the store
+        - At least one criterion has enough uses (auto_improve_min_uses)
+        """
+        try:
+            from rubric_system.rubric_learning import RubricLearner
+            learner = RubricLearner(self.rubric_store)
+            insights = learner.get_insights()
+
+            total_evals = insights.get("total_evaluations", 0)
+            if total_evals < 10:
+                return False
+
+            # Only trigger every Nth run
+            if total_evals % self.auto_improve_interval != 0:
+                return False
+
+            # At least one criterion needs enough data points
+            all_stats = insights.get("all_criteria_stats", [])
+            has_enough_data = any(
+                s.get("times_used", 0) >= self.auto_improve_min_uses
+                for s in all_stats
+            ) if all_stats else False
+
+            return has_enough_data
+        except Exception:
+            return False
+
+    def _run_auto_improve(self):
+        """Execute automatic self-improvement: propose and apply code edits."""
+        self._log("[Loop3] Auto self-improvement triggered")
+        try:
+            editor = SelfEditor(
+                store=self.rubric_store,
+                verbose=self.verbose,
+            )
+            proposals = editor.auto_improve(
+                min_uses=self.auto_improve_min_uses,
+                dry_run=False,
+                max_edits=self.auto_improve_max_edits,
+            )
+            if proposals:
+                self._log(f"[Loop3] Auto-applied {len(proposals)} self-edit(s)")
+                for p in proposals:
+                    self._log(f"  - {p.target_function}: {p.rationale[:80]}")
+        except Exception as e:
+            self._log(f"[Loop3] Auto self-improvement error (non-fatal): {e}")
 
     def self_improve(self, dry_run: bool = True, max_edits: int = 3) -> list:
         """Run the self-improvement cycle: analyze learnings and propose/apply source edits.
@@ -2964,6 +3082,8 @@ async def main():
                         help="Run self-improvement and apply edits (not dry run)")
     parser.add_argument("--no-learn", action="store_true",
                         help="Disable learning/outcome tracking for this run")
+    parser.add_argument("--no-auto-improve", action="store_true",
+                        help="Disable automatic self-editing (keeps learning active)")
     parser.add_argument("--no-research", action="store_true",
                         help="Skip deep research step during rubric generation")
 
@@ -3013,6 +3133,7 @@ async def main():
         verbose=not args.quiet,
         enable_self_improve=not args.no_learn,
         enable_research=not args.no_research,
+        auto_improve_interval=0 if args.no_auto_improve else 10,
     )
 
     result = await loop.run(
