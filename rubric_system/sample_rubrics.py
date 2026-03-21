@@ -12,13 +12,14 @@ Usage:
     rubric = ALL_SAMPLE_RUBRICS[0]()   # Same thing
 """
 
-from rubric_system.models import (
-    ScoringMethod,
-    SubAttribute,
-    ScoringRubric,
-    Criterion,
-    Rubric,
-)
+try:
+    from rubric_system.models import (
+        ScoringMethod, SubAttribute, ScoringRubric, Criterion, Rubric,
+    )
+except ImportError:
+    from models import (
+        ScoringMethod, SubAttribute, ScoringRubric, Criterion, Rubric,
+    )
 
 
 # ============================================================================

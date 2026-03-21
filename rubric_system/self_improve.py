@@ -1,0 +1,1011 @@
+#!/usr/bin/env python3
+"""
+Self-Improvement Engine — the harness rewrites itself based on accumulated learnings.
+
+Three capabilities:
+1. OutcomeTracker: Auto-closes Loop 3 by detecting outcomes from CI/git/deployment signals
+2. LearningIntegrator: Feeds RubricLearner insights into RubricGenerator at generation time
+3. SelfEditor: Rewrites scoring rubric factories, measurement prompts, and generation
+   prompts in the actual source code based on what the learning system has discovered.
+
+The key insight: instead of just logging "criterion X has a 60% false positive rate" to
+a report, SelfEditor calls Claude to propose code patches to the scoring rubric factory
+that produces X, then applies them. The harness literally edits its own source files.
+"""
+
+import json
+import re
+import os
+import subprocess
+import hashlib
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Optional
+from dataclasses import dataclass, field
+
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None
+
+try:
+    from rubric_system.models import (
+        ScoringMethod, SubAttribute, ScoringRubric, Criterion, Rubric,
+        CriterionScore, CriterionStats,
+    )
+    from rubric_system.rubric_learning import RubricStore, RubricLearner
+    from rubric_system.feedback_loop import FeedbackStore
+except ImportError:
+    from models import (
+        ScoringMethod, SubAttribute, ScoringRubric, Criterion, Rubric,
+        CriterionScore, CriterionStats,
+    )
+    from rubric_learning import RubricStore, RubricLearner
+    from feedback_loop import FeedbackStore
+
+
+# ============================================================================
+# 1. Outcome Tracker — closes the learning loop automatically
+# ============================================================================
+
+@dataclass
+class OutcomeSignal:
+    """A signal that indicates the quality of a prior rubric evaluation."""
+    rubric_id: str
+    outcome: str  # "success", "bug_found", "reverted", "hotfix"
+    details: str = ""
+    days_since_eval: int = 0
+    source: str = "manual"  # "git", "ci", "deploy", "manual"
+    detected_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
+class OutcomeTracker:
+    """Automatically detects outcomes and feeds them back to RubricStore.
+
+    Sources:
+    - Git: detect reverts, hotfix branches, revert commits within N days of eval
+    - CI: detect test failures on files that previously passed rubric
+    - Deploy: detect rollbacks or incident signals
+    - Manual: explicit outcome reporting (existing path)
+
+    Usage:
+        tracker = OutcomeTracker(store)
+        tracker.scan_git_outcomes(repo_path="/path/to/repo", lookback_days=14)
+        tracker.report_outcome(rubric_id, "bug_found", "Prod incident on auth flow")
+    """
+
+    def __init__(self, store: RubricStore, verbose: bool = True):
+        self.store = store
+        self.verbose = verbose
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(f"[OutcomeTracker] {msg}")
+
+    def report_outcome(
+        self,
+        rubric_id: str,
+        outcome: str,
+        details: str = "",
+        days_to_bug: int = None,
+    ):
+        """Manually report an outcome for a scored rubric."""
+        self.store.update_outcome(
+            rubric_id=rubric_id,
+            outcome=outcome,
+            details=details,
+            days_to_bug=days_to_bug,
+        )
+        self._log(f"Outcome recorded: {rubric_id} → {outcome}")
+
+    def scan_git_outcomes(
+        self,
+        repo_path: str = ".",
+        lookback_days: int = 14,
+    ) -> list[OutcomeSignal]:
+        """Scan git history for revert/hotfix signals that indicate bugs.
+
+        Looks for:
+        - Commits with "revert" in message
+        - Branches named hotfix/* or fix/*
+        - Commits that modify files previously evaluated by rubric
+
+        Returns list of detected outcome signals.
+        """
+        signals = []
+        since_date = (datetime.utcnow() - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+
+        try:
+            # Find revert commits
+            result = subprocess.run(
+                ["git", "log", f"--since={since_date}", "--oneline", "--grep=revert", "-i"],
+                capture_output=True, text=True, cwd=repo_path, timeout=10,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().split("\n"):
+                    if line.strip():
+                        commit_hash = line.split()[0]
+                        message = " ".join(line.split()[1:])
+                        signal = self._match_revert_to_rubric(commit_hash, message, repo_path)
+                        if signal:
+                            signals.append(signal)
+
+            # Find hotfix branches merged recently
+            result = subprocess.run(
+                ["git", "log", f"--since={since_date}", "--oneline", "--merges",
+                 "--grep=hotfix\\|fix/"],
+                capture_output=True, text=True, cwd=repo_path, timeout=10,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().split("\n"):
+                    if line.strip() and ("hotfix" in line.lower() or "fix/" in line.lower()):
+                        commit_hash = line.split()[0]
+                        message = " ".join(line.split()[1:])
+                        signal = self._match_revert_to_rubric(commit_hash, message, repo_path)
+                        if signal:
+                            signal.outcome = "hotfix"
+                            signals.append(signal)
+
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            self._log("Git scan failed — git not available or not a repo")
+
+        # Apply signals to store
+        for signal in signals:
+            self.report_outcome(
+                rubric_id=signal.rubric_id,
+                outcome=signal.outcome,
+                details=signal.details,
+                days_to_bug=signal.days_since_eval,
+            )
+
+        self._log(f"Git scan found {len(signals)} outcome signals")
+        return signals
+
+    def _match_revert_to_rubric(
+        self, commit_hash: str, message: str, repo_path: str
+    ) -> Optional[OutcomeSignal]:
+        """Try to match a revert/hotfix commit to a previously scored rubric."""
+        try:
+            # Get files changed in this commit
+            result = subprocess.run(
+                ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_hash],
+                capture_output=True, text=True, cwd=repo_path, timeout=5,
+            )
+            if result.returncode != 0:
+                return None
+
+            changed_files = [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
+
+            # Search for rubric evaluations that scored these files
+            for filepath in changed_files:
+                similar = self.store.find_similar_tasks(filepath, limit=1)
+                if similar:
+                    record = similar[0]
+                    days = (datetime.utcnow() - datetime.fromisoformat(record.created_at)).days
+                    return OutcomeSignal(
+                        rubric_id=record.id,
+                        outcome="reverted",
+                        details=f"Revert: {message}. File: {filepath}",
+                        days_since_eval=days,
+                        source="git",
+                    )
+        except Exception:
+            pass
+        return None
+
+    def scan_ci_failures(
+        self,
+        ci_results_dir: str = ".rubric_ci_results",
+        lookback_days: int = 7,
+    ) -> list[OutcomeSignal]:
+        """Scan CI result files for test failures on previously-passing files."""
+        signals = []
+        results_path = Path(ci_results_dir)
+        if not results_path.exists():
+            return signals
+
+        cutoff = datetime.utcnow() - timedelta(days=lookback_days)
+
+        for result_file in results_path.glob("*.json"):
+            try:
+                data = json.loads(result_file.read_text())
+                file_time = datetime.fromisoformat(data.get("timestamp", "2000-01-01"))
+                if file_time < cutoff:
+                    continue
+
+                if not data.get("passed", True):
+                    # CI failed — find the rubric that last evaluated these files
+                    for file_score in data.get("files", []):
+                        if not file_score.get("passed", True):
+                            similar = self.store.find_similar_tasks(
+                                file_score.get("path", ""), limit=1
+                            )
+                            if similar:
+                                record = similar[0]
+                                signals.append(OutcomeSignal(
+                                    rubric_id=record.id,
+                                    outcome="bug_found",
+                                    details=f"CI failure: {file_score.get('path')}",
+                                    source="ci",
+                                ))
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+        for signal in signals:
+            self.report_outcome(signal.rubric_id, signal.outcome, signal.details)
+
+        self._log(f"CI scan found {len(signals)} outcome signals")
+        return signals
+
+
+# ============================================================================
+# 2. Learning Integrator — feeds learnings into rubric generation
+# ============================================================================
+
+class LearningIntegrator:
+    """Bridges RubricLearner insights into the RubricGenerator prompt.
+
+    When generating a new rubric, this class:
+    1. Queries RubricLearner for similar past tasks and their effective criteria
+    2. Gets criterion effectiveness insights (high-value, low-value, redundant)
+    3. Gets human feedback relevant to rubric construction
+    4. Formats all of this as a structured section for the generation prompt
+
+    Usage:
+        integrator = LearningIntegrator(store, feedback_store)
+        learning_section = integrator.build_learning_context(task, domain)
+        # Append to rubric generation prompt
+    """
+
+    def __init__(
+        self,
+        store: RubricStore = None,
+        feedback_store: FeedbackStore = None,
+        verbose: bool = True,
+    ):
+        self.store = store or RubricStore()
+        self.learner = RubricLearner(self.store)
+        self.feedback_store = feedback_store
+        self.verbose = verbose
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(f"[LearningIntegrator] {msg}")
+
+    def build_learning_context(self, task: str, domain: str = "") -> str:
+        """Build a formatted learning context section for rubric generation.
+
+        Returns a string to append to the rubric generation prompt.
+        """
+        parts = []
+
+        # 1. Similar task history
+        suggestion = self.learner.suggest_rubric_for_task(task)
+        if suggestion["criteria"]:
+            parts.append(self._format_similar_tasks(suggestion))
+
+        # 2. Criterion effectiveness insights
+        insights = self.learner.get_insights()
+        if insights["high_value_criteria"] or insights["low_value_criteria"]:
+            parts.append(self._format_insights(insights))
+
+        # 3. Human feedback on rubric construction
+        if self.feedback_store:
+            from rubric_system.feedback_loop import FeedbackInjector
+            injector = FeedbackInjector(self.feedback_store)
+            feedback_section = injector.format_for_rubric_generation(task, domain)
+            if feedback_section:
+                parts.append(feedback_section)
+
+        if not parts:
+            return ""
+
+        header = ("\nLEARNING CONTEXT — the system has accumulated knowledge from prior evaluations. "
+                  "Use this to inform your rubric design.\n")
+        return header + "\n".join(parts)
+
+    def _format_similar_tasks(self, suggestion: dict) -> str:
+        """Format similar task suggestions."""
+        lines = [
+            f"\nSIMILAR PAST TASKS ({suggestion['similar_tasks']} found, "
+            f"confidence: {suggestion['confidence']}):",
+        ]
+
+        for c in suggestion["criteria"][:5]:
+            cid = c.get("id", "unknown")
+            desc = c.get("description", "")[:60]
+            pass_rate = c.get("historical_pass_rate", 0)
+            bug_rate = c.get("historical_bug_rate", 0)
+            confidence = c.get("confidence", 0)
+
+            lines.append(
+                f"  - {cid}: {desc} "
+                f"(pass_rate: {pass_rate:.0%}, bug_rate: {bug_rate:.0%}, "
+                f"confidence: {confidence:.0%})"
+            )
+
+            # Flag criteria that correlate with bugs
+            if bug_rate > 0.3:
+                lines.append(f"    ⚠ HIGH BUG RATE — this criterion caught real issues. Keep it.")
+            elif pass_rate > 0.95:
+                lines.append(f"    ⚡ ALWAYS PASSES — consider making it harder or removing.")
+
+        return "\n".join(lines)
+
+    def _format_insights(self, insights: dict) -> str:
+        """Format criterion effectiveness insights."""
+        lines = ["\nCRITERION EFFECTIVENESS (from outcome tracking):"]
+
+        if insights["high_value_criteria"]:
+            lines.append("  HIGH-VALUE (keep or strengthen):")
+            for c in insights["high_value_criteria"][:3]:
+                lines.append(
+                    f"    ✓ {c['id']}: predictive_value={c['predictive_value']:.0%}, "
+                    f"bug_prevention={c['bug_prevention_rate']:.0%}"
+                )
+
+        if insights["low_value_criteria"]:
+            lines.append("  LOW-VALUE (refine or remove):")
+            for c in insights["low_value_criteria"][:3]:
+                lines.append(
+                    f"    ✗ {c['id']}: false_positive_rate={c['false_positive_rate']:.0%} — "
+                    f"{c['recommendation']}"
+                )
+
+        if insights["suggested_removals"]:
+            lines.append("  POTENTIALLY REDUNDANT:")
+            for c in insights["suggested_removals"][:3]:
+                lines.append(
+                    f"    ~ {c['id']}: pass_rate={c['pass_rate']:.0%} — always passes"
+                )
+
+        return "\n".join(lines)
+
+
+# ============================================================================
+# 3. Self-Editor — the harness rewrites its own source code
+# ============================================================================
+
+SELF_EDIT_PROMPT = """You are a code improvement agent. Given performance data about scoring criteria,
+propose SPECIFIC code edits to improve the rubric system.
+
+CURRENT FUNCTION:
+```python
+{current_code}
+```
+
+PERFORMANCE DATA:
+{performance_data}
+
+HUMAN FEEDBACK:
+{feedback_data}
+
+TASK: Propose a concrete edit to this function that addresses the performance issues.
+
+RULES:
+1. Output a JSON object with "edits" — an array of find-and-replace operations.
+2. Each edit has "old" (exact string to find) and "new" (replacement string).
+3. Keep edits minimal and targeted. Don't rewrite the whole function.
+4. Focus on: adjusting weights, adding/removing sub-attributes, tuning penalties,
+   changing max_points, improving measurement descriptions.
+5. Include a "rationale" field explaining why each edit will improve the criterion.
+6. If no edit is warranted, return {{"edits": [], "rationale": "No changes needed"}}
+
+OUTPUT FORMAT (JSON only):
+{{
+  "edits": [
+    {{
+      "old": "exact string to replace",
+      "new": "replacement string",
+      "rationale": "why this change improves scoring"
+    }}
+  ],
+  "rationale": "overall reasoning"
+}}"""
+
+
+@dataclass
+class SelfEditProposal:
+    """A proposed edit to the harness source code."""
+    target_file: str
+    target_function: str
+    edits: list[dict]  # [{"old": str, "new": str, "rationale": str}]
+    rationale: str
+    performance_data: dict
+    proposed_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    applied: bool = False
+    outcome: str = ""  # filled in after observing impact
+
+
+class SelfEditor:
+    """Rewrites the harness's own scoring rubric factories, prompts, and criteria
+    based on accumulated learning data.
+
+    This is the core self-improvement mechanism: instead of logging insights to a
+    report, the system proposes and applies code patches to its own source files.
+
+    Safety model:
+    - All edits are proposed, logged, and can be reviewed before applying
+    - Edits are git-committed with a descriptive message
+    - If an edit degrades performance, it can be reverted
+    - The edit history is stored for audit
+
+    Usage:
+        editor = SelfEditor(store, feedback_store)
+
+        # Analyze and propose edits
+        proposals = editor.analyze_and_propose()
+
+        # Review proposals
+        for p in proposals:
+            print(p.rationale)
+
+        # Apply approved proposals
+        editor.apply_proposals(proposals)
+
+        # Or auto-apply (for CI/automated usage)
+        editor.auto_improve()
+    """
+
+    def __init__(
+        self,
+        store: RubricStore = None,
+        feedback_store: FeedbackStore = None,
+        harness_path: str = None,
+        model: str = "claude-sonnet-4-20250514",
+        verbose: bool = True,
+        edit_history_path: str = ".rubric_feedback/self_edits.json",
+    ):
+        if Anthropic is None:
+            raise ImportError("anthropic package required")
+        self.client = Anthropic()
+        self.store = store or RubricStore()
+        self.learner = RubricLearner(self.store)
+        self.feedback_store = feedback_store
+        self.model = model
+        self.verbose = verbose
+
+        # Find harness source file
+        if harness_path:
+            self.harness_path = Path(harness_path)
+        else:
+            self.harness_path = Path(__file__).parent.parent / "rubric_harness.py"
+
+        self.edit_history_path = Path(edit_history_path)
+        self.edit_history: list[dict] = self._load_history()
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(f"[SelfEditor] {msg}")
+
+    def _load_history(self) -> list[dict]:
+        if self.edit_history_path.exists():
+            try:
+                return json.loads(self.edit_history_path.read_text())
+            except (json.JSONDecodeError, IOError):
+                pass
+        return []
+
+    def _save_history(self):
+        self.edit_history_path.parent.mkdir(parents=True, exist_ok=True)
+        self.edit_history_path.write_text(json.dumps(self.edit_history, indent=2))
+
+    def analyze_and_propose(self, min_uses: int = 5) -> list[SelfEditProposal]:
+        """Analyze learning data and propose source code edits.
+
+        Returns a list of SelfEditProposal objects, one per problematic criterion.
+        """
+        proposals = []
+        insights = self.learner.get_insights()
+        stats = self.store.get_criterion_stats(min_uses=min_uses)
+        source_code = self.harness_path.read_text()
+
+        # Collect feedback by criterion
+        feedback_by_criterion = {}
+        if self.feedback_store:
+            for entry in self.feedback_store.get_all():
+                if entry.criterion_id:
+                    feedback_by_criterion.setdefault(entry.criterion_id, []).append(entry.content)
+
+        # Propose edits for low-value criteria (high false positive rate)
+        for criterion_info in insights.get("low_value_criteria", []):
+            cid = criterion_info["id"]
+            proposal = self._propose_edit_for_criterion(
+                cid, criterion_info, stats, source_code,
+                feedback_by_criterion.get(cid, []),
+                reason="high_false_positive",
+            )
+            if proposal:
+                proposals.append(proposal)
+
+        # Propose edits for always-passing criteria (too easy)
+        for criterion_info in insights.get("suggested_removals", []):
+            cid = criterion_info["id"]
+            proposal = self._propose_edit_for_criterion(
+                cid, criterion_info, stats, source_code,
+                feedback_by_criterion.get(cid, []),
+                reason="always_passes",
+            )
+            if proposal:
+                proposals.append(proposal)
+
+        # Propose edits for high-value criteria that could be strengthened
+        for criterion_info in insights.get("high_value_criteria", []):
+            cid = criterion_info["id"]
+            stat = next((s for s in stats if s.criterion_id == cid), None)
+            if stat and stat.pass_rate < 0.5:
+                # High-value but hard — might need rebalancing
+                proposal = self._propose_edit_for_criterion(
+                    cid, criterion_info, stats, source_code,
+                    feedback_by_criterion.get(cid, []),
+                    reason="high_value_low_pass",
+                )
+                if proposal:
+                    proposals.append(proposal)
+
+        # Propose prompt edits based on accumulated feedback
+        prompt_proposal = self._propose_prompt_edits(source_code, feedback_by_criterion)
+        if prompt_proposal:
+            proposals.append(prompt_proposal)
+
+        self._log(f"Generated {len(proposals)} edit proposals")
+        return proposals
+
+    def _propose_edit_for_criterion(
+        self,
+        criterion_id: str,
+        criterion_info: dict,
+        stats: list[CriterionStats],
+        source_code: str,
+        feedback: list[str],
+        reason: str,
+    ) -> Optional[SelfEditProposal]:
+        """Propose an edit for a specific criterion's scoring rubric factory."""
+
+        # Find the scoring rubric factory function in source
+        # Look for functions that create ScoringRubric objects related to this criterion
+        function_code = self._extract_related_function(criterion_id, source_code)
+        if not function_code:
+            self._log(f"Could not find source function for {criterion_id}")
+            return None
+
+        # Get the criterion's stats
+        stat = next((s for s in stats if s.criterion_id == criterion_id), None)
+
+        performance_data = {
+            "criterion_id": criterion_id,
+            "reason_for_edit": reason,
+            **criterion_info,
+        }
+        if stat:
+            performance_data.update({
+                "times_used": stat.times_used,
+                "pass_rate": round(stat.pass_rate, 3),
+                "predictive_value": round(stat.predictive_value, 3),
+                "false_positive_rate": round(stat.false_positive_rate, 3),
+                "bug_prevention_rate": round(stat.bug_prevention_rate, 3),
+            })
+
+        feedback_text = "\n".join(f"- {f}" for f in feedback[:5]) if feedback else "No feedback"
+
+        prompt = SELF_EDIT_PROMPT.format(
+            current_code=function_code,
+            performance_data=json.dumps(performance_data, indent=2),
+            feedback_data=feedback_text,
+        )
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = response.content[0].text
+
+            spec = self._parse_json(raw)
+            edits = spec.get("edits", [])
+
+            if not edits:
+                return None
+
+            return SelfEditProposal(
+                target_file=str(self.harness_path),
+                target_function=criterion_id,
+                edits=edits,
+                rationale=spec.get("rationale", ""),
+                performance_data=performance_data,
+            )
+        except Exception as e:
+            self._log(f"Edit proposal failed for {criterion_id}: {e}")
+            return None
+
+    def _propose_prompt_edits(
+        self,
+        source_code: str,
+        feedback_by_criterion: dict,
+    ) -> Optional[SelfEditProposal]:
+        """Propose edits to measurement/generation prompts based on feedback patterns."""
+
+        # Collect all feedback that mentions scoring or measurement issues
+        scoring_feedback = []
+        if self.feedback_store:
+            for entry in self.feedback_store.get_all("scoring"):
+                scoring_feedback.append(entry.content)
+
+        if len(scoring_feedback) < 3:
+            return None  # Not enough feedback to justify prompt edits
+
+        # Extract the measurement prompt
+        match = re.search(
+            r'(MEASUREMENT_PROMPT\s*=\s*"""[\s\S]*?""")',
+            source_code,
+        )
+        if not match:
+            return None
+
+        prompt_code = match.group(1)
+
+        prompt = SELF_EDIT_PROMPT.format(
+            current_code=prompt_code[:3000],
+            performance_data=json.dumps({"type": "measurement_prompt", "feedback_count": len(scoring_feedback)}),
+            feedback_data="\n".join(f"- {f}" for f in scoring_feedback[:8]),
+        )
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            spec = self._parse_json(response.content[0].text)
+            edits = spec.get("edits", [])
+
+            if not edits:
+                return None
+
+            return SelfEditProposal(
+                target_file=str(self.harness_path),
+                target_function="MEASUREMENT_PROMPT",
+                edits=edits,
+                rationale=spec.get("rationale", ""),
+                performance_data={"type": "prompt_edit", "feedback_count": len(scoring_feedback)},
+            )
+        except Exception as e:
+            self._log(f"Prompt edit proposal failed: {e}")
+            return None
+
+    def _extract_related_function(self, criterion_id: str, source_code: str) -> Optional[str]:
+        """Find the scoring rubric factory or criterion definition for a given criterion ID."""
+        lines = source_code.split("\n")
+
+        # Strategy 1: find Criterion definition with this ID
+        for i, line in enumerate(lines):
+            if f'id="{criterion_id}"' in line:
+                # Walk backward to find the Criterion( start
+                start = i
+                while start > 0 and "Criterion(" not in lines[start]:
+                    start -= 1
+                # Walk forward to find the closing )
+                end = i
+                paren_depth = 0
+                for j in range(start, min(len(lines), start + 50)):
+                    paren_depth += lines[j].count("(") - lines[j].count(")")
+                    if paren_depth <= 0:
+                        end = j + 1
+                        break
+                return "\n".join(lines[start:end])
+
+        # Strategy 2: find function with criterion_id in name
+        pattern = criterion_id.replace("_", r"[\s_]")
+        for i, line in enumerate(lines):
+            if re.search(rf"def\s+.*{pattern}", line, re.I):
+                # Extract entire function
+                start = i
+                end = i + 1
+                base_indent = len(line) - len(line.lstrip())
+                for j in range(i + 1, min(len(lines), i + 60)):
+                    if lines[j].strip() and not lines[j].startswith(" " * (base_indent + 1)):
+                        if not lines[j].strip().startswith("#"):
+                            end = j
+                            break
+                    end = j + 1
+                return "\n".join(lines[start:end])
+
+        return None
+
+    def apply_proposals(
+        self,
+        proposals: list[SelfEditProposal],
+        dry_run: bool = False,
+        git_commit: bool = True,
+    ) -> list[dict]:
+        """Apply approved edit proposals to the source code.
+
+        Args:
+            proposals: list of SelfEditProposal to apply
+            dry_run: if True, show edits but don't apply
+            git_commit: if True, create a git commit for each batch of edits
+
+        Returns:
+            list of applied edit records
+        """
+        applied = []
+
+        for proposal in proposals:
+            if not proposal.edits:
+                continue
+
+            target = Path(proposal.target_file)
+            if not target.exists():
+                self._log(f"Target file not found: {target}")
+                continue
+
+            source = target.read_text()
+            original = source
+            edits_applied = 0
+
+            for edit in proposal.edits:
+                old = edit.get("old", "")
+                new = edit.get("new", "")
+
+                if not old or old not in source:
+                    self._log(f"Edit target not found: {old[:60]}...")
+                    continue
+
+                if dry_run:
+                    self._log(f"[DRY RUN] Would replace:\n  {old[:80]}...\n  → {new[:80]}...")
+                else:
+                    source = source.replace(old, new, 1)
+                    edits_applied += 1
+
+            if edits_applied > 0 and not dry_run:
+                # Validate the edited code parses
+                try:
+                    import ast
+                    ast.parse(source)
+                except SyntaxError as e:
+                    self._log(f"SYNTAX ERROR in proposed edit — reverting: {e}")
+                    source = original
+                    edits_applied = 0
+                else:
+                    target.write_text(source)
+                    self._log(f"Applied {edits_applied} edits to {target.name}")
+
+            record = {
+                "proposal": {
+                    "target_function": proposal.target_function,
+                    "rationale": proposal.rationale,
+                    "edits_count": len(proposal.edits),
+                    "edits_applied": edits_applied,
+                    "performance_data": proposal.performance_data,
+                },
+                "applied_at": datetime.utcnow().isoformat(),
+                "dry_run": dry_run,
+            }
+            applied.append(record)
+            proposal.applied = not dry_run
+
+        # Save to edit history
+        self.edit_history.extend(applied)
+        self._save_history()
+
+        # Git commit
+        if git_commit and not dry_run and any(r["proposal"]["edits_applied"] > 0 for r in applied):
+            self._git_commit_edits(applied)
+
+        return applied
+
+    def auto_improve(
+        self,
+        min_uses: int = 10,
+        dry_run: bool = False,
+        max_edits: int = 3,
+    ) -> list[dict]:
+        """Full auto-improvement cycle: analyze → propose → apply.
+
+        This is the main entry point for automated self-improvement.
+
+        Args:
+            min_uses: minimum criterion usage count before considering edits
+            dry_run: if True, propose but don't apply
+            max_edits: maximum number of edits to apply per cycle
+
+        Returns:
+            list of applied edit records
+        """
+        self._log("Starting self-improvement cycle...")
+
+        # 1. Scan for new outcome signals
+        tracker = OutcomeTracker(self.store, verbose=self.verbose)
+        try:
+            tracker.scan_git_outcomes()
+        except Exception as e:
+            self._log(f"Git scan skipped: {e}")
+
+        # 2. Analyze and propose
+        proposals = self.analyze_and_propose(min_uses=min_uses)
+
+        if not proposals:
+            self._log("No improvements identified")
+            return []
+
+        # 3. Limit and apply
+        proposals = proposals[:max_edits]
+        self._log(f"Applying {len(proposals)} proposals (max: {max_edits})")
+
+        results = self.apply_proposals(proposals, dry_run=dry_run)
+
+        # 4. Summary
+        applied_count = sum(1 for r in results if r["proposal"]["edits_applied"] > 0)
+        self._log(f"Self-improvement complete: {applied_count} edits applied")
+
+        return results
+
+    def _git_commit_edits(self, applied: list[dict]):
+        """Create a git commit for self-edits."""
+        try:
+            # Build commit message
+            summaries = []
+            for record in applied:
+                if record["proposal"]["edits_applied"] > 0:
+                    fn = record["proposal"]["target_function"]
+                    rationale = record["proposal"]["rationale"][:100]
+                    summaries.append(f"  - {fn}: {rationale}")
+
+            if not summaries:
+                return
+
+            message = "rubric: self-improvement edits based on learning data\n\n"
+            message += "\n".join(summaries)
+            message += "\n\nAutomated by SelfEditor based on criterion effectiveness analysis."
+
+            subprocess.run(
+                ["git", "add", str(self.harness_path)],
+                capture_output=True,
+                cwd=self.harness_path.parent,
+                timeout=5,
+            )
+            subprocess.run(
+                ["git", "commit", "-m", message],
+                capture_output=True,
+                cwd=self.harness_path.parent,
+                timeout=5,
+            )
+            self._log("Git commit created for self-edits")
+        except Exception as e:
+            self._log(f"Git commit failed: {e}")
+
+    def _parse_json(self, text: str) -> dict:
+        text = text.strip()
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                pass
+        match = re.search(r'\{[\s\S]*\}', text)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+        return {}
+
+    def get_edit_history(self) -> list[dict]:
+        """Return the full history of self-edits."""
+        return self.edit_history
+
+    def revert_last_edit(self) -> bool:
+        """Revert the most recent self-edit via git."""
+        try:
+            result = subprocess.run(
+                ["git", "log", "--oneline", "-1"],
+                capture_output=True, text=True,
+                cwd=self.harness_path.parent,
+                timeout=5,
+            )
+            if "self-improvement" in result.stdout:
+                subprocess.run(
+                    ["git", "revert", "--no-edit", "HEAD"],
+                    capture_output=True,
+                    cwd=self.harness_path.parent,
+                    timeout=10,
+                )
+                self._log("Reverted last self-edit")
+                return True
+            else:
+                self._log("Last commit was not a self-edit")
+                return False
+        except Exception as e:
+            self._log(f"Revert failed: {e}")
+            return False
+
+
+# ============================================================================
+# CLI
+# ============================================================================
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Rubric Self-Improvement Engine")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Scan for outcomes
+    scan = subparsers.add_parser("scan", help="Scan for outcome signals")
+    scan.add_argument("--repo", default=".", help="Git repo path")
+    scan.add_argument("--days", type=int, default=14, help="Lookback days")
+
+    # Propose edits
+    propose = subparsers.add_parser("propose", help="Propose self-edits")
+    propose.add_argument("--min-uses", type=int, default=5)
+
+    # Apply edits
+    apply_cmd = subparsers.add_parser("apply", help="Apply proposed edits")
+    apply_cmd.add_argument("--dry-run", action="store_true")
+    apply_cmd.add_argument("--max-edits", type=int, default=3)
+
+    # Auto-improve (full cycle)
+    auto = subparsers.add_parser("auto", help="Full auto-improvement cycle")
+    auto.add_argument("--dry-run", action="store_true")
+    auto.add_argument("--min-uses", type=int, default=10)
+    auto.add_argument("--max-edits", type=int, default=3)
+
+    # History
+    subparsers.add_parser("history", help="Show edit history")
+
+    # Revert
+    subparsers.add_parser("revert", help="Revert last self-edit")
+
+    args = parser.parse_args()
+
+    store = RubricStore()
+    editor = SelfEditor(store=store)
+
+    if args.command == "scan":
+        tracker = OutcomeTracker(store)
+        signals = tracker.scan_git_outcomes(repo_path=args.repo, lookback_days=args.days)
+        signals += tracker.scan_ci_failures()
+        print(f"Found {len(signals)} outcome signals")
+
+    elif args.command == "propose":
+        proposals = editor.analyze_and_propose(min_uses=args.min_uses)
+        for p in proposals:
+            print(f"\n{'─'*60}")
+            print(f"Target: {p.target_function}")
+            print(f"Rationale: {p.rationale}")
+            for edit in p.edits:
+                print(f"  Edit: {edit.get('rationale', '')}")
+
+    elif args.command == "apply":
+        proposals = editor.analyze_and_propose()
+        results = editor.apply_proposals(proposals, dry_run=args.dry_run)
+        for r in results:
+            print(f"  {r['proposal']['target_function']}: {r['proposal']['edits_applied']} edits")
+
+    elif args.command == "auto":
+        results = editor.auto_improve(
+            min_uses=args.min_uses,
+            dry_run=args.dry_run,
+            max_edits=args.max_edits,
+        )
+        print(f"Applied {len(results)} edit batches")
+
+    elif args.command == "history":
+        for record in editor.get_edit_history():
+            print(f"  {record['applied_at']}: {record['proposal']['target_function']} "
+                  f"({record['proposal']['edits_applied']} edits)")
+
+    elif args.command == "revert":
+        editor.revert_last_edit()
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

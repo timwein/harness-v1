@@ -36,12 +36,16 @@ from rubric_system.models import (
     Rubric,
     Iteration,
     LoopResult,
+    ScoredRubricRecord,
 )
 
 try:
     from anthropic import Anthropic
 except ImportError:
     Anthropic = None
+
+from rubric_system.rubric_learning import RubricStore, RubricLearner
+from rubric_system.self_improve import OutcomeTracker, LearningIntegrator, SelfEditor
 
 
 # ============================================================================
@@ -694,37 +698,482 @@ def keyboard_motor_rubric(max_points: int = 8) -> ScoringRubric:
 
 
 # ============================================================================
-# Domain Detection
+# Task-Level Rubric Resolution
 # ============================================================================
 
-DOMAIN_PATTERNS = {
-    "knowledge_work_research": [
-        r"\b(research|report|analysis|whitepaper|brief)\b",
-        r"\b(document|write|draft|study|paper)\b",
-        r"\b(source|citation|evidence|data)\b",
-    ],
-    "api_rest_endpoint": [
-        r"\b(endpoint|api|route|REST|GET|POST)\b",
-        r"\b(express|fastapi|flask|router)\b",
-    ],
-    "frontend_design": [
-        r"\b(design|ui|ux|frontend|landing)\b",
-        r"\b(css|tailwind|component|layout)\b",
-    ],
-}
+from dataclasses import dataclass as _dataclass, field as _field
+from typing import Callable, Optional
 
 
+@_dataclass
+class RubricSignature:
+    """Defines how to match a task string to a rubric builder.
+
+    Each signature has:
+    - name: unique key for this rubric type
+    - builder: callable(task: str) -> Rubric
+    - keywords: high-signal words that strongly indicate this task type
+    - anti_keywords: words that indicate this is NOT this task type (negative signal)
+    - task_patterns: regex patterns for structural matching
+    - example_tasks: canonical examples (used for similarity scoring)
+    - priority: tiebreaker — higher wins when scores are close (default 0)
+    """
+    name: str
+    builder: Callable[[str], Rubric]
+    keywords: list[str] = _field(default_factory=list)
+    anti_keywords: list[str] = _field(default_factory=list)
+    task_patterns: list[str] = _field(default_factory=list)
+    example_tasks: list[str] = _field(default_factory=list)
+    priority: int = 0
+
+
+class RubricRegistry:
+    """Registry of rubric builders with task-level matching.
+
+    Resolution strategy (in order):
+    1. Explicit rubric override (caller passes a Rubric directly)
+    2. Explicit name lookup (caller passes rubric name string)
+    3. Task-level scoring: keyword hits + anti-keyword penalties + pattern matches
+    4. Fallback to knowledge_work if nothing scores above threshold
+
+    The scoring is deterministic (no LLM) and transparent — you can inspect
+    why a rubric was chosen via resolve_with_explanation().
+    """
+
+    def __init__(self):
+        self._signatures: dict[str, RubricSignature] = {}
+        self._fallback_name: str = "knowledge_work"
+
+    def register(self, sig: RubricSignature) -> None:
+        """Register a rubric signature."""
+        self._signatures[sig.name] = sig
+
+    def set_fallback(self, name: str) -> None:
+        """Set which registered rubric to use as fallback."""
+        self._fallback_name = name
+
+    @property
+    def registered_names(self) -> list[str]:
+        return list(self._signatures.keys())
+
+    def get(self, name: str) -> Optional[RubricSignature]:
+        return self._signatures.get(name)
+
+    def resolve(self, task: str, rubric_name: str = None) -> tuple[Rubric, str, float]:
+        """Resolve a task string to a Rubric.
+
+        Args:
+            task: the task description
+            rubric_name: optional explicit rubric name (skips matching)
+
+        Returns:
+            (rubric, matched_name, confidence)
+        """
+        # Path 1: explicit name lookup
+        if rubric_name:
+            sig = self._signatures.get(rubric_name)
+            if sig:
+                return sig.builder(task), rubric_name, 1.0
+            raise ValueError(
+                f"Unknown rubric '{rubric_name}'. Available: {self.registered_names}"
+            )
+
+        # Path 2: task-level scoring
+        scores = self._score_all(task)
+
+        if scores:
+            best_name, best_score = scores[0]
+            # Confidence threshold: need at least 2.0 to beat fallback
+            if best_score >= 2.0:
+                sig = self._signatures[best_name]
+                confidence = min(best_score / 8.0, 1.0)  # normalize to 0-1
+                return sig.builder(task), best_name, confidence
+
+        # Path 3: fallback
+        fallback = self._signatures.get(self._fallback_name)
+        if fallback:
+            return fallback.builder(task), self._fallback_name, 0.0
+        raise ValueError(f"Fallback rubric '{self._fallback_name}' not registered")
+
+    def resolve_with_explanation(self, task: str) -> dict:
+        """Resolve and return full scoring breakdown for debugging."""
+        scores = self._score_all(task)
+        rubric, matched, confidence = self.resolve(task)
+
+        return {
+            "task": task,
+            "matched": matched,
+            "confidence": confidence,
+            "rubric_criteria_count": len(rubric.criteria),
+            "rubric_max_points": rubric.total_points,
+            "all_scores": [
+                {"name": name, "score": score, "breakdown": self._score_breakdown(task, name)}
+                for name, score in scores
+            ],
+        }
+
+    def _score_all(self, task: str) -> list[tuple[str, float]]:
+        """Score task against all registered signatures. Returns sorted (name, score) pairs."""
+        task_lower = task.lower()
+        results = []
+
+        for name, sig in self._signatures.items():
+            score = self._score_task(task_lower, sig)
+            if score > 0:
+                results.append((name, score))
+
+        results.sort(key=lambda x: (-x[1], -self._signatures[x[0]].priority))
+        return results
+
+    def _score_task(self, task_lower: str, sig: RubricSignature) -> float:
+        """Score a task string against a single signature."""
+        score = 0.0
+
+        # Keyword hits: +1.0 each (these are high-signal)
+        for kw in sig.keywords:
+            if kw.lower() in task_lower:
+                score += 1.0
+
+        # Anti-keyword penalties: -2.0 each (strong negative signal)
+        for akw in sig.anti_keywords:
+            if akw.lower() in task_lower:
+                score -= 2.0
+
+        # Pattern matches: +1.5 each (structural signal)
+        for pattern in sig.task_patterns:
+            if re.search(pattern, task_lower, re.I):
+                score += 1.5
+
+        # Priority bonus (small tiebreaker)
+        score += sig.priority * 0.1
+
+        return max(0.0, score)
+
+    def _score_breakdown(self, task: str, name: str) -> dict:
+        """Detailed scoring breakdown for a single signature."""
+        sig = self._signatures[name]
+        task_lower = task.lower()
+
+        keyword_hits = [kw for kw in sig.keywords if kw.lower() in task_lower]
+        anti_hits = [akw for akw in sig.anti_keywords if akw.lower() in task_lower]
+        pattern_hits = [p for p in sig.task_patterns if re.search(p, task_lower, re.I)]
+
+        return {
+            "keyword_hits": keyword_hits,
+            "anti_keyword_hits": anti_hits,
+            "pattern_hits": pattern_hits,
+            "keyword_score": len(keyword_hits) * 1.0,
+            "anti_score": len(anti_hits) * -2.0,
+            "pattern_score": len(pattern_hits) * 1.5,
+            "priority_bonus": sig.priority * 0.1,
+        }
+
+
+# ============================================================================
+# Global Registry — all built-in rubrics registered here
+# ============================================================================
+
+REGISTRY = RubricRegistry()
+
+
+def _register_builtin_rubrics():
+    """Register all built-in rubric builders with their task signatures."""
+
+    # --- Knowledge Work / Research (the original) ---
+    REGISTRY.register(RubricSignature(
+        name="knowledge_work",
+        builder=build_knowledge_work_rubric,
+        keywords=[
+            "research", "report", "analysis", "whitepaper", "brief",
+            "document", "study", "paper", "source", "citation",
+            "evidence", "literature review", "findings",
+        ],
+        anti_keywords=["code", "function", "script", "sql", "bash", "api"],
+        task_patterns=[
+            r"write\s+a\s+(research|report|analysis|brief|memo|document)",
+            r"(summarize|analyze|review)\s+.*(data|findings|research|paper)",
+        ],
+        example_tasks=[
+            "Write a research brief on the AI chip market",
+            "Analyze Q3 earnings and produce a report",
+            "Draft a whitepaper on quantum computing applications",
+        ],
+        priority=0,  # default fallback, so low priority
+    ))
+
+    # --- Frontend Design ---
+    REGISTRY.register(RubricSignature(
+        name="frontend_design",
+        builder=build_frontend_design_rubric,
+        keywords=[
+            "ui", "ux", "frontend", "landing page", "dashboard",
+            "design", "component", "layout", "css", "tailwind",
+            "figma", "wireframe", "mockup", "responsive",
+        ],
+        anti_keywords=["report", "research", "memo", "email"],
+        task_patterns=[
+            r"(design|build|create)\s+.*(ui|ux|frontend|dashboard|landing|page|app)",
+            r"(component|layout|interface)\s+(for|that|with)",
+        ],
+        example_tasks=[
+            "Design a modern dashboard UI for a SaaS app",
+            "Create a responsive landing page component",
+            "Build a mobile app interface for a finance product",
+        ],
+        priority=1,
+    ))
+
+    # --- Register sample rubrics from rubric_system.sample_rubrics ---
+    try:
+        from rubric_system.sample_rubrics import SAMPLE_TASKS
+        _register_sample_rubrics(SAMPLE_TASKS)
+    except ImportError:
+        pass  # sample_rubrics not available, skip
+
+
+def _register_sample_rubrics(sample_tasks: dict):
+    """Register sample rubric builders with appropriate task signatures."""
+
+    # Sample rubric builders take 0 args; registry expects builder(task) -> Rubric.
+    # Wrap them so the task arg is accepted but unused (task is baked into the rubric).
+    def _wrap(builder_fn):
+        return lambda task: builder_fn()
+
+    _SAMPLE_SIGNATURES = {
+        "cold_outreach_email": RubricSignature(
+            name="cold_outreach_email",
+            builder=_wrap(sample_tasks["cold_outreach_email"]),
+            keywords=[
+                "cold email", "outreach", "pitch", "angel",
+                "investor email", "fundraising email", "intro email",
+            ],
+            anti_keywords=["newsletter", "marketing email", "drip"],
+            task_patterns=[
+                r"(write|draft|compose)\s+.*(cold|outreach|pitch)\s*(email|message)",
+                r"(email|message)\s+.*(founder|investor|ceo|vp|cto)",
+                r"(angel|seed|series\s*[ab])\s+.*(pitch|investment|outreach)",
+            ],
+            example_tasks=[
+                "Write a cold outreach email to a Series A founder pitching angel investment",
+                "Draft a pitch email to a startup CEO for investment",
+            ],
+            priority=5,  # very specific, should win over generic
+        ),
+
+        "csv_parser": RubricSignature(
+            name="csv_parser",
+            builder=_wrap(sample_tasks["csv_parser"]),
+            keywords=[
+                "csv", "parser", "parse", "delimiter", "messy data",
+                "data cleaning", "missing headers",
+            ],
+            anti_keywords=["sql", "database", "api"],
+            task_patterns=[
+                r"(parse|read|clean|handle)\s+.*(csv|tsv|delimited)",
+                r"(function|script|code)\s+.*(csv|delimiter|header)",
+                r"(messy|inconsistent|broken)\s+.*(data|csv|file)",
+            ],
+            example_tasks=[
+                "Generate a Python function that parses messy CSV data with inconsistent delimiters",
+                "Write a CSV parser that handles missing headers",
+            ],
+            priority=5,
+        ),
+
+        "exec_summary": RubricSignature(
+            name="exec_summary",
+            builder=_wrap(sample_tasks["exec_summary"]),
+            keywords=[
+                "summarize", "summary", "executive summary", "bullet",
+                "tldr", "key takeaways", "condense",
+            ],
+            anti_keywords=["write", "create", "generate", "design"],
+            task_patterns=[
+                r"summarize\s+.*(post|article|document|paper|report)",
+                r"(executive|exec)\s+summary",
+                r"(\d+)[\s-]bullet\s+(summary|takeaway|point)",
+                r"(condense|distill)\s+.*(into|to)\s+.*(bullet|point|summary)",
+            ],
+            example_tasks=[
+                "Summarize a 2,000-word technical blog post into a 3-bullet executive summary",
+                "Give me 5 key takeaways from this research paper",
+            ],
+            priority=5,
+        ),
+
+        "sql_ltv_query": RubricSignature(
+            name="sql_ltv_query",
+            builder=_wrap(sample_tasks["sql_ltv_query"]),
+            keywords=[
+                "sql", "query", "select", "join", "group by",
+                "ltv", "lifetime value", "customer value",
+                "schema", "database",
+            ],
+            anti_keywords=["api", "frontend", "email"],
+            task_patterns=[
+                r"(create|write|build)\s+.*(sql|query|select)",
+                r"(find|get|calculate)\s+.*(customer|user|ltv|lifetime|revenue)",
+                r"(top|best|highest)\s+\d+\s+.*(customer|user|account)",
+            ],
+            example_tasks=[
+                "Create a SQL query to find the top 10 customers by lifetime value",
+                "Write SQL to calculate customer LTV excluding refunds",
+            ],
+            priority=5,
+        ),
+
+        "agi_counterargument": RubricSignature(
+            name="agi_counterargument",
+            builder=_wrap(sample_tasks["agi_counterargument"]),
+            keywords=[
+                "counterargument", "counter argument", "argue against",
+                "rebuttal", "refute", "push back", "devil's advocate",
+                "steelman", "debate",
+            ],
+            anti_keywords=["code", "sql", "design", "email"],
+            task_patterns=[
+                r"(write|make|give)\s+.*(counterargument|counter.?argument|rebuttal)",
+                r"(argue|push\s*back)\s+(against|that)",
+                r"(counter|rebut|challenge)\s+.*(claim|argument|thesis|position)",
+            ],
+            example_tasks=[
+                "Write a counterargument to the claim 'AGI will arrive before 2030'",
+                "Argue against the position that remote work reduces productivity",
+            ],
+            priority=5,
+        ),
+
+        "billing_schema": RubricSignature(
+            name="billing_schema",
+            builder=_wrap(sample_tasks["billing_schema"]),
+            keywords=[
+                "json schema", "schema", "data model", "billing",
+                "pricing", "subscription", "usage-based", "seat-based",
+                "multi-tenant", "saas",
+            ],
+            anti_keywords=["query", "frontend", "email", "report"],
+            task_patterns=[
+                r"(design|create|define)\s+.*(schema|data\s*model|json)",
+                r"(billing|pricing|subscription)\s+.*(system|model|schema)",
+                r"(usage|seat|metered)\s*[\-]?\s*based",
+            ],
+            example_tasks=[
+                "Design a JSON schema for a multi-tenant SaaS billing system",
+                "Create a data model for subscription billing with usage-based pricing",
+            ],
+            priority=5,
+        ),
+
+        "attention_explanation": RubricSignature(
+            name="attention_explanation",
+            builder=_wrap(sample_tasks["attention_explanation"]),
+            keywords=[
+                "explain", "explanation", "teach", "tutorial",
+                "how does", "what is", "eli5", "beginner",
+                "year-old", "year old", "simple terms",
+            ],
+            anti_keywords=["code", "implement", "build", "write a function"],
+            task_patterns=[
+                r"explain\s+.*(to|for)\s+.*(beginner|\d+[\s-]year|non[\s-]?technical|someone)",
+                r"(how|what)\s+(does|is|are)\s+.*(work|mean)",
+                r"(teach|explain|describe)\s+.*(mechanism|concept|principle)",
+            ],
+            example_tasks=[
+                "Explain transformer attention mechanisms to a smart 16-year-old",
+                "How does gradient descent work? Explain for a beginner.",
+            ],
+            priority=3,  # slightly lower — "explain" is common in many tasks
+        ),
+
+        "startup_naming": RubricSignature(
+            name="startup_naming",
+            builder=_wrap(sample_tasks["startup_naming"]),
+            keywords=[
+                "name", "names", "naming", "startup name",
+                "brand name", "product name", "company name",
+            ],
+            anti_keywords=["variable name", "function name", "file name", "rename"],
+            task_patterns=[
+                r"(generate|suggest|come\s+up\s+with|brainstorm)\s+.*(name|brand)",
+                r"\d+\s+names?\s+(for|that)",
+                r"name\s+.*(startup|company|product|app|brand)",
+            ],
+            example_tasks=[
+                "Generate 5 names for a startup that does AI-powered contract review",
+                "Come up with brand names for a fintech app",
+            ],
+            priority=5,
+        ),
+
+        "bash_backup": RubricSignature(
+            name="bash_backup",
+            builder=_wrap(sample_tasks["bash_backup"]),
+            keywords=[
+                "bash", "shell script", "backup", "pg_dump",
+                "postgresql", "postgres", "s3", "cron",
+                "rotation", "logging",
+            ],
+            anti_keywords=["python", "node", "frontend", "email"],
+            task_patterns=[
+                r"(write|create|build)\s+.*(bash|shell)\s*(script)",
+                r"(backup|back\s*up)\s+.*(database|postgres|mysql|s3)",
+                r"(script|cron)\s+.*(backup|rotate|log|notify)",
+            ],
+            example_tasks=[
+                "Write a bash script that backs up a PostgreSQL database to S3",
+                "Create a shell script for automated database backup with rotation",
+            ],
+            priority=5,
+        ),
+
+        "investment_memo": RubricSignature(
+            name="investment_memo",
+            builder=_wrap(sample_tasks["investment_memo"]),
+            keywords=[
+                "investment memo", "memo", "series a", "series b",
+                "pitch", "due diligence", "deal memo",
+                "thesis", "portfolio", "venture",
+            ],
+            anti_keywords=["code", "sql", "bash", "frontend", "email"],
+            task_patterns=[
+                r"(draft|write)\s+.*(investment|deal)\s*memo",
+                r"(memo|brief)\s+.*(series\s*[abc]|seed|investment|company|startup)",
+                r"(investment|vc|venture)\s+.*(thesis|memo|brief|analysis)",
+            ],
+            example_tasks=[
+                "Draft a 1-page investment memo on a Series A defense drone company",
+                "Write an investment memo for a seed-stage AI startup",
+            ],
+            priority=5,
+        ),
+    }
+
+    for name, sig in _SAMPLE_SIGNATURES.items():
+        REGISTRY.register(sig)
+
+
+# Convenience: keep a top-level resolve function
+def resolve_rubric(task: str, rubric: Rubric = None, rubric_name: str = None) -> tuple[Rubric, str, float]:
+    """Resolve a task to the best-matching rubric.
+
+    Args:
+        task: task description string
+        rubric: explicit Rubric object (bypasses all matching)
+        rubric_name: explicit rubric name to look up in registry
+
+    Returns:
+        (rubric, matched_name, confidence)
+    """
+    if rubric is not None:
+        return rubric, "explicit", 1.0
+    return REGISTRY.resolve(task, rubric_name=rubric_name)
+
+
+# Legacy compatibility
 def detect_domain(task: str) -> tuple[str, float]:
-    task_lower = task.lower()
-    scores = {}
-    for domain, patterns in DOMAIN_PATTERNS.items():
-        score = sum(len(re.findall(p, task_lower, re.I)) for p in patterns)
-        if score > 0:
-            scores[domain] = score
-    if not scores:
-        return ("generic", 0.0)
-    best = max(scores, key=scores.get)
-    return (best, min(scores[best] / 4.0, 1.0))
+    """DEPRECATED: Use resolve_rubric() instead. Kept for backwards compatibility."""
+    _, name, confidence = resolve_rubric(task)
+    return (name, confidence)
 
 
 # ============================================================================
@@ -1540,6 +1989,485 @@ def format_focus_for_generation(focus_areas: list[tuple[str, str, float]]) -> st
 
 
 # ============================================================================
+# Rubric Generator — builds bespoke rubrics for any task via LLM
+# ============================================================================
+
+RUBRIC_GENERATION_PROMPT = """You are a rubric architect. Given a task, produce a scoring rubric that a verifier can use to evaluate the output.
+
+TASK:
+{task}
+
+{context_section}
+
+INSTRUCTIONS:
+1. Analyze the task and identify 4-7 evaluation criteria. Each criterion must be:
+   - Specific to THIS task (not generic quality platitudes)
+   - Measurable (a verifier can score it without subjectivity)
+   - Ordered by importance (most critical first)
+
+2. For each criterion, choose the best scoring method:
+   - "weighted_components": When quality is a composite of measurable sub-dimensions. Use for criteria where multiple aspects contribute (e.g., "source quality" = freshness + authority + triangulation). Each sub-attribute gets a weight (must sum to 1.0) and a measurement description.
+   - "penalty_based": When you start perfect and deduct for violations. Use for criteria where specific anti-patterns exist (e.g., code safety = 10pts minus deductions for hardcoded secrets, missing error handling, etc.). Define each violation and its penalty (negative float).
+   - "binary": When it either passes or fails with no gradient. Use sparingly — only for structural requirements (e.g., "exactly 3 bullets", "includes a return type").
+
+3. Assign max_points reflecting importance: critical criteria get 10-12, important get 8, standard get 4-6.
+
+4. Set pass_threshold between 0.75-0.90 based on task type:
+   - Creative/subjective tasks: 0.75-0.80
+   - Technical/precision tasks: 0.85-0.90
+
+{examples_section}
+
+OUTPUT FORMAT — valid JSON only, no markdown fences:
+{{
+  "domain": "<short domain label for this task type>",
+  "pass_threshold": <float>,
+  "criteria": [
+    {{
+      "id": "<short_snake_case>",
+      "category": "<category>",
+      "description": "<what this criterion evaluates>",
+      "pass_condition": "<specific conditions for passing>",
+      "scoring_method": "weighted_components|penalty_based|binary",
+      "max_points": <int>,
+      "sub_attributes": [
+        {{
+          "sub_id": "<snake_case>",
+          "description": "<what this measures>",
+          "weight": <float 0.0-1.0>,
+          "measurement": "<how to measure, produce a float 0.0-1.0>"
+        }}
+      ],
+      "penalties": {{
+        "<violation_name>": <negative_float>,
+        ...
+      }},
+      "pass_examples": ["<example of passing>"],
+      "fail_examples": ["<example of failing>"]
+    }}
+  ]
+}}
+
+RULES:
+- sub_attributes only for weighted_components (weights must sum to 1.0)
+- penalties only for penalty_based
+- Neither for binary
+- Every criterion needs pass_examples and fail_examples (1-2 each)
+- Be specific: "function handles edge cases" is bad. "Function handles empty input, mixed quoting, and trailing delimiters without crash" is good.
+- Criteria should be evaluatable from the output alone — don't require external validation
+- Output ONLY the JSON object, nothing else"""
+
+
+RUBRIC_GEN_EXAMPLES = """EXAMPLE — for the task "Write a cold outreach email to a Series A founder":
+
+{
+  "domain": "cold_outreach_email",
+  "pass_threshold": 0.80,
+  "criteria": [
+    {
+      "id": "email_subject",
+      "category": "engagement",
+      "description": "Subject line is compelling and specific — not generic or spammy",
+      "pass_condition": "Subject is <60 chars, references something specific to the recipient, creates curiosity without clickbait.",
+      "scoring_method": "weighted_components",
+      "max_points": 10,
+      "sub_attributes": [
+        {"sub_id": "specificity", "description": "References recipient's company/round/domain", "weight": 0.40, "measurement": "1.0 if names company or specific context, 0.0 if generic"},
+        {"sub_id": "brevity", "description": "Under 60 chars, scannable on mobile", "weight": 0.25, "measurement": "1.0 if ≤60 chars, 0.5 if ≤80, 0.0 if >80"},
+        {"sub_id": "curiosity_hook", "description": "Creates reason to open without being clickbait", "weight": 0.35, "measurement": "1.0 if compelling + honest, 0.5 if generic, 0.0 if spammy"}
+      ],
+      "penalties": {},
+      "pass_examples": ["'$2M angel check for Acme's Series A — operator background in logistics'"],
+      "fail_examples": ["'Quick question'", "'Exciting investment opportunity!'"]
+    },
+    {
+      "id": "email_tone",
+      "category": "voice",
+      "description": "Tone is peer-to-peer, confident but not presumptuous",
+      "pass_condition": "Reads like one founder talking to another. Not sycophantic, not salesy, not formal.",
+      "scoring_method": "penalty_based",
+      "max_points": 6,
+      "sub_attributes": [],
+      "penalties": {
+        "sycophantic_language": -2.0,
+        "salesy_pressure": -2.0,
+        "overly_formal": -1.5,
+        "presumptuous_familiarity": -1.5
+      },
+      "pass_examples": ["Direct, warm, brief — reads like a text from a smart friend"],
+      "fail_examples": ["'I'd be truly honored to be part of your incredible journey'"]
+    }
+  ]
+}
+
+EXAMPLE — for the task "Write a bash script that backs up PostgreSQL to S3":
+
+{
+  "domain": "bash_scripting",
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "bash_safety",
+      "category": "reliability",
+      "description": "Script is safe — set -euo pipefail, no secrets in code, cleanup on failure",
+      "pass_condition": "set -euo pipefail. Trap for cleanup. No hardcoded passwords.",
+      "scoring_method": "penalty_based",
+      "max_points": 10,
+      "sub_attributes": [],
+      "penalties": {
+        "no_set_e": -2.0,
+        "no_pipefail": -1.5,
+        "hardcoded_password": -3.0,
+        "no_trap_cleanup": -1.5,
+        "unquoted_variables": -1.0
+      },
+      "pass_examples": ["set -euo pipefail, trap cleanup EXIT, reads creds from env"],
+      "fail_examples": ["No error handling, password in script"]
+    }
+  ]
+}"""
+
+
+RESEARCH_PROMPT = """You are a domain research specialist. Your job is to research what industry experts, practitioners, and authoritative sources consider "excellent" for a specific type of task.
+
+TASK TO RESEARCH:
+{task}
+
+RESEARCH GOALS:
+1. Find what domain experts consider best practices for this type of work
+2. Identify specific quality standards, frameworks, or checklists used by professionals
+3. Discover common failure modes that experts watch for
+4. Find measurable dimensions of quality that separate good from great
+
+RESEARCH APPROACH:
+- Search for professional standards, style guides, industry benchmarks
+- Look for expert blogs, authoritative publications, professional associations
+- Find real evaluation criteria used in the field (not generic advice)
+- Prioritize sources that are specific and measurable over vague guidance
+
+OUTPUT FORMAT:
+Provide a structured research brief with these sections:
+
+DOMAIN CONTEXT: What field/discipline does this task fall under? What role typically does this?
+
+EXPERT QUALITY STANDARDS: What do professionals in this field consider the key dimensions of quality? Be specific — cite frameworks, standards, or expert consensus where possible.
+
+MEASURABLE CRITERIA: List 5-10 specific, measurable things an expert would check. For each, explain:
+- What to measure
+- What "great" looks like vs. "acceptable" vs. "poor"
+- Why it matters (the consequence of getting it wrong)
+
+COMMON FAILURE MODES: What are the most frequent ways this type of task goes wrong? What do experts specifically watch for?
+
+NON-OBVIOUS QUALITY SIGNALS: What separates truly excellent work from merely competent work in this domain? What would an expert notice that a generalist would miss?
+
+Be concrete and specific. Cite real standards, frameworks, or practices where possible. Avoid generic advice like "be clear" or "be thorough" — instead say exactly what clarity or thoroughness means in this context."""
+
+
+class RubricGenerator:
+    """Generates bespoke rubrics for any task by calling Claude.
+
+    The generator uses few-shot examples from pre-built rubrics to teach
+    the model what good criteria look like, then produces a task-specific
+    rubric configuration that gets hydrated into canonical Criterion objects.
+
+    Before generating, it performs deep research using web search to understand
+    what domain experts consider best practices for the task type. This ensures
+    rubrics capture real-world quality standards, not just LLM intuitions.
+
+    Usage:
+        gen = RubricGenerator()
+        rubric = gen.generate("Write a cold email to a VC partner")
+
+        # Or with the RubricLoop:
+        loop = RubricLoop()
+        result = await loop.run("any task here")  # auto-generates rubric
+    """
+
+    def __init__(self, model: str = "claude-sonnet-4-20250514", verbose: bool = True,
+                 learning_integrator: LearningIntegrator = None,
+                 enable_research: bool = True,
+                 research_model: str = "claude-sonnet-4-20250514"):
+        if Anthropic is None:
+            raise ImportError("anthropic package required: pip install anthropic")
+        self.client = Anthropic()
+        self.model = model
+        self.verbose = verbose
+        self.learning_integrator = learning_integrator
+        self.enable_research = enable_research
+        self.research_model = research_model
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(msg)
+
+    def _research_best_practices(self, task: str) -> str:
+        """Deep research step: use web search to find what domain experts consider
+        best practices and quality standards for this task type.
+
+        Uses Claude with the web_search tool to ground rubric generation in
+        real-world expert standards rather than LLM intuitions.
+
+        Returns:
+            Formatted research brief to inject into the generation prompt.
+        """
+        self._log("Researching best practices for task domain...")
+
+        prompt = RESEARCH_PROMPT.format(task=task)
+
+        try:
+            response = self.client.messages.create(
+                model=self.research_model,
+                max_tokens=4000,
+                tools=[{
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": 5,
+                }],
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            # Extract text blocks from response (may include tool_use + text blocks)
+            text_parts = []
+            for block in response.content:
+                if hasattr(block, "text"):
+                    text_parts.append(block.text)
+
+            research = "\n".join(text_parts)
+
+            if research.strip():
+                self._log(f"Research complete ({len(research)} chars, "
+                          f"{sum(1 for b in response.content if b.type == 'web_search_tool_result')} searches)")
+                return (
+                    "\nDOMAIN RESEARCH — the following is based on web research into what "
+                    "industry experts and practitioners consider best practices for this task type. "
+                    "Use this to ensure your rubric criteria reflect real-world professional standards, "
+                    "not generic quality platitudes.\n\n"
+                    + research
+                )
+            else:
+                self._log("Research returned no results — proceeding without")
+                return ""
+
+        except Exception as e:
+            self._log(f"Research step failed (non-fatal): {e}")
+            return ""
+
+    def generate(self, task: str, context: str = "", seed_rubrics: list[Rubric] = None) -> Rubric:
+        """Generate a bespoke rubric for the given task.
+
+        Args:
+            task: the task description
+            context: optional additional context
+            seed_rubrics: optional list of existing Rubrics to use as few-shot seeds.
+                          If not provided, pulls the closest matches from the registry.
+
+        Returns:
+            A fully hydrated Rubric with Criterion objects and ScoringRubrics
+        """
+        self._log(f"Generating rubric for: {task[:60]}...")
+
+        context_section = ""
+        if context:
+            context_section = f"ADDITIONAL CONTEXT:\n{context[:2000]}"
+
+        # Build examples section: static examples + dynamic seeds from registry
+        examples_section = RUBRIC_GEN_EXAMPLES
+        seed_section = self._build_seed_section(task, seed_rubrics)
+        if seed_section:
+            examples_section += "\n\n" + seed_section
+
+        # Step 1: Deep research — what do domain experts consider best practices?
+        research_section = ""
+        if self.enable_research:
+            research_section = self._research_best_practices(task)
+
+        # Step 2: Inject learning context from prior evaluations
+        learning_section = ""
+        if self.learning_integrator:
+            try:
+                learning_section = self.learning_integrator.build_learning_context(task)
+                if learning_section:
+                    self._log(f"Injected learning context ({len(learning_section)} chars)")
+            except Exception as e:
+                self._log(f"Learning context unavailable: {e}")
+
+        prompt = RUBRIC_GENERATION_PROMPT.format(
+            task=task,
+            context_section=context_section,
+            examples_section=examples_section,
+        )
+        # Append research + learnings after the base prompt so the rubric architect
+        # has full domain context before generating criteria
+        if research_section:
+            prompt += "\n" + research_section
+        if learning_section:
+            prompt += "\n" + learning_section
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=4000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text
+
+        # Parse JSON from response
+        spec = self._parse_json(raw)
+        if not spec or "criteria" not in spec:
+            raise ValueError(f"Failed to parse rubric spec from LLM response: {raw[:200]}")
+
+        # Hydrate into canonical objects
+        rubric = self._hydrate(task, spec)
+        self._log(f"Generated: {len(rubric.criteria)} criteria, {rubric.total_points} max points, "
+                  f"threshold: {rubric.pass_threshold:.0%}")
+        return rubric
+
+    def _build_seed_section(self, task: str, seed_rubrics: list[Rubric] = None) -> str:
+        """Build a seed examples section from existing rubrics.
+
+        If seed_rubrics is provided, uses those. Otherwise, queries the registry
+        for the top 2 closest matches to use as structural seeds.
+        """
+        seeds = seed_rubrics or []
+
+        if not seeds:
+            # Pull closest matches from registry as seeds
+            try:
+                scores = REGISTRY._score_all(task)
+                for name, score in scores[:2]:  # top 2 matches
+                    sig = REGISTRY.get(name)
+                    if sig:
+                        seed = sig.builder(task)
+                        seeds.append(seed)
+            except Exception:
+                pass
+
+        if not seeds:
+            return ""
+
+        parts = ["SEED RUBRICS — these are similar rubrics for related task types. "
+                  "Use their structure and scoring patterns as inspiration, "
+                  "but generate criteria SPECIFIC to the task above.\n"]
+
+        for seed in seeds[:2]:
+            parts.append(f"--- Seed: {seed.domain} ({len(seed.criteria)} criteria, {seed.total_points}pts) ---")
+            for c in seed.criteria[:3]:  # show first 3 criteria as seeds
+                method = c.scoring.method.value
+                pts = c.scoring.max_points
+                parts.append(f"  {c.id} ({method}, {pts}pts): {c.description}")
+                if c.scoring.sub_attributes:
+                    for sub in c.scoring.sub_attributes[:2]:
+                        parts.append(f"    - {sub.sub_id} ({sub.weight:.0%}): {sub.measurement[:80]}")
+                if c.scoring.penalties:
+                    for v, p in list(c.scoring.penalties.items())[:3]:
+                        parts.append(f"    - violation: {v} ({p})")
+            parts.append("")
+
+        return "\n".join(parts)
+
+    def _parse_json(self, text: str) -> dict:
+        """Extract JSON from LLM response."""
+        text = text.strip()
+
+        # Try direct parse
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Try extracting from markdown fences
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        # Try finding the first { ... } block
+        match = re.search(r'\{[\s\S]*\}', text)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+
+        return {}
+
+    def _hydrate(self, task: str, spec: dict) -> Rubric:
+        """Convert a JSON spec into canonical Rubric/Criterion objects."""
+        criteria = []
+
+        for c_spec in spec["criteria"]:
+            scoring = self._build_scoring(c_spec)
+
+            criterion = Criterion(
+                id=c_spec["id"],
+                category=c_spec.get("category", "general"),
+                description=c_spec["description"],
+                pass_condition=c_spec.get("pass_condition", ""),
+                scoring=scoring,
+                source="generated",
+                pass_examples=c_spec.get("pass_examples", []),
+                fail_examples=c_spec.get("fail_examples", []),
+                domain=spec.get("domain", "generated"),
+            )
+            criteria.append(criterion)
+
+        total_points = sum(c.scoring.max_points for c in criteria)
+
+        return Rubric(
+            task=task,
+            domain=spec.get("domain", "generated"),
+            criteria=criteria,
+            total_points=total_points,
+            pass_threshold=spec.get("pass_threshold", 0.85),
+        )
+
+    def _build_scoring(self, c_spec: dict) -> ScoringRubric:
+        """Build a ScoringRubric from a criterion spec."""
+        method_str = c_spec.get("scoring_method", "binary")
+        max_points = c_spec.get("max_points", 5)
+
+        method_map = {
+            "weighted_components": ScoringMethod.WEIGHTED_COMPONENTS,
+            "penalty_based": ScoringMethod.PENALTY_BASED,
+            "binary": ScoringMethod.BINARY,
+            "percentage": ScoringMethod.PERCENTAGE,
+            "threshold_tiers": ScoringMethod.THRESHOLD_TIERS,
+            "count_based": ScoringMethod.COUNT_BASED,
+        }
+        method = method_map.get(method_str, ScoringMethod.BINARY)
+
+        sub_attributes = []
+        if method == ScoringMethod.WEIGHTED_COMPONENTS:
+            for sub_spec in c_spec.get("sub_attributes", []):
+                sub_attributes.append(SubAttribute(
+                    sub_id=sub_spec["sub_id"],
+                    description=sub_spec.get("description", ""),
+                    weight=sub_spec.get("weight", 0.5),
+                    measurement=sub_spec.get("measurement", ""),
+                ))
+            # Normalize weights if they don't sum to 1.0
+            total_weight = sum(s.weight for s in sub_attributes)
+            if sub_attributes and abs(total_weight - 1.0) > 0.01:
+                for s in sub_attributes:
+                    s.weight = s.weight / total_weight
+
+        penalties = {}
+        if method == ScoringMethod.PENALTY_BASED:
+            penalties = c_spec.get("penalties", {})
+            # Ensure penalties are negative
+            penalties = {k: -abs(v) for k, v in penalties.items()}
+
+        return ScoringRubric(
+            method=method,
+            max_points=max_points,
+            sub_attributes=sub_attributes,
+            penalties=penalties,
+        )
+
+
+# ============================================================================
 # Main Harness
 # ============================================================================
 
@@ -1553,6 +2481,9 @@ class RubricLoop:
         feedback_dir: str = ".rubric_feedback",
         enable_checkpoints: bool = True,
         checkpoint_callback: callable = None,
+        repo_path: str = ".",
+        enable_self_improve: bool = True,
+        enable_research: bool = True,
     ):
         if Anthropic is None:
             raise ImportError("anthropic package is required: pip install anthropic")
@@ -1579,6 +2510,18 @@ class RubricLoop:
         )
         self.enable_checkpoints = enable_checkpoints
         self.checkpoint_callback = checkpoint_callback  # fn(Checkpoint) -> (action, feedback)
+
+        # Component 4: Self-improvement (Loop 3)
+        self.repo_path = repo_path
+        self.enable_self_improve = enable_self_improve
+        self.rubric_store = RubricStore()
+        self.outcome_tracker = OutcomeTracker(self.rubric_store, verbose=verbose)
+        self.learning_integrator = LearningIntegrator(
+            store=self.rubric_store,
+            feedback_store=self.feedback_store,
+            verbose=verbose,
+        )
+        self.enable_research = enable_research
 
     def _log(self, msg: str):
         if self.verbose:
@@ -1706,24 +2649,61 @@ class RubricLoop:
             self.checkpoint_policy.record_outcome(checkpoint, "continue")
             return "continue", ""
 
-    async def run(self, task: str, context: str = "") -> LoopResult:
+    async def run(
+        self,
+        task: str,
+        context: str = "",
+        rubric: Rubric = None,
+        rubric_name: str = None,
+        generate_rubric: bool = True,
+    ) -> LoopResult:
         """Run the generation-verification loop with granular scoring,
-        feedback injection, verification tracking, and checkpoints."""
+        feedback injection, verification tracking, and checkpoints.
+
+        Rubric resolution order:
+        1. Explicit rubric object (rubric=...)
+        2. Explicit registry name (rubric_name=...)
+        3. Generate bespoke rubric via LLM (default when generate_rubric=True)
+        4. Fall back to registry matching (when generate_rubric=False)
+
+        Args:
+            task: task description
+            context: optional context (file content, etc.)
+            rubric: explicit Rubric object — bypasses all resolution
+            rubric_name: explicit registry name — looks up by name
+            generate_rubric: if True (default), generates a bespoke rubric via LLM
+                             when no explicit rubric/name is provided
+        """
         self._log(f"\n{'='*60}")
         self._log(f"Task: {task[:60]}...")
         self._log(f"{'='*60}")
 
-        domain, confidence = detect_domain(task)
-        self._log(f"Domain: {domain} ({confidence:.0%})")
-
-        if domain == "knowledge_work_research":
-            rubric = build_knowledge_work_rubric(task)
-        elif domain == "frontend_design":
-            rubric = build_frontend_design_rubric(task)
+        # Rubric resolution
+        if rubric is not None:
+            matched_name = "explicit"
+            self._log(f"Rubric: explicit ({len(rubric.criteria)} criteria, {rubric.total_points}pts)")
+        elif rubric_name is not None:
+            rubric, matched_name, _ = resolve_rubric(task, rubric_name=rubric_name)
+            self._log(f"Rubric: {matched_name} (registry lookup)")
+            self._log(f"  {len(rubric.criteria)} criteria, {rubric.total_points} max points")
+        elif generate_rubric:
+            # Primary path: generate bespoke rubric (with research + learning context)
+            generator = RubricGenerator(
+                model=self.model, verbose=self.verbose,
+                learning_integrator=self.learning_integrator if self.enable_self_improve else None,
+                enable_research=self.enable_research,
+            )
+            rubric = generator.generate(task, context=context)
+            matched_name = f"generated:{rubric.domain}"
+            self._log(f"Rubric: {matched_name}")
+            self._log(f"  {len(rubric.criteria)} criteria, {rubric.total_points} max points")
         else:
-            rubric = build_knowledge_work_rubric(task)  # Default fallback
+            # Legacy path: registry matching
+            rubric, matched_name, confidence = resolve_rubric(task)
+            self._log(f"Rubric: {matched_name} (registry match, {confidence:.0%})")
+            self._log(f"  {len(rubric.criteria)} criteria, {rubric.total_points} max points")
 
-        self._log(f"Rubric: {len(rubric.criteria)} criteria, {rubric.total_points} max points")
+        domain = rubric.domain
 
         # Initialize verification tracker
         self.tracker.set_task(task, domain)
@@ -1799,7 +2779,7 @@ class RubricLoop:
             if percentage >= self.pass_threshold:
                 self._log(f"\nPASSED at iteration {i}! ({percentage:.1%})")
                 self.tracker.complete()
-                return LoopResult(
+                result = LoopResult(
                     success=True,
                     output=content,
                     iterations=i,
@@ -1808,6 +2788,8 @@ class RubricLoop:
                     rubric=rubric,
                     history=history
                 )
+                self._post_run(result)
+                return result
 
             # Checkpoint check (after scoring, before next iteration)
             if self.enable_checkpoints:
@@ -1847,7 +2829,7 @@ class RubricLoop:
                 gap = cs.max_points - cs.points_earned
                 improvements.append(f"{cs.criterion_id}: +{gap:.1f} pts available")
 
-        return LoopResult(
+        result = LoopResult(
             success=False,
             output=history[-1].attempt,
             iterations=self.max_iterations,
@@ -1856,6 +2838,82 @@ class RubricLoop:
             rubric=rubric,
             history=history,
             improvement_summary=improvements
+        )
+        self._post_run(result)
+        return result
+
+    def _post_run(self, result: LoopResult):
+        """Post-run hook: persist scored rubric and scan for outcome signals."""
+        if not self.enable_self_improve:
+            return
+
+        try:
+            import hashlib
+            from datetime import datetime
+
+            # Save scored rubric to store for long-term learning
+            task_hash = hashlib.sha256(result.rubric.task.encode()).hexdigest()[:12]
+            rubric_id = f"run_{task_hash}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
+            record = ScoredRubricRecord(
+                id=rubric_id,
+                task=result.rubric.task,
+                task_hash=task_hash,
+                template_id=None,
+                criteria=[
+                    {"id": c.id, "description": c.description, "category": c.category,
+                     "max_points": c.scoring.max_points}
+                    for c in result.rubric.criteria
+                ],
+                scores=[
+                    {"criterion_id": cs.criterion_id, "points_earned": cs.points_earned,
+                     "max_points": cs.max_points, "percentage": cs.percentage}
+                    for cs in result.history[-1].criterion_scores
+                ],
+                overall_score=result.final_percentage,
+                outcome=None,
+                outcome_details=None,
+                days_to_bug=None,
+                created_at=datetime.utcnow().isoformat(),
+                project=None,
+                author=None,
+                iteration_count=result.iterations,
+            )
+            self.rubric_store.save_rubric(record)
+            self._log(f"[Loop3] Saved scored rubric: {rubric_id}")
+
+            # Scan for outcome signals from prior runs
+            signals = self.outcome_tracker.scan_git_outcomes(
+                repo_path=self.repo_path, lookback_days=14
+            )
+            if signals:
+                self._log(f"[Loop3] Detected {len(signals)} outcome signals from git")
+
+        except Exception as e:
+            self._log(f"[Loop3] Post-run hook error (non-fatal): {e}")
+
+    def self_improve(self, dry_run: bool = True, max_edits: int = 3) -> list:
+        """Run the self-improvement cycle: analyze learnings and propose/apply source edits.
+
+        Args:
+            dry_run: if True, only proposes edits without applying. Set False to auto-apply.
+            max_edits: maximum number of edits to apply in one cycle.
+
+        Returns:
+            List of SelfEditProposal objects (applied or proposed).
+        """
+        if not self.enable_self_improve:
+            self._log("Self-improvement disabled")
+            return []
+
+        editor = SelfEditor(
+            store=self.rubric_store,
+            verbose=self.verbose,
+        )
+        return editor.auto_improve(
+            min_uses=5,
+            dry_run=dry_run,
+            max_edits=max_edits,
         )
 
     def save_dashboard(self, path: str = "verification_dashboard.html"):
@@ -1875,6 +2933,13 @@ class RubricLoop:
 
 
 # ============================================================================
+# Module initialization — register all built-in rubrics
+# ============================================================================
+
+_register_builtin_rubrics()
+
+
+# ============================================================================
 # CLI
 # ============================================================================
 
@@ -1884,15 +2949,58 @@ async def main():
     parser = argparse.ArgumentParser(description="Rubric Loop - Granular Scoring")
     parser.add_argument("task", nargs="?", help="Task description")
     parser.add_argument("--context", "-c", help="Context file or text")
+    parser.add_argument("--rubric", "-r", help="Explicit rubric name (see --list-rubrics)")
+    parser.add_argument("--no-generate", action="store_true",
+                        help="Disable rubric generation; use registry matching instead")
+    parser.add_argument("--list-rubrics", action="store_true", help="List all registered rubrics")
+    parser.add_argument("--explain", action="store_true", help="Show rubric resolution explanation")
     parser.add_argument("--max-iter", "-m", type=int, default=5)
     parser.add_argument("--threshold", "-t", type=float, default=0.85)
     parser.add_argument("--quiet", "-q", action="store_true")
     parser.add_argument("--json", "-j", action="store_true")
+    parser.add_argument("--self-improve", action="store_true",
+                        help="Run self-improvement cycle after the loop completes")
+    parser.add_argument("--self-improve-apply", action="store_true",
+                        help="Run self-improvement and apply edits (not dry run)")
+    parser.add_argument("--no-learn", action="store_true",
+                        help="Disable learning/outcome tracking for this run")
+    parser.add_argument("--no-research", action="store_true",
+                        help="Skip deep research step during rubric generation")
 
     args = parser.parse_args()
 
+    # List all registered rubrics
+    if args.list_rubrics:
+        print(f"\nRegistered rubrics ({len(REGISTRY.registered_names)}):")
+        print(f"{'─'*50}")
+        for name in sorted(REGISTRY.registered_names):
+            sig = REGISTRY.get(name)
+            rubric = sig.builder("test")
+            kw_preview = ", ".join(sig.keywords[:5])
+            print(f"  {name:30s} | {len(rubric.criteria):2d} criteria | {rubric.total_points:3d}pts | kw: {kw_preview}")
+        print(f"\nFallback: {REGISTRY._fallback_name}")
+        sys.exit(0)
+
     if not args.task:
         args.task = "Write a research brief on the AI chip market in 2025, including market size, key players, and 2-year forecast"
+
+    # Explain rubric resolution
+    if args.explain:
+        explanation = REGISTRY.resolve_with_explanation(args.task)
+        print(f"\nTask: {explanation['task'][:80]}")
+        print(f"Matched: {explanation['matched']} (confidence: {explanation['confidence']:.0%})")
+        print(f"Rubric: {explanation['rubric_criteria_count']} criteria, {explanation['rubric_max_points']}pts")
+        print(f"\nAll scores:")
+        for entry in explanation["all_scores"]:
+            bd = entry["breakdown"]
+            print(f"  {entry['name']:30s} | score: {entry['score']:5.1f} | "
+                  f"kw: {bd['keyword_score']:+.0f} anti: {bd['anti_score']:+.0f} "
+                  f"pat: {bd['pattern_score']:+.0f} pri: {bd['priority_bonus']:+.1f}")
+            if bd["keyword_hits"]:
+                print(f"    keywords hit: {', '.join(bd['keyword_hits'])}")
+            if bd["pattern_hits"]:
+                print(f"    patterns hit: {', '.join(bd['pattern_hits'][:2])}")
+        sys.exit(0)
 
     context = ""
     if args.context:
@@ -1902,10 +3010,28 @@ async def main():
     loop = RubricLoop(
         max_iterations=args.max_iter,
         pass_threshold=args.threshold,
-        verbose=not args.quiet
+        verbose=not args.quiet,
+        enable_self_improve=not args.no_learn,
+        enable_research=not args.no_research,
     )
 
-    result = await loop.run(args.task, context)
+    result = await loop.run(
+        args.task, context,
+        rubric_name=args.rubric,
+        generate_rubric=not args.no_generate,
+    )
+
+    # Self-improvement cycle
+    if args.self_improve or args.self_improve_apply:
+        dry_run = not args.self_improve_apply
+        proposals = loop.self_improve(dry_run=dry_run)
+        if proposals:
+            print(f"\n{'='*60}")
+            print(f"SELF-IMPROVEMENT: {len(proposals)} proposal(s) {'(dry run)' if dry_run else '(applied)'}")
+            for p in proposals:
+                print(f"  - {p.target_function}: {p.rationale[:80]}")
+        else:
+            print("\nSelf-improvement: no proposals (need more data or everything looks healthy)")
 
     if args.json:
         print(json.dumps({
