@@ -2528,6 +2528,9 @@ class RubricLoop:
             verbose=verbose,
         )
         self.enable_research = enable_research
+        self.auto_improve_interval = auto_improve_interval
+        self.auto_improve_min_uses = auto_improve_min_uses
+        self.auto_improve_max_edits = auto_improve_max_edits
 
     def _log(self, msg: str):
         if self.verbose:
@@ -2912,7 +2915,7 @@ class RubricLoop:
         (never improve), writes them as feedback so LearningIntegrator picks
         them up on the next rubric generation.
         """
-        if not result.history:
+        if not self.enable_self_improve or not result.history:
             return
 
         try:
@@ -2967,6 +2970,9 @@ class RubricLoop:
         - At least one criterion has enough uses (auto_improve_min_uses)
         """
         try:
+            if not self.auto_improve_interval:
+                return False
+
             from rubric_system.rubric_learning import RubricLearner
             learner = RubricLearner(self.rubric_store)
             insights = learner.get_insights()
