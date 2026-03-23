@@ -2840,7 +2840,7 @@ Output as JSON:
 }}"""
 
 
-@dataclass
+@_dataclass
 class CriterionAudit:
     """Result of auditing a single criterion against research."""
     criterion_id: str
@@ -2850,7 +2850,7 @@ class CriterionAudit:
     recommendation: str = ""
 
 
-@dataclass
+@_dataclass
 class ResearchGap:
     """A research finding not covered by any criterion."""
     finding: str
@@ -2859,7 +2859,7 @@ class ResearchGap:
     suggested_description: str = ""
 
 
-@dataclass
+@_dataclass
 class TraceResult:
     """Full result of research-to-rubric traceability audit."""
     criterion_audits: list[CriterionAudit]

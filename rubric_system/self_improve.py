@@ -493,7 +493,10 @@ class SelfEditor:
     def analyze_and_propose(self, min_uses: int = 5) -> list[SelfEditProposal]:
         """Analyze learning data and propose source code edits.
 
-        Returns a list of SelfEditProposal objects, one per problematic criterion.
+        Works in two modes:
+        1. Per-criterion mode (pre-built rubrics with repeated criterion IDs)
+        2. Feedback-pattern mode (generated rubrics — uses accumulated feedback
+           entries to identify systemic issues and propose prompt edits)
         """
         proposals = []
         insights = self.learner.get_insights()
@@ -507,7 +510,7 @@ class SelfEditor:
                 if entry.criterion_id:
                     feedback_by_criterion.setdefault(entry.criterion_id, []).append(entry.content)
 
-        # Propose edits for low-value criteria (high false positive rate)
+        # === Mode 1: Per-criterion edits (pre-built rubrics) ===
         for criterion_info in insights.get("low_value_criteria", []):
             cid = criterion_info["id"]
             proposal = self._propose_edit_for_criterion(
@@ -518,7 +521,6 @@ class SelfEditor:
             if proposal:
                 proposals.append(proposal)
 
-        # Propose edits for always-passing criteria (too easy)
         for criterion_info in insights.get("suggested_removals", []):
             cid = criterion_info["id"]
             proposal = self._propose_edit_for_criterion(
@@ -529,12 +531,10 @@ class SelfEditor:
             if proposal:
                 proposals.append(proposal)
 
-        # Propose edits for high-value criteria that could be strengthened
         for criterion_info in insights.get("high_value_criteria", []):
             cid = criterion_info["id"]
             stat = next((s for s in stats if s.criterion_id == cid), None)
             if stat and stat.pass_rate < 0.5:
-                # High-value but hard — might need rebalancing
                 proposal = self._propose_edit_for_criterion(
                     cid, criterion_info, stats, source_code,
                     feedback_by_criterion.get(cid, []),
@@ -543,13 +543,129 @@ class SelfEditor:
                 if proposal:
                     proposals.append(proposal)
 
-        # Propose prompt edits based on accumulated feedback
+        # === Mode 2: Feedback-pattern edits (generated rubrics) ===
+        # When criterion IDs don't repeat, per-criterion stats are empty.
+        # Fall back to analyzing accumulated feedback entries for patterns.
+        if not proposals and self.feedback_store:
+            feedback_proposals = self._propose_feedback_based_edits(source_code)
+            proposals.extend(feedback_proposals)
+
+        # Propose prompt edits based on accumulated scoring feedback
         prompt_proposal = self._propose_prompt_edits(source_code, feedback_by_criterion)
         if prompt_proposal:
             proposals.append(prompt_proposal)
 
         self._log(f"Generated {len(proposals)} edit proposals")
         return proposals
+
+    def _propose_feedback_based_edits(self, source_code: str) -> list[SelfEditProposal]:
+        """Analyze feedback patterns to propose systemic edits for generated rubrics."""
+        proposals = []
+
+        rubric_feedback = self.feedback_store.get_all("rubric") if self.feedback_store else []
+        if len(rubric_feedback) < 2:
+            return proposals
+
+        self._log(f"Analyzing {len(rubric_feedback)} feedback entries for patterns...")
+
+        non_discriminating = [f for f in rubric_feedback if "scored 95%" in f.content or "don't discriminate" in f.content]
+        stuck_criteria = [f for f in rubric_feedback if "never improved" in f.content]
+
+        if len(non_discriminating) >= 2:
+            all_easy = set()
+            for f in non_discriminating:
+                words = f.content.split(":")[-1].strip() if ":" in f.content else f.content
+                for word in words.replace(",", " ").split():
+                    word = word.strip()
+                    if "_" in word and len(word) > 3:
+                        all_easy.add(word)
+            if all_easy:
+                proposal = self._propose_generation_prompt_edit(
+                    source_code, "non_discriminating",
+                    f"{len(non_discriminating)} runs produced criteria scoring 95%+ on first attempt",
+                    list(all_easy)[:10],
+                )
+                if proposal:
+                    proposals.append(proposal)
+
+        if len(stuck_criteria) >= 2:
+            all_stuck = set()
+            for f in stuck_criteria:
+                words = f.content.split(":")[-1].strip() if ":" in f.content else f.content
+                for word in words.replace(",", " ").split():
+                    word = word.strip()
+                    if "_" in word and len(word) > 3:
+                        all_stuck.add(word)
+            if all_stuck:
+                proposal = self._propose_generation_prompt_edit(
+                    source_code, "stuck_criteria",
+                    f"{len(stuck_criteria)} runs had criteria that never improved",
+                    list(all_stuck)[:10],
+                )
+                if proposal:
+                    proposals.append(proposal)
+
+        return proposals
+
+    def _propose_generation_prompt_edit(
+        self, source_code: str, issue_type: str,
+        evidence: str, example_criteria: list[str],
+    ) -> Optional[SelfEditProposal]:
+        """Propose an edit to RUBRIC_GENERATION_PROMPT based on systemic feedback."""
+        match = re.search(r'(RUBRIC_GENERATION_PROMPT\s*=\s*"""[\s\S]*?""")', source_code)
+        if not match:
+            return None
+
+        prompt_code = match.group(1)
+        issue_desc = {
+            "non_discriminating": (
+                f"Rubrics produce criteria scoring 95%+ on first attempt — no discrimination. "
+                f"Examples: {', '.join(example_criteria[:5])}"
+            ),
+            "stuck_criteria": (
+                f"Rubrics produce criteria stuck <70% that never improve. "
+                f"Examples: {', '.join(example_criteria[:5])}"
+            ),
+        }.get(issue_type, evidence)
+
+        prompt = f"""You are a self-improvement engine for a rubric generation system.
+
+PROBLEM: {issue_desc}
+EVIDENCE: {evidence}
+
+CURRENT RUBRIC GENERATION PROMPT (excerpt):
+{prompt_code[:4000]}
+
+Propose 1-2 targeted edits. Each must be a find-and-replace on the prompt text.
+
+Output JSON:
+{{
+  "rationale": "<why this fixes the issue>",
+  "edits": [{{"old": "<exact substring to find>", "new": "<replacement>"}}]
+}}
+
+RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON."""
+
+        try:
+            response = self.client.messages.create(
+                model=self.model, max_tokens=2000, temperature=0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            spec = self._parse_json(response.content[0].text)
+            edits = spec.get("edits", [])
+            if not edits:
+                return None
+            return SelfEditProposal(
+                target_file=str(self.harness_path),
+                target_function="RUBRIC_GENERATION_PROMPT",
+                edits=edits,
+                rationale=spec.get("rationale", f"Feedback-based: {issue_type}"),
+                performance_data={"type": "feedback_pattern", "issue": issue_type,
+                                  "evidence": evidence, "examples": example_criteria},
+            )
+        except Exception as e:
+            self._log(f"Generation prompt edit proposal failed: {e}")
+            return None
 
     def _propose_edit_for_criterion(
         self,
