@@ -13,7 +13,7 @@ $ARGUMENTS
 2. Run the harness:
 ```bash
 cd rubric_system
-python rubric_harness.py "$ARGUMENTS" --max-iter 3 --json 2>&1
+python rubric_harness.py "$ARGUMENTS" --max-iter 5 --json 2>&1
 ```
 
 3. Parse the JSON output and report:
@@ -23,10 +23,10 @@ python rubric_harness.py "$ARGUMENTS" --max-iter 3 --json 2>&1
    - **Rubric used**: note whether it was generated (with research) or pre-built, and the domain
    - If it failed, note how close it got and the biggest point gaps
 
-4. If the run fails with an import error, try: `PYTHONPATH=. python rubric_harness.py "$ARGUMENTS" --max-iter 3 --json`
+4. If the run fails with an import error, try: `PYTHONPATH=. python rubric_harness.py "$ARGUMENTS" --max-iter 5 --json`
 
 ## Flags you can append to $ARGUMENTS
-- `--max-iter 5` for more iterations (default 3)
+- `--max-iter 5` for more iterations (default 5)
 - `--threshold 0.90` for a higher quality bar (default 0.85)
 - `--no-research` to skip web research (faster, less grounded)
 - `--rubric <name>` to use a pre-built rubric (run --list-rubrics to see options)
