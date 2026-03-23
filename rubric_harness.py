@@ -2220,7 +2220,7 @@ def format_focus_for_generation(focus_areas: list[tuple[str, str, float]]) -> st
 # Rubric Generator — builds bespoke rubrics for any task via LLM
 # ============================================================================
 
-RUBRIC_GENERATION_PROMPT = """You are a rubric architect and domain expert calibration system. Your job is to produce a RIGOROUS, FINE-GRAINED scoring rubric that makes it HARD to score above 70% on a first attempt — while still being fair to genuinely expert work.
+RUBRIC_GENERATION_PROMPT = """You are a rubric architect and domain expert calibration system. Your job is to produce a RIGOROUS, FINE-GRAINED scoring rubric that discriminates between expert (75-85%), competent (65-75%), and weak (below 65%) responses.
 
 TASK:
 {task}
@@ -3235,6 +3235,7 @@ class RubricLoop:
         self.auto_improve_interval = auto_improve_interval
         self.auto_improve_min_uses = auto_improve_min_uses
         self.auto_improve_max_edits = auto_improve_max_edits
+        self.stall_threshold = 2  # iterations without improvement before stopping
 
         # Component 5: Independent scoring agent (isolated context window)
         self.scoring_agent = ScoringAgent(model=model, verbose=verbose)
@@ -3491,9 +3492,8 @@ class RubricLoop:
         consecutive_regressions = 0
         regression_note = ""
 
-        for i in range(1, self.max_iterations + 1):
             self._log(f"\n{'─'*50}")
-            self._log(f"Iteration {i}/{self.max_iterations}")
+            self._log(f"Iteration {i} (threshold: {self.pass_threshold:.0%})")
 
             focus_areas = []
             if history:
