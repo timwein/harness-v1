@@ -3325,6 +3325,7 @@ class RubricLoop:
         current_iter: int = 1,
         max_iterations: int = 1,
         regression_note: str = "",
+        context: str = None,
     ) -> str:
         """Generate content optimized for rubric scores, with feedback injection.
 
@@ -3390,6 +3391,9 @@ class RubricLoop:
         if feedback_section:
             prompt += "\n" + feedback_section
 
+        if context:
+            prompt += "\n\nCONTEXT FROM PRIOR WORK:\n---\n" + context + "\n---\n"
+
         return self._call_claude(prompt, max_tokens=12000)
 
     def _handle_checkpoint(self, checkpoint) -> tuple[str, str]:
@@ -3411,6 +3415,7 @@ class RubricLoop:
         rubric: Rubric = None,
         rubric_name: str = None,
         generate_rubric: bool = True,
+        seed_content: str = None,
     ) -> LoopResult:
         """Run the generation-verification loop with granular scoring,
         feedback injection, verification tracking, and checkpoints.
@@ -3501,11 +3506,17 @@ class RubricLoop:
                 if focus_areas:
                     self._log(f"Focus: {focus_areas[0][0]}.{focus_areas[0][1]} ({focus_areas[0][2]:.0%})")
 
-            content = await self.generate_content(
-                rubric, history, focus_areas,
-                current_iter=i, max_iterations=self.max_iterations,
-                regression_note=regression_note,
-            )
+            if i == 1 and seed_content:
+                # Warm start: use seed as iteration 1 content, skip generation
+                content = seed_content
+                self._log(f"Warm start: scoring existing draft ({len(seed_content)} chars)...")
+            else:
+                content = await self.generate_content(
+                    rubric, history, focus_areas,
+                    current_iter=i, max_iterations=self.max_iterations,
+                    regression_note=regression_note,
+                    context=context if context else None,
+                )
 
             # Track verification iteration
             self.tracker.start_iteration(i, [f"{f[0]}.{f[1]}" for f in focus_areas])
@@ -3924,7 +3935,10 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Rubric Loop - Granular Scoring")
     parser.add_argument("task", nargs="?", help="Task description")
-    parser.add_argument("--context", "-c", help="Context file or text")
+    parser.add_argument("--context", "-c", nargs="+", metavar="FILE",
+                        help="One or more context files (chat summaries, notes, reference docs)")
+    parser.add_argument("--seed", "-s", metavar="FILE",
+                        help="Existing draft file to warm-start from (skips initial generation)")
     parser.add_argument("--rubric", "-r", help="Explicit rubric name (see --list-rubrics)")
     parser.add_argument("--no-generate", action="store_true",
                         help="Disable rubric generation; use registry matching instead")
@@ -3982,8 +3996,21 @@ async def main():
 
     context = ""
     if args.context:
-        p = Path(args.context)
-        context = p.read_text() if p.exists() else args.context
+        for ctx_path in args.context:
+            p = Path(ctx_path)
+            if p.exists():
+                context += f"\n--- {p.name} ---\n{p.read_text()}\n"
+            else:
+                print(f"Warning: context file not found: {ctx_path}")
+
+    seed_content = None
+    if args.seed:
+        p = Path(args.seed)
+        if p.exists():
+            seed_content = p.read_text()
+        else:
+            print(f"Error: seed file not found: {args.seed}")
+            sys.exit(1)
 
     loop = RubricLoop(
         max_iterations=args.max_iter,
@@ -3998,6 +4025,7 @@ async def main():
         args.task, context,
         rubric_name=args.rubric,
         generate_rubric=not args.no_generate,
+        seed_content=seed_content,
     )
 
     # Self-improvement cycle

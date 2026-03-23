@@ -32,9 +32,13 @@ python rubric_harness.py "$ARGUMENTS" --max-iter 5 --json 2>&1
 - `--rubric <name>` to use a pre-built rubric (run --list-rubrics to see options)
 - `--self-improve` to analyze criterion effectiveness after the run
 - `--explain` to just show rubric resolution without running the loop
+- `--seed ./draft.md` to warm-start from an existing draft (skips initial generation, scores the draft directly)
+- `--context ./notes.md ./summary.txt` for supplementary context files injected into rubric generation and edit prompts
 
 ## Examples
 - `/verify Write a cold outreach email to a Series B SaaS founder`
 - `/verify Write a bash script that backs up PostgreSQL to S3 --threshold 0.90`
 - `/verify --list-rubrics`
 - `/verify Design a REST API for user auth --no-research --max-iter 5`
+- `/verify "Write a forensic analysis memo" --seed ./memo_v1.md --context ./chat_summary.txt`
+- `/verify "Write a product spec" --context ./cowork_notes.md ./prior_decisions.md`
