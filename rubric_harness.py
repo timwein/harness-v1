@@ -3497,6 +3497,7 @@ class RubricLoop:
         consecutive_regressions = 0
         regression_note = ""
 
+        for i in range(1, self.max_iterations + 1):
             self._log(f"\n{'─'*50}")
             self._log(f"Iteration {i} (threshold: {self.pass_threshold:.0%})")
 
