@@ -3497,7 +3497,9 @@ class RubricLoop:
         consecutive_regressions = 0
         regression_note = ""
 
-        for i in range(1, self.max_iterations + 1):
+        i = 0
+        while self.max_iterations == 0 or i < self.max_iterations:
+            i += 1
             self._log(f"\n{'─'*50}")
             self._log(f"Iteration {i} (threshold: {self.pass_threshold:.0%})")
 
@@ -3643,7 +3645,8 @@ class RubricLoop:
 
         # Use best iteration, not last (scores can regress)
         best = max(history, key=lambda h: h.percentage)
-        self._log(f"\nMax iterations reached. Best: {best.percentage:.1%} (iteration {best.number})")
+        limit_msg = f"Max iterations ({self.max_iterations}) reached" if self.max_iterations > 0 else "Loop ended"
+        self._log(f"\n{limit_msg}. Best: {best.percentage:.1%} (iteration {best.number})")
         self.tracker.complete()
 
         improvements = []
@@ -3694,7 +3697,7 @@ class RubricLoop:
         result = LoopResult(
             success=False,
             output=best.attempt,
-            iterations=self.max_iterations,
+            iterations=len(history),
             final_score=best.total_score,
             final_percentage=best.percentage,
             rubric=rubric,
@@ -3945,7 +3948,7 @@ async def main():
                         help="Disable rubric generation; use registry matching instead")
     parser.add_argument("--list-rubrics", action="store_true", help="List all registered rubrics")
     parser.add_argument("--explain", action="store_true", help="Show rubric resolution explanation")
-    parser.add_argument("--max-iter", "-m", type=int, default=5)
+    parser.add_argument("--max-iter", "-m", type=int, default=0, help="Max iterations (0 = unlimited)")
     parser.add_argument("--threshold", "-t", type=float, default=0.85)
     parser.add_argument("--quiet", "-q", action="store_true")
     parser.add_argument("--json", "-j", action="store_true")
