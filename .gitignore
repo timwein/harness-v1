@@ -9,3 +9,7 @@ build/
 *.db
 .env
 .DS_Store
+.rubric_feedback/
+.claude/worktrees/
+harness-v1/
+rubric_system.zip
