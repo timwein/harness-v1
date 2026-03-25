@@ -3635,7 +3635,7 @@ class RubricLoop:
     def __init__(
         self,
         model: str = "claude-sonnet-4-20250514",
-        max_iterations: int = 5,
+        max_iterations: int = 0,  # 0 = unlimited (run until pass or convergence)
         pass_threshold: float = 0.85,
         verbose: bool = True,
         feedback_dir: str = ".rubric_feedback",
@@ -4252,6 +4252,11 @@ class RubricLoop:
                 )
                 self._post_run(result)
                 return result
+
+            # Convergence stop: if scores have plateaued, further iterations won't help
+            if eval_result.get("convergence") and i >= 3:
+                self._log(f"\nConverged at iteration {i} — scores plateaued. Stopping.")
+                break
 
             # Checkpoint check (after scoring, before next iteration)
             if self.enable_checkpoints:
