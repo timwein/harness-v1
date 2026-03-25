@@ -18,7 +18,7 @@ A generation-verification loop for AI quality assurance. Conceptually a GAN wher
 │                                                                              │
 │  Loop 1 (within-run)    Feedback store → injected into generation/scoring   │
 │  Loop 2 (checkpoint)    Checkpoint policy learns when to pause from history │
-│  Loop 3 (cross-run)     Criterion effectiveness tracking → RubricGenerator  │
+│  Loop 3 (cross-run)     Criterion effectiveness tracking → RubricAgent  │
 │                          ↑ LearningIntegrator feeds pass rates / bug rates  │
 │                          ↑ OutcomeTracker closes loop via git/CI signals     │
 │                                                                              │
@@ -29,13 +29,26 @@ A generation-verification loop for AI quality assurance. Conceptually a GAN wher
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Core loop**: Two separate LLM calls per iteration — one generates content, one scores it against the rubric. Structural separation between generator and discriminator.
+**4 independent agents**: Each with its own `Anthropic()` client, system prompt, and isolated context window — no cross-agent context leakage:
+
+| Agent | Role | Isolation Guarantee |
+|-------|------|-------------------|
+| **GenerationAgent** | Content creation | Never sees scoring calibration or rubric design rationale |
+| **RubricAgent** | Rubric design grounded in web research | Never sees generated content or scores |
+| **ScoringAgent** | Adversarial two-stage measurement | Never sees generation strategy or task context |
+| **EvaluationAgent** | Pass/fail decisions, regression detection, convergence | Only sees numeric score trajectories |
 
 **Scoring engine**: 6 methods (binary, percentage, weighted components, penalty-based, threshold tiers, count-based) with sub-attribute decomposition for fine-grained measurement.
+
+**Anti-leniency scoring**: Perfect score prohibition, calibration anchors, first-iteration ceiling — prevents the generator from gaming the scorer.
+
+**Rubric markdown export**: Every run saves the full rubric as a human-readable `.md` file to `rubrics/`, capturing all criteria, scoring methods, sub-attributes, penalties, and research basis.
 
 **Feedback loop**: Persistent memory that injects prior human feedback into both generation and scoring prompts, making the system learn your preferences over time.
 
 **Checkpoint policy**: Learns when to pause for human verification based on task complexity, score trajectory, and historical feedback patterns.
+
+**Convergence detection**: The loop runs until it passes or scores plateau — no arbitrary iteration cap. The EvaluationAgent detects convergence automatically.
 
 **Verification dashboard**: Interactive HTML dashboard showing every verification step, sub-score breakdowns, and improvement trajectories.
 
@@ -163,23 +176,26 @@ python rubric_harness.py --no-research "Quick internal task"
 
 ## Rubric Generation
 
-When no matching built-in rubric exists (or the task is novel), `RubricGenerator` creates a bespoke rubric via LLM.
+When no matching built-in rubric exists (or the task is novel), `RubricAgent` creates a bespoke rubric via LLM in an isolated context window.
 
 **Pipeline:**
 1. **Deep Research** — web search for domain best practices (see above)
 2. **Seed Examples** — pulls closest-matching rubrics from `RubricRegistry` as few-shot examples
 3. **Learning Context** — `LearningIntegrator` injects criterion effectiveness data from prior runs (pass rates, bug rates, false positive rates)
-4. **LLM Generation** — Claude generates rubric JSON with criteria, scoring methods, weights, and pass conditions
-5. **Hydration** — JSON is parsed and instantiated into canonical `Criterion` + `ScoringRubric` objects
+4. **LLM Generation** — `RubricAgent` (with its own system prompt and `Anthropic()` client) generates rubric JSON with criteria, scoring methods, weights, and pass conditions
+5. **Research Traceability Audit** — `ResearchTracer` verifies each criterion is grounded in the web research; ungrounded criteria are patched or removed
+6. **Hydration** — JSON is parsed and instantiated into canonical `Criterion` + `ScoringRubric` objects
+7. **Markdown Export** — full rubric saved as a human-readable `.md` file to `rubrics/`
 
-**Default path**: Every run uses `RubricGenerator` unless `--no-generate` is passed. You never need to specify a rubric manually — just give it a task.
+**Default path**: Every run uses `RubricAgent` unless `--no-generate` is passed. You never need to specify a rubric manually — just give it a task.
 
 ```python
-from rubric_harness import RubricGenerator
+from rubric_harness import RubricAgent
 
-gen = RubricGenerator(enable_research=True)
-rubric = gen.generate("Audit a Kubernetes RBAC configuration for least-privilege violations")
+agent = RubricAgent(enable_research=True)
+rubric = agent.generate("Audit a Kubernetes RBAC configuration for least-privilege violations")
 # Returns a fully hydrated Rubric with 5–10 measurable Criterion objects
+# Also saved as rubrics/rubric_<timestamp>_<hash>.md
 ```
 
 ## Task-Level Rubric Resolution
@@ -242,7 +258,7 @@ tracker.scan_ci_failures(ci_results_dir=".ci_results/")
 
 ### LearningIntegrator
 
-Bridges `RubricLearner` criterion effectiveness data into `RubricGenerator` at generation time. Ensures newly generated rubrics avoid repeating criteria that have historically underperformed.
+Bridges `RubricLearner` criterion effectiveness data into `RubricAgent` at generation time. Ensures newly generated rubrics avoid repeating criteria that have historically underperformed.
 
 **What it injects:**
 - Criteria with high false positive rates ("always passes even when quality is low")
@@ -255,7 +271,7 @@ from rubric_system.self_improve import LearningIntegrator
 
 integrator = LearningIntegrator(store, feedback_store)
 context = integrator.build_learning_context(task="Write a Python CSV parser")
-# context is injected into RubricGenerator.generate() automatically
+# context is injected into RubricAgent.generate() automatically
 ```
 
 ### SelfEditor
@@ -265,7 +281,7 @@ The core self-editing capability. Analyzes criterion effectiveness data, calls C
 **What it edits:**
 - Scoring rubric factories (the functions that build `ScoringRubric` objects)
 - Measurement prompts (the LLM instructions used to score each criterion)
-- Generation prompts (the system prompt for `RubricGenerator`)
+- Generation prompts (the system prompt for `RubricAgent`)
 
 **Safety:**
 - All proposals validated with `ast.parse()` before applying — syntax errors are rejected
@@ -290,7 +306,7 @@ python -m rubric_system.self_improve revert
 
 ```
 rubric_system/
-├── rubric_harness.py              # Core loop: RubricLoop, RubricGenerator, domain detection
+├── rubric_harness.py              # Core loop: RubricLoop, 4 agents (Generation, Rubric, Scoring, Evaluation)
 ├── rubric_claude_code.py          # Claude Code CLI wrapper + approval workflow
 ├── rubric-loop-skill.md           # Claude Code skill definition
 ├── rubric-loop-harness-spec.md    # Original system spec
@@ -313,6 +329,8 @@ rubric_system/
 │
 ├── tests/
 │   └── test_integration.py        # 47 integration tests
+│
+├── rubrics/                       # Generated rubric .md files (one per run)
 │
 └── .rubric_feedback/              # Created at runtime
     ├── rubric/                    # Rubric adjustment feedback
