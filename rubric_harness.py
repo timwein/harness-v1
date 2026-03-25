@@ -3646,6 +3646,248 @@ EVALUATION PRINCIPLES:
 
 
 # ============================================================================
+# Feedback Learning Loop — tracks fix effectiveness, accumulates learnings
+# ============================================================================
+
+class FeedbackLearningLoop:
+    """Tracks whether FeedbackAgent fixes actually improve scores, and distills
+    learnings into a persistent markdown file that future runs can reference.
+
+    Lifecycle:
+    1. After FeedbackAgent generates fixes, call `record_fixes()` to snapshot
+       what was prescribed and the current scores.
+    2. After the next scoring round, call `record_outcomes()` to compare
+       post-fix scores against the snapshot — marking each fix as EFFECTIVE,
+       INEFFECTIVE, or HARMFUL.
+    3. At end-of-run, call `reflect()` to analyze accumulated effectiveness
+       data and distill new learnings into the markdown file.
+    4. On next run, `load_learnings()` returns the accumulated wisdom for
+       injection into the FeedbackAgent's system prompt.
+    """
+
+    LEARNINGS_DIR = "feedback_learnings"
+    LEARNINGS_FILE = "learnings.md"
+    HISTORY_FILE = "fix_history.json"
+
+    def __init__(self, verbose: bool = True):
+        self.verbose = verbose
+        self.dir = Path(self.LEARNINGS_DIR)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        # Pending fixes from the current iteration, awaiting outcome measurement
+        self._pending_fixes: list[dict] = []
+        self._pending_scores: dict[str, float] = {}
+        self._pending_iteration: int = 0
+        # Accumulated fix outcomes across all iterations in this run
+        self._run_outcomes: list[dict] = []
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(f"[FeedbackLearning] {msg}")
+
+    # ----- Phase 1: Record what was prescribed -----
+
+    def record_fixes(
+        self,
+        feedback: dict,
+        criterion_scores: list,
+        iteration: int,
+    ):
+        """Snapshot the fixes prescribed and current scores before the generator acts.
+
+        Call this right after FeedbackAgent.generate_feedback() returns.
+        """
+        self._pending_fixes = feedback.get("fix", [])
+        self._pending_scores = {
+            cs.criterion_id: cs.percentage for cs in criterion_scores
+        }
+        self._pending_iteration = iteration
+
+    # ----- Phase 2: Measure outcomes after generator acted -----
+
+    def record_outcomes(self, new_criterion_scores: list):
+        """Compare post-generation scores against the pre-fix snapshot.
+
+        Call this after the next scoring round completes.
+        Each fix is classified as EFFECTIVE (score improved 5%+),
+        INEFFECTIVE (no significant change), or HARMFUL (score dropped 5%+).
+        """
+        if not self._pending_fixes:
+            return
+
+        new_scores = {cs.criterion_id: cs.percentage for cs in new_criterion_scores}
+
+        for fix in self._pending_fixes:
+            crit_id = fix.get("criterion_id", "")
+            old_score = self._pending_scores.get(crit_id, 0)
+            new_score = new_scores.get(crit_id, 0)
+            delta = new_score - old_score
+
+            if delta >= 0.05:
+                effect = "EFFECTIVE"
+            elif delta <= -0.05:
+                effect = "HARMFUL"
+            else:
+                effect = "INEFFECTIVE"
+
+            outcome = {
+                "iteration": self._pending_iteration,
+                "criterion_id": crit_id,
+                "sub_id": fix.get("sub_id", ""),
+                "instruction": fix.get("instruction", ""),
+                "what_failed": fix.get("what_failed", ""),
+                "old_score": round(old_score, 3),
+                "new_score": round(new_score, 3),
+                "delta": round(delta, 3),
+                "effect": effect,
+            }
+            self._run_outcomes.append(outcome)
+
+        effective = sum(1 for o in self._run_outcomes if o["effect"] == "EFFECTIVE")
+        harmful = sum(1 for o in self._run_outcomes if o["effect"] == "HARMFUL")
+        ineffective = sum(1 for o in self._run_outcomes if o["effect"] == "INEFFECTIVE")
+        self._log(
+            f"Fix outcomes (iter {self._pending_iteration}→{self._pending_iteration+1}): "
+            f"{effective} effective, {ineffective} ineffective, {harmful} harmful"
+        )
+
+        # Clear pending state
+        self._pending_fixes = []
+        self._pending_scores = {}
+
+    # ----- Phase 3: End-of-run reflection -----
+
+    def reflect(self, task: str, model: str = "claude-sonnet-4-20250514"):
+        """Analyze accumulated fix outcomes and distill new learnings.
+
+        Uses Claude to identify patterns in what worked vs what didn't,
+        then appends new insights to the learnings markdown file.
+        """
+        if not self._run_outcomes:
+            self._log("No fix outcomes to reflect on — skipping")
+            return
+
+        # Save raw history for auditability
+        self._append_history(task)
+
+        # Load existing learnings for context
+        existing = self.load_learnings()
+
+        # Build the reflection prompt
+        outcomes_text = self._format_outcomes_for_reflection()
+
+        prompt = f"""You are analyzing the effectiveness of feedback instructions that were given to a content generator during an iterative improvement loop.
+
+TASK CONTEXT: {task}
+
+FIX OUTCOMES FROM THIS RUN:
+{outcomes_text}
+
+EXISTING LEARNINGS (accumulated from prior runs):
+{existing if existing else "(none yet)"}
+
+Analyze the outcomes and produce NEW learnings. Focus on:
+
+1. PATTERNS IN EFFECTIVE FIXES: What made certain instructions work? Were they more specific? Did they include examples? Did they target structural vs content issues?
+
+2. PATTERNS IN HARMFUL FIXES: What caused regressions? Did fixing one criterion break another? Were instructions too broad, causing rewrites of passing content?
+
+3. PATTERNS IN INEFFECTIVE FIXES: Why didn't some instructions move the needle? Were they too vague? Did they target symptoms rather than root causes?
+
+4. FEEDBACK STYLE RULES: Derive concrete rules for how to write better feedback instructions. Be specific — not "be more specific" but "always include the exact section header where the change should be made."
+
+5. ANTI-PATTERNS TO AVOID: List specific instruction patterns that consistently fail or cause harm.
+
+Return a markdown document with these sections:
+## Effective Patterns
+## Anti-Patterns (Harmful/Ineffective)
+## Feedback Style Rules
+## Domain-Specific Notes
+
+Each item should be a concrete, actionable rule — not a vague observation. Include evidence from the outcomes data.
+Keep it concise — each rule should be 1-2 sentences max. Remove any existing learnings that are contradicted by new evidence."""
+
+        try:
+            if Anthropic is None:
+                self._log("anthropic package not available — skipping reflection")
+                return
+            client = Anthropic()
+            response = client.messages.create(
+                model=model,
+                max_tokens=4000,
+                temperature=0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            new_learnings = response.content[0].text
+
+            # Write the learnings file (replace, not append — the LLM merges old+new)
+            learnings_path = self.dir / self.LEARNINGS_FILE
+            from datetime import datetime
+            header = f"# FeedbackAgent Learnings\n\n_Last updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}_\n_Runs analyzed: {self._count_runs()}_\n\n"
+            learnings_path.write_text(header + new_learnings)
+            self._log(f"Updated learnings → {learnings_path}")
+
+        except Exception as e:
+            self._log(f"Reflection failed (non-fatal): {e}")
+
+        # Clear run state
+        self._run_outcomes = []
+
+    # ----- Loading learnings for injection -----
+
+    def load_learnings(self) -> str:
+        """Load the accumulated learnings markdown for injection into FeedbackAgent."""
+        learnings_path = self.dir / self.LEARNINGS_FILE
+        if learnings_path.exists():
+            return learnings_path.read_text()
+        return ""
+
+    # ----- Persistence helpers -----
+
+    def _append_history(self, task: str):
+        """Append this run's fix outcomes to the persistent JSON history."""
+        history_path = self.dir / self.HISTORY_FILE
+        history = []
+        if history_path.exists():
+            try:
+                history = json.loads(history_path.read_text())
+            except (json.JSONDecodeError, IOError):
+                pass
+
+        from datetime import datetime
+        history.append({
+            "task": task[:200],
+            "timestamp": datetime.utcnow().isoformat(),
+            "outcomes": self._run_outcomes,
+        })
+
+        # Keep last 50 runs to bound file size
+        history = history[-50:]
+        history_path.write_text(json.dumps(history, indent=2))
+
+    def _count_runs(self) -> int:
+        """Count total runs in the history file."""
+        history_path = self.dir / self.HISTORY_FILE
+        if history_path.exists():
+            try:
+                return len(json.loads(history_path.read_text()))
+            except (json.JSONDecodeError, IOError):
+                pass
+        return 1
+
+    def _format_outcomes_for_reflection(self) -> str:
+        """Format run outcomes into readable text for the reflection prompt."""
+        lines = []
+        for o in self._run_outcomes:
+            lines.append(
+                f"[{o['effect']}] {o['criterion_id']}.{o['sub_id']}: "
+                f"{o['old_score']:.0%} → {o['new_score']:.0%} (Δ{o['delta']:+.0%})\n"
+                f"  Instruction: {o['instruction'][:200]}\n"
+                f"  Failed check: {o['what_failed'][:150]}"
+            )
+        return "\n\n".join(lines)
+
+
+# ============================================================================
 # Independent Feedback Agent — translates scores into actionable diagnostics
 # ============================================================================
 
@@ -3709,16 +3951,39 @@ Return a JSON object with this structure:
   "summary": "2-3 sentence overall diagnosis"
 }"""
 
-    def __init__(self, model: str = "claude-sonnet-4-20250514", verbose: bool = True):
+    def __init__(
+        self,
+        model: str = "claude-sonnet-4-20250514",
+        verbose: bool = True,
+        learning_loop=None,
+    ):
         if Anthropic is None:
             raise ImportError("anthropic package required: pip install anthropic")
         self.client = Anthropic()  # Fresh client, isolated from all other agents
         self.model = model
         self.verbose = verbose
+        self.learning_loop = learning_loop or FeedbackLearningLoop(verbose=verbose)
 
     def _log(self, msg: str):
         if self.verbose:
             print(f"[Feedback] {msg}")
+
+    def _build_system_prompt(self) -> str:
+        """Build system prompt with accumulated learnings injected."""
+        base = self.FEEDBACK_AGENT_SYSTEM_PROMPT
+        learnings = self.learning_loop.load_learnings()
+        if learnings:
+            return (
+                base
+                + "\n\n"
+                + "=" * 60
+                + "\nLEARNED PATTERNS FROM PRIOR RUNS:\n"
+                + "Apply these rules when generating feedback. They are derived from "
+                + "measured outcomes of past feedback instructions.\n\n"
+                + learnings
+                + "\n" + "=" * 60
+            )
+        return base
 
     def generate_feedback(
         self,
@@ -3785,7 +4050,7 @@ Generate structured feedback following your system prompt format. Focus on the F
             model=self.model,
             max_tokens=8000,
             temperature=0,
-            system=self.FEEDBACK_AGENT_SYSTEM_PROMPT,
+            system=self._build_system_prompt(),
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -4173,7 +4438,7 @@ class RubricLoop:
         path.write_text(json.dumps(artifact, indent=2))
         return path
 
-    def _load_best_artifact(self, run_id: str) -> dict | None:
+    def _load_best_artifact(self, run_id: str):
         """Load the best-scoring iteration artifact from disk.
 
         Used to resume a crashed run or to provide the next iteration with
@@ -4449,6 +4714,10 @@ class RubricLoop:
             self.tracker.add_steps_from_criterion_scores(criterion_scores)
             self.tracker.complete_iteration(total, max_total)
 
+            # Feedback learning: measure outcomes of prior iteration's fixes
+            if i > 1:
+                self.feedback_agent.learning_loop.record_outcomes(criterion_scores)
+
             self._log(f"\nScore: {total:.1f}/{max_total} ({percentage:.1%})")
             for cs in criterion_scores:
                 emoji = "PASS" if cs.percentage >= 0.8 else "WARN" if cs.percentage >= 0.5 else "FAIL"
@@ -4551,6 +4820,12 @@ class RubricLoop:
                 last_feedback_text = self.feedback_agent.format_for_generator(structured_feedback)
                 self._log(f"  [Feedback] {len(structured_feedback.get('fix', []))} fixes, "
                           f"{len(structured_feedback.get('preserve', []))} preserved")
+                # Feedback learning: snapshot what we prescribed + current scores
+                self.feedback_agent.learning_loop.record_fixes(
+                    feedback=structured_feedback,
+                    criterion_scores=criterion_scores,
+                    iteration=i,
+                )
             except Exception as e:
                 self._log(f"  [Feedback] Generation failed (non-fatal): {e}")
                 last_feedback_text = ""
@@ -4672,6 +4947,15 @@ class RubricLoop:
 
         # Analyze rubric generation quality and store improvement signals
         self._post_run_improve_generation(result)
+
+        # Feedback learning loop: reflect on fix effectiveness and update learnings
+        try:
+            self.feedback_agent.learning_loop.reflect(
+                task=result.rubric.task,
+                model=self.model,
+            )
+        except Exception as e:
+            self._log(f"[FeedbackLearning] Reflection failed (non-fatal): {e}")
 
         # Auto self-improvement: propose and apply code edits when enough data
         if self._should_auto_improve():

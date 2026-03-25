@@ -21,6 +21,8 @@ A generation-verification loop for AI quality assurance. Conceptually a GAN wher
 │  Loop 3 (cross-run)     Criterion effectiveness tracking → RubricAgent  │
 │                          ↑ LearningIntegrator feeds pass rates / bug rates  │
 │                          ↑ OutcomeTracker closes loop via git/CI signals     │
+│  Loop 4 (feedback)      FeedbackAgent tracks fix effectiveness →           │
+│                          distills learnings → injects into own prompt       │
 │                                                                              │
 │  ──────────────────── Self-Improvement Engine ─────────────────────────── │
 │                                                                              │
@@ -36,7 +38,7 @@ A generation-verification loop for AI quality assurance. Conceptually a GAN wher
 | **GenerationAgent** | Content creation | Never sees scoring calibration or rubric design rationale |
 | **RubricAgent** | Rubric design grounded in web research | Never sees generated content or scores |
 | **ScoringAgent** | Adversarial two-stage measurement | Never sees generation strategy or task context |
-| **FeedbackAgent** | Translates scores into actionable editing instructions | Never sees generation prompts or scoring calibration |
+| **FeedbackAgent** | Translates scores into actionable editing instructions + learns from fix outcomes | Never sees generation prompts or scoring calibration |
 | **EvaluationAgent** | Pass/fail decisions, regression detection, convergence | Only sees numeric score trajectories |
 
 **Scoring engine**: 6 methods (binary, percentage, weighted components, penalty-based, threshold tiers, count-based) with sub-attribute decomposition for fine-grained measurement.
@@ -333,6 +335,10 @@ rubric_system/
 │
 ├── rubrics/                       # Generated rubric .md files (one per run)
 │
+├── feedback_learnings/            # Created at runtime (FeedbackAgent learning loop)
+│   ├── learnings.md               # Accumulated feedback effectiveness learnings
+│   └── fix_history.json           # Raw fix outcome data (last 50 runs)
+│
 └── .rubric_feedback/              # Created at runtime
     ├── rubric/                    # Rubric adjustment feedback
     ├── scoring/                   # Scoring calibration feedback
@@ -396,6 +402,35 @@ loop.add_feedback("general", "I prefer concise outputs under 500 words")
 ```
 
 Feedback is stored in `.rubric_feedback/` and automatically injected into relevant future prompts. The system tracks which feedback entries actually improved scores and weights them accordingly.
+
+## Feedback Learning Loop
+
+The FeedbackAgent has its own learning loop that tracks whether its fix instructions actually improve scores, and uses that data to get better over time.
+
+**How it works:**
+
+1. **Record** — After the FeedbackAgent prescribes fixes, the learning loop snapshots each fix instruction and the current criterion scores as a baseline.
+
+2. **Measure** — After the next scoring round, it compares new scores against the baseline and classifies each fix as:
+   - **EFFECTIVE** — criterion score improved 5%+
+   - **INEFFECTIVE** — no significant change
+   - **HARMFUL** — criterion score dropped 5%+ (fix caused a regression)
+
+3. **Reflect** — At end-of-run, Claude analyzes all fix outcomes and distills patterns into `feedback_learnings/learnings.md` — identifying effective instruction styles, anti-patterns that cause regressions, and domain-specific rules.
+
+4. **Inject** — On future runs, the learnings are loaded into the FeedbackAgent's system prompt so it avoids repeating mistakes and amplifies what works.
+
+**Persistence:**
+```
+feedback_learnings/
+├── learnings.md        # Human-readable learnings (updated each run)
+└── fix_history.json    # Raw fix outcome data (last 50 runs)
+```
+
+**Example learnings the system discovers:**
+- "Instructions that reference specific section headers are 3x more likely to be effective"
+- "Telling the generator to 'add a section on X' without specifying where causes regressions in adjacent criteria"
+- "Quantitative instructions (add exact numbers, percentages) outperform qualitative ones"
 
 ## Tests
 
