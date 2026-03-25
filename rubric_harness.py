@@ -3717,6 +3717,109 @@ class RubricLoop:
         if self.verbose:
             print(msg)
 
+    def _save_rubric_markdown(self, rubric: Rubric, task: str) -> Path:
+        """Serialize the rubric to a markdown document in rubrics/.
+
+        Creates a human-readable .md file capturing the full rubric structure:
+        task, domain, criteria, scoring methods, sub-attributes, penalties,
+        thresholds, and research basis.
+        """
+        import hashlib
+        from datetime import datetime
+
+        rubrics_dir = Path("rubrics")
+        rubrics_dir.mkdir(exist_ok=True)
+
+        task_hash = hashlib.sha256(task.encode()).hexdigest()[:8]
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H%M%S")
+        filename = f"rubric_{timestamp}_{task_hash}.md"
+        path = rubrics_dir / filename
+
+        lines = []
+        lines.append(f"# Rubric: {rubric.domain}")
+        lines.append("")
+        lines.append(f"**Task:** {task}")
+        lines.append("")
+        lines.append(f"**Domain:** {rubric.domain}")
+        lines.append(f"**Total Points:** {rubric.total_points}")
+        lines.append(f"**Pass Threshold:** {rubric.pass_threshold:.0%}")
+        lines.append(f"**Criteria Count:** {len(rubric.criteria)}")
+        lines.append(f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+        for i, c in enumerate(rubric.criteria, 1):
+            lines.append(f"## {i}. {c.id}")
+            lines.append("")
+            lines.append(f"**Category:** {c.category}")
+            lines.append(f"**Description:** {c.description}")
+            lines.append("")
+
+            if c.pass_condition:
+                lines.append(f"**Pass Condition:** {c.pass_condition}")
+                lines.append("")
+
+            # Scoring details
+            lines.append(f"**Scoring Method:** `{c.scoring.method.value}`")
+            lines.append(f"**Max Points:** {c.scoring.max_points}")
+            lines.append("")
+
+            # Sub-attributes
+            if c.scoring.sub_attributes:
+                lines.append("### Sub-Attributes")
+                lines.append("")
+                lines.append("| Sub-ID | Weight | Description | Measurement |")
+                lines.append("|--------|--------|-------------|-------------|")
+                for sub in c.scoring.sub_attributes:
+                    desc = sub.description.replace("|", "\\|")[:80]
+                    meas = sub.measurement.replace("|", "\\|").replace("\n", " ")[:100]
+                    lines.append(f"| `{sub.sub_id}` | {sub.weight:.0%} | {desc} | {meas} |")
+                lines.append("")
+
+            # Penalties
+            if c.scoring.penalties:
+                lines.append("### Penalties")
+                lines.append("")
+                for violation, deduction in c.scoring.penalties.items():
+                    lines.append(f"- **{violation}:** {deduction} pts")
+                lines.append("")
+
+            # Tiers
+            if c.scoring.tiers:
+                lines.append("### Threshold Tiers")
+                lines.append("")
+                for tier_name, tier_val in c.scoring.tiers.items():
+                    lines.append(f"- **{tier_name}:** {tier_val}")
+                lines.append("")
+
+            # Examples
+            if c.pass_examples:
+                lines.append("### Pass Examples")
+                lines.append("")
+                for ex in c.pass_examples:
+                    lines.append(f"- {ex}")
+                lines.append("")
+
+            if c.fail_examples:
+                lines.append("### Fail Examples")
+                lines.append("")
+                for ex in c.fail_examples:
+                    lines.append(f"- {ex}")
+                lines.append("")
+
+            # Research basis
+            if c.research_basis:
+                lines.append(f"**Research Basis:** {c.research_basis}")
+                lines.append("")
+
+            lines.append("---")
+            lines.append("")
+
+        path.write_text("\n".join(lines))
+        self._log(f"Rubric saved: {path}")
+        return path
+
     def _call_claude(self, prompt: str, max_tokens: int = 8000) -> str:
         response = self.client.messages.create(
             model=self.model,
@@ -4005,6 +4108,9 @@ class RubricLoop:
         rubric = self._negotiate_rubric(rubric, task)
 
         domain = rubric.domain
+
+        # Save rubric as markdown document
+        self._save_rubric_markdown(rubric, task)
 
         # Initialize verification tracker
         self.tracker.set_task(task, domain)
