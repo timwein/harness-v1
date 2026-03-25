@@ -29,13 +29,14 @@ A generation-verification loop for AI quality assurance. Conceptually a GAN wher
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**4 independent agents**: Each with its own `Anthropic()` client, system prompt, and isolated context window — no cross-agent context leakage:
+**5 independent agents**: Each with its own `Anthropic()` client, system prompt, and isolated context window — no cross-agent context leakage:
 
 | Agent | Role | Isolation Guarantee |
 |-------|------|-------------------|
 | **GenerationAgent** | Content creation | Never sees scoring calibration or rubric design rationale |
 | **RubricAgent** | Rubric design grounded in web research | Never sees generated content or scores |
 | **ScoringAgent** | Adversarial two-stage measurement | Never sees generation strategy or task context |
+| **FeedbackAgent** | Translates scores into actionable editing instructions | Never sees generation prompts or scoring calibration |
 | **EvaluationAgent** | Pass/fail decisions, regression detection, convergence | Only sees numeric score trajectories |
 
 **Scoring engine**: 6 methods (binary, percentage, weighted components, penalty-based, threshold tiers, count-based) with sub-attribute decomposition for fine-grained measurement.
@@ -306,7 +307,7 @@ python -m rubric_system.self_improve revert
 
 ```
 rubric_system/
-├── rubric_harness.py              # Core loop: RubricLoop, 4 agents (Generation, Rubric, Scoring, Evaluation)
+├── rubric_harness.py              # Core loop: RubricLoop, 5 agents (Generation, Rubric, Scoring, Feedback, Evaluation)
 ├── rubric_claude_code.py          # Claude Code CLI wrapper + approval workflow
 ├── rubric-loop-skill.md           # Claude Code skill definition
 ├── rubric-loop-harness-spec.md    # Original system spec
