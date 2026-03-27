@@ -25,6 +25,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 from rubric_system.models import (
     ScoringMethod,
@@ -2098,6 +2099,11 @@ high-quality content that satisfies specific rubric criteria. You receive:
 - Rubric criteria with pass/fail examples
 - (On iterations 2+) The current best attempt and its score breakdown
 
+The harness uses observation masking: bulk content from older iterations is
+offloaded to disk and resolved for you before being placed in this prompt.
+You always receive the actual content of the best prior attempt — never a
+file pointer. Focus entirely on improving the content to score higher.
+
 Output the complete content only — no meta-commentary, no scoring rationale.
 Produce content that earns high scores on every rubric criterion."""
 
@@ -4148,32 +4154,72 @@ class RubricLoop:
         task_hash = hashlib.sha256(task.encode()).hexdigest()[:8]
         return f"{task_hash}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
-    def _write_iteration_artifact(self, run_id: str, iteration: Iteration) -> Path:
-        """Serialize an iteration result to a structured JSON artifact.
+    def _write_iteration_artifact(
+        self,
+        run_id: str,
+        iteration: Iteration,
+        prior_percentage: Optional[float] = None,
+    ) -> Path:
+        """Serialize an iteration result to disk.
 
-        Writes to {iterations_dir}/{run_id}/iter_NNN.json.
-        Each artifact contains only what the next iteration needs:
-        content, scores, and focus areas — not the full conversation history.
-        This enables crash resumability and clean context handoffs.
+        Writes three files per iteration:
+        - iter_NNN_content.md  — full generated content (for masking + resume)
+        - iter_NNN_meta.json   — scores, delta, focus areas (crash resumability)
+        - iter_NNN.json        — combined artifact (backward compatibility)
+
+        Returns the content path (iter_NNN_content.md).
         """
         from dataclasses import asdict
         run_dir = Path(self.iterations_dir) / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
-        artifact = {
+
+        n = iteration.number
+        content_path = run_dir / f"iter_{n:03d}_content.md"
+        content_path.write_text(iteration.attempt)
+
+        delta = (
+            round(iteration.percentage - prior_percentage, 4)
+            if prior_percentage is not None
+            else None
+        )
+        meta = {
             "run_id": run_id,
-            "iteration": iteration.number,
+            "iteration": n,
+            "total_score": iteration.total_score,
+            "max_score": iteration.max_score,
+            "percentage": iteration.percentage,
+            "delta_from_prior": delta,
+            "focus_areas": iteration.focus_areas,
+            "content_path": str(content_path),
+            "criterion_scores": [
+                {
+                    "criterion_id": cs.criterion_id,
+                    "points_earned": cs.points_earned,
+                    "max_points": cs.max_points,
+                    "percentage": cs.percentage,
+                }
+                for cs in iteration.criterion_scores
+            ],
+        }
+        meta_path = run_dir / f"iter_{n:03d}_meta.json"
+        meta_path.write_text(json.dumps(meta, indent=2))
+
+        # Combined artifact for backward compatibility
+        combined_path = run_dir / f"iter_{n:03d}.json"
+        combined_path.write_text(json.dumps({
+            "run_id": run_id,
+            "iteration": n,
             "content": iteration.attempt,
             "total_score": iteration.total_score,
             "max_score": iteration.max_score,
             "percentage": iteration.percentage,
             "criterion_scores": [asdict(cs) for cs in iteration.criterion_scores],
             "focus_areas": iteration.focus_areas,
-        }
-        path = run_dir / f"iter_{iteration.number:03d}.json"
-        path.write_text(json.dumps(artifact, indent=2))
-        return path
+        }, indent=2))
 
-    def _load_best_artifact(self, run_id: str) -> dict | None:
+        return content_path
+
+    def _load_best_artifact(self, run_id: str) -> Optional[dict]:
         """Load the best-scoring iteration artifact from disk.
 
         Used to resume a crashed run or to provide the next iteration with
@@ -4182,7 +4228,7 @@ class RubricLoop:
         run_dir = Path(self.iterations_dir) / run_id
         if not run_dir.exists():
             return None
-        best: dict | None = None
+        best: Optional[dict] = None
         for p in sorted(run_dir.glob("iter_*.json")):
             try:
                 data = json.loads(p.read_text())
@@ -4191,6 +4237,187 @@ class RubricLoop:
             except Exception:
                 pass
         return best
+
+    # -------------------------------------------------------------------------
+    # Observation masking helpers
+    # -------------------------------------------------------------------------
+
+    _MASK_PREFIX = "[CONTENT OFFLOADED"
+
+    def _make_mask(self, iteration: Iteration, content_path: Path) -> str:
+        """Return a 3-line summary+pointer that replaces the full content in memory."""
+        char_count = len(iteration.attempt)
+        return (
+            f"[CONTENT OFFLOADED — Iteration {iteration.number}: "
+            f"{iteration.percentage:.0%} score, {char_count:,} chars]\n"
+            f"Full content saved to: {content_path}\n"
+            f"Score: {iteration.total_score:.1f}/{iteration.max_score} pts"
+        )
+
+    def _is_masked(self, attempt: str) -> bool:
+        return attempt.startswith(self._MASK_PREFIX)
+
+    def _resolve_attempt(self, attempt: str) -> str:
+        """Return full content — reads from disk if the attempt was offloaded."""
+        if not self._is_masked(attempt):
+            return attempt
+        m = re.search(r"Full content saved to: (.+)", attempt)
+        if m:
+            path = Path(m.group(1).strip())
+            if path.exists():
+                return path.read_text()
+        return attempt  # fallback: return the mask (generator sees the pointer)
+
+    # -------------------------------------------------------------------------
+    # Resume helpers: rubric serialization + history reconstruction
+    # -------------------------------------------------------------------------
+
+    def _save_rubric_artifact(self, run_id: str, rubric: Rubric) -> Path:
+        """Persist the rubric to disk so a crashed run can be resumed."""
+        run_dir = Path(self.iterations_dir) / run_id
+        run_dir.mkdir(parents=True, exist_ok=True)
+
+        def _criterion_to_dict(c: Criterion) -> dict:
+            return {
+                "id": c.id,
+                "category": c.category,
+                "description": c.description,
+                "pass_condition": c.pass_condition,
+                "scoring": {
+                    "method": c.scoring.method.value,
+                    "max_points": c.scoring.max_points,
+                    "sub_attributes": [
+                        {
+                            "sub_id": sa.sub_id,
+                            "description": sa.description,
+                            "weight": sa.weight,
+                            "measurement": sa.measurement,
+                            "thresholds": sa.thresholds,
+                        }
+                        for sa in c.scoring.sub_attributes
+                    ],
+                    "penalties": c.scoring.penalties,
+                    "tiers": c.scoring.tiers,
+                    "points_per_instance": c.scoring.points_per_instance,
+                    "max_instances": c.scoring.max_instances,
+                },
+                "source": c.source,
+                "pass_examples": c.pass_examples,
+                "fail_examples": c.fail_examples,
+                "domain": c.domain,
+                "research_basis": c.research_basis,
+            }
+
+        data = {
+            "task": rubric.task,
+            "domain": rubric.domain,
+            "total_points": rubric.total_points,
+            "pass_threshold": rubric.pass_threshold,
+            "criteria": [_criterion_to_dict(c) for c in rubric.criteria],
+        }
+        path = run_dir / "rubric.json"
+        path.write_text(json.dumps(data, indent=2))
+        return path
+
+    def _load_rubric_from_artifact(self, run_id: str) -> Optional[Rubric]:
+        """Reconstruct a Rubric from a previously saved rubric.json."""
+        path = Path(self.iterations_dir) / run_id / "rubric.json"
+        if not path.exists():
+            return None
+        try:
+            data = json.loads(path.read_text())
+            criteria = []
+            for cd in data["criteria"]:
+                sd = cd["scoring"]
+                scoring = ScoringRubric(
+                    method=ScoringMethod(sd["method"]),
+                    max_points=sd["max_points"],
+                    sub_attributes=[
+                        SubAttribute(
+                            sub_id=sa["sub_id"],
+                            description=sa["description"],
+                            weight=sa["weight"],
+                            measurement=sa["measurement"],
+                            thresholds=sa.get("thresholds", {}),
+                        )
+                        for sa in sd.get("sub_attributes", [])
+                    ],
+                    penalties=sd.get("penalties", {}),
+                    tiers=sd.get("tiers", {}),
+                    points_per_instance=sd.get("points_per_instance", 1.0),
+                    max_instances=sd.get("max_instances", 10),
+                )
+                criteria.append(Criterion(
+                    id=cd["id"],
+                    category=cd["category"],
+                    description=cd["description"],
+                    pass_condition=cd["pass_condition"],
+                    scoring=scoring,
+                    source=cd.get("source", "loaded"),
+                    pass_examples=cd.get("pass_examples", []),
+                    fail_examples=cd.get("fail_examples", []),
+                    domain=cd.get("domain", ""),
+                    research_basis=cd.get("research_basis", ""),
+                ))
+            return Rubric(
+                task=data["task"],
+                domain=data["domain"],
+                criteria=criteria,
+                total_points=data["total_points"],
+                pass_threshold=data["pass_threshold"],
+            )
+        except Exception as e:
+            self._log(f"[Resume] Failed to load rubric from {path}: {e}")
+            return None
+
+    def _load_history_for_resume(self, run_id: str) -> List[Iteration]:
+        """Reconstruct history from per-iteration meta.json files.
+
+        All iterations are loaded with their content masked (pointer to disk)
+        so they don't bloat context. The caller can selectively resolve the
+        most recent ones when needed.
+        """
+        run_dir = Path(self.iterations_dir) / run_id
+        if not run_dir.exists():
+            return []
+        iterations = []
+        for meta_path in sorted(run_dir.glob("iter_*_meta.json")):
+            try:
+                meta = json.loads(meta_path.read_text())
+                n = meta["iteration"]
+                content_path = run_dir / f"iter_{n:03d}_content.md"
+                # Start with all iterations masked; run() will unmask the last 2
+                if content_path.exists():
+                    attempt = (
+                        f"[CONTENT OFFLOADED — Iteration {n}: "
+                        f"{meta['percentage']:.0%} score, "
+                        f"{content_path.stat().st_size:,} chars]\n"
+                        f"Full content saved to: {content_path}\n"
+                        f"Score: {meta['total_score']:.1f}/{meta['max_score']} pts"
+                    )
+                else:
+                    attempt = f"[Content not found: {content_path}]"
+                criterion_scores = [
+                    CriterionScore(
+                        criterion_id=cs["criterion_id"],
+                        points_earned=cs["points_earned"],
+                        max_points=cs["max_points"],
+                        percentage=cs["percentage"],
+                    )
+                    for cs in meta.get("criterion_scores", [])
+                ]
+                iterations.append(Iteration(
+                    number=n,
+                    attempt=attempt,
+                    total_score=meta["total_score"],
+                    max_score=meta["max_score"],
+                    percentage=meta["percentage"],
+                    criterion_scores=criterion_scores,
+                    focus_areas=meta.get("focus_areas", []),
+                ))
+            except Exception as e:
+                self._log(f"[Resume] Skipping {meta_path.name}: {e}")
+        return iterations
 
     async def generate_content(
         self,
@@ -4222,6 +4449,8 @@ class RubricLoop:
         if history:
             # Edit mode: improve the best prior attempt
             best = max(history, key=lambda h: h.percentage)
+            # Resolve content from disk if it was offloaded to save context
+            best_content = self._resolve_attempt(best.attempt)
             score_breakdown = self._format_score_breakdown(best.criterion_scores)
 
             # Iteration-aware strategy guidance (improvement #5: --lean disables this)
@@ -4251,7 +4480,7 @@ class RubricLoop:
                 task=rubric.task,
                 rubric_summary=rubric_summary,
                 best_score=f"{best.percentage:.0%}",
-                best_content=best.attempt,
+                best_content=best_content,
                 score_breakdown=score_breakdown,
                 focus_section=focus_section,
                 iteration_guidance=iteration_guidance,
@@ -4301,19 +4530,21 @@ class RubricLoop:
         self,
         task: str,
         context: str = "",
-        rubric: Rubric = None,
-        rubric_name: str = None,
+        rubric: Optional[Rubric] = None,
+        rubric_name: Optional[str] = None,
         generate_rubric: bool = True,
-        seed_content: str = None,
+        seed_content: Optional[str] = None,
+        resume_run_id: Optional[str] = None,
     ) -> LoopResult:
         """Run the generation-verification loop with granular scoring,
         feedback injection, verification tracking, and checkpoints.
 
         Rubric resolution order:
         1. Explicit rubric object (rubric=...)
-        2. Explicit registry name (rubric_name=...)
-        3. Generate bespoke rubric via LLM (default when generate_rubric=True)
-        4. Fall back to registry matching (when generate_rubric=False)
+        2. Resume from prior run (resume_run_id=...) — loads rubric + history from disk
+        3. Explicit registry name (rubric_name=...)
+        4. Generate bespoke rubric via LLM (default when generate_rubric=True)
+        5. Fall back to registry matching (when generate_rubric=False)
 
         Args:
             task: task description
@@ -4322,15 +4553,35 @@ class RubricLoop:
             rubric_name: explicit registry name — looks up by name
             generate_rubric: if True (default), generates a bespoke rubric via LLM
                              when no explicit rubric/name is provided
+            resume_run_id: run ID of a prior (possibly crashed) run to continue from
         """
         self._log(f"\n{'='*60}")
         self._log(f"Task: {task[:60]}...")
         self._log(f"{'='*60}")
 
+        # Resume: load prior run state before rubric resolution
+        _resuming = False
+        _resume_history: List[Iteration] = []
+        if resume_run_id:
+            _loaded_rubric = self._load_rubric_from_artifact(resume_run_id)
+            _resume_history = self._load_history_for_resume(resume_run_id)
+            if _loaded_rubric and _resume_history:
+                _resuming = True
+                if rubric is None:
+                    rubric = _loaded_rubric
+                self._log(
+                    f"Resuming run {resume_run_id} — "
+                    f"{len(_resume_history)} prior iteration(s) loaded"
+                )
+            else:
+                self._log(
+                    f"[Resume] No valid state found for {resume_run_id}, starting fresh"
+                )
+
         # Rubric resolution
         if rubric is not None:
-            matched_name = "explicit"
-            self._log(f"Rubric: explicit ({len(rubric.criteria)} criteria, {rubric.total_points}pts)")
+            matched_name = "explicit" if not _resuming else f"resumed:{rubric.domain}"
+            self._log(f"Rubric: {matched_name} ({len(rubric.criteria)} criteria, {rubric.total_points}pts)")
         elif rubric_name is not None:
             rubric, matched_name, _ = resolve_rubric(task, rubric_name=rubric_name)
             self._log(f"Rubric: {matched_name} (registry lookup)")
@@ -4353,14 +4604,15 @@ class RubricLoop:
             self._log(f"  {len(rubric.criteria)} criteria, {rubric.total_points} max points")
 
         # Sprint contract: review generated rubric before first iteration (improvement #1)
-        # One extra LLM call — negotiation agent (isolated context) flags and refines
-        # ambiguous or untestable criteria before any generation begins.
-        rubric = self._negotiate_rubric(rubric, task)
+        # Skip on resume — the rubric was already negotiated and saved in the prior run.
+        if not _resuming:
+            rubric = self._negotiate_rubric(rubric, task)
 
         domain = rubric.domain
 
-        # Save rubric as markdown document
-        self._save_rubric_markdown(rubric, task)
+        # Save rubric as markdown document (skip on resume — already exists)
+        if not _resuming:
+            self._save_rubric_markdown(rubric, task)
 
         # Initialize verification tracker
         self.tracker.set_task(task, domain)
@@ -4390,16 +4642,31 @@ class RubricLoop:
                     improvement_summary=["Stopped at rubric review checkpoint"]
                 )
 
-        history = []
         consecutive_regressions = 0
         regression_note = ""
         last_feedback_text = ""  # Structured feedback from FeedbackAgent for next iteration
 
-        # Generate a stable run ID for file-based artifact handoffs (improvement #3)
-        run_id = self._run_id(task)
+        # Run ID + history init (resume reuses the existing run directory)
+        if _resuming:
+            run_id = resume_run_id
+            history = _resume_history
+            # Apply masking to all but the most recent 2 iterations so older
+            # content doesn't bloat context.  Recent 2 keep full content in
+            # memory; generator resolves older ones from disk when needed.
+            for old_iter in history[:-2]:
+                if not self._is_masked(old_iter.attempt):
+                    run_dir = Path(self.iterations_dir) / run_id
+                    content_path = run_dir / f"iter_{old_iter.number:03d}_content.md"
+                    old_iter.attempt = self._make_mask(old_iter, content_path)
+        else:
+            run_id = self._run_id(task)
+            history = []
+            # Persist rubric to disk for crash resumability
+            self._save_rubric_artifact(run_id, rubric)
+
         self._log(f"Run ID: {run_id}")
 
-        i = 0
+        i = len(history)  # Resume continues from the last completed iteration
         while self.max_iterations == 0 or i < self.max_iterations:
             i += 1
             self._log(f"\n{'─'*50}")
@@ -4476,12 +4743,25 @@ class RubricLoop:
                 focus_areas=[f"{f[0]}.{f[1]}" for f in focus_areas]
             ))
 
-            # File-based artifact handoff (improvements #2 and #3): write each
-            # iteration to disk so the next iteration reads a clean, structured
-            # artifact rather than accumulating the full in-memory history.
+            # File-based artifact handoff: write content.md + meta.json + combined JSON.
             # Also makes the harness resumable if it crashes mid-loop.
-            artifact_path = self._write_iteration_artifact(run_id, history[-1])
-            self._log(f"  [Artifact] → {artifact_path}")
+            prior_pct = history[-2].percentage if len(history) >= 2 else None
+            content_path = self._write_iteration_artifact(run_id, history[-1], prior_pct)
+            self._log(f"  [Artifact] → {content_path}")
+
+            # Observation masking: replace the content of iterations older than the
+            # most recent 2 with a summary+pointer so they don't accumulate in context.
+            # The generator always resolves the best attempt from disk when needed.
+            if len(history) > 2:
+                for old_iter in history[:-2]:
+                    if not self._is_masked(old_iter.attempt):
+                        run_dir = Path(self.iterations_dir) / run_id
+                        old_content_path = run_dir / f"iter_{old_iter.number:03d}_content.md"
+                        old_iter.attempt = self._make_mask(old_iter, old_content_path)
+                        self._log(
+                            f"  [Mask] Iter {old_iter.number} offloaded "
+                            f"({old_iter.percentage:.0%}) → {old_content_path.name}"
+                        )
 
             # Update regression tracking from evaluation agent
             if eval_result["regression"]:
@@ -4877,6 +5157,11 @@ async def main():
     parser.add_argument("--lean", action="store_true",
                         help="Lean mode: strip iteration-aware scaffolding (early/mid/late strategy) "
                              "for A/B testing whether that guidance is still necessary with newer models")
+    parser.add_argument("--resume", metavar="RUN_ID",
+                        help="Resume a previous (possibly crashed) run from its last saved checkpoint. "
+                             "Provide the run ID printed at the start of the original run "
+                             "(e.g. 'abc12345_20260327_143022'). The task argument is still required "
+                             "for tracker display but the rubric and history are loaded from disk.")
 
     args = parser.parse_args()
 
@@ -4946,6 +5231,7 @@ async def main():
         rubric_name=args.rubric,
         generate_rubric=not args.no_generate,
         seed_content=seed_content,
+        resume_run_id=args.resume,
     )
 
     # Self-improvement cycle
