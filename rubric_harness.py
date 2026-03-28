@@ -2552,7 +2552,7 @@ TASK:
 {context_section}
 
 CORE PHILOSOPHY:
-Think like a senior practitioner in this field grading a junior colleague's work. What would the junior get right? What would they miss? The rubric must test for the DELTA between "competent junior" and "expert practitioner." Broad criteria that an average LLM response will satisfy are useless — they produce 95% scores and no learning signal.
+Test JUDGMENT, not KNOWLEDGE. Focus on areas where domain experts would disagree on quality - nuanced trade-offs, contextual appropriateness, and subjective professional judgment calls. Avoid criteria that test factual correctness or comprehensive coverage (LLMs excel at these). Instead, test: "Given multiple technically correct approaches, did they choose the most appropriate one for this context?" The rubric should evaluate decisions where reasonable people disagree, but experts can distinguish quality levels.
 
 INSTRUCTIONS:
 
@@ -2569,18 +2569,18 @@ INSTRUCTIONS:
    - "penalty_based": Start at max and deduct for named violations. Use for anti-patterns, professional errors, missing required elements.
    - "binary": Only for structural requirements with no gradient (use very sparingly, max 2 per rubric).
 
-6. ANTI-GAMING: Criteria must test things that are HARD to fake with surface-level content:
-   - Correct domain-specific terminology used precisely (not just present)
-   - Logical consistency BETWEEN sections (not just within each section)
-   - Quantitative precision where applicable (specific numbers, ranges, thresholds)
-   - Methodology correctness (not just "methodology mentioned" but "correct methodology applied")
-   - Expert red-flag detection (things that would make a professional wince)
+6. ANTI-GAMING: Criteria must test CONTEXTUAL JUDGMENT that requires weighing trade-offs:
+   - Appropriateness of approach for the specific context (not just technical correctness)
+   - Quality of reasoning about edge cases and limitations (not just acknowledging they exist)
+   - Sophistication of trade-off analysis between competing valid options
+   - Professional judgment calls where multiple approaches are defensible but some are more suitable
+   - Nuanced understanding of when standard approaches should be modified
 
-7. Set pass_threshold between 0.70-0.80:
-   - Technical/analytical tasks: 0.75-0.80
-   - Creative/writing tasks: 0.70-0.75
+7. Set pass_threshold between 0.65-0.75:
+   - Technical/analytical tasks: 0.68-0.75
+   - Creative/writing tasks: 0.65-0.70
 
-8. EXPERT vs JUNIOR DELTA: For every criterion, ask: "Would a junior analyst satisfy this?" If yes, make it harder. Add a sub-attribute that tests for something juniors routinely miss. The rubric should have at least 5 criteria that a confident-but-shallow LLM response will fail. Each criterion must have a pass_condition that requires specific technical knowledge, precise calculations, or domain expertise that cannot be faked with general knowledge.
+8. EXPERT vs JUNIOR DELTA: For every criterion, ask: "Would a junior analyst satisfy this?" If yes, make it harder. Add a sub-attribute that tests for something juniors routinely miss. The rubric should have at least 5 criteria that a confident-but-shallow LLM response will fail. Each criterion must have a pass_condition with clear performance gradients: define what constitutes 40%, 60%, and 80% performance levels. Ensure that competent responses can achieve 60-70% while expert responses reach 80%+.
 
 {examples_section}
 
@@ -4532,6 +4532,7 @@ class RubricLoop:
         }, indent=2))
 
         return content_path
+
 
     def _load_best_artifact(self, run_id: str) -> Optional[dict]:
         """Load the best-scoring iteration artifact from disk.
