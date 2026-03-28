@@ -2749,6 +2749,22 @@ NON-OBVIOUS QUALITY SIGNALS: What separates truly excellent work from merely com
 Be concrete and specific. Cite real standards, frameworks, or practices where possible. Avoid generic advice like "be clear" or "be thorough" — instead say exactly what clarity or thoroughness means in this context."""
 
 
+EXPERT_PERSONA_PROMPT = """You are an expert profiler. Given a task description, identify the ideal human expert who would evaluate the output of that task at the highest professional level.
+
+TASK:
+{task}
+
+Write a 3-5 sentence expert persona profile that answers:
+1. What credentials and experience would this evaluator have? (degrees, certifications, years of practice, industry background)
+2. What domain-specific quality signals would they focus on that a generalist would overlook?
+3. What common mistakes or anti-patterns would they immediately catch that a generalist would miss?
+4. What professional standards, frameworks, or benchmarks would they hold the output to?
+
+Write the persona in second person ("You are..."). Be specific and concrete — name real credentials, real frameworks, real standards. Avoid generic descriptions like "experienced professional" — say exactly what kind of expert, from what background, with what specific knowledge.
+
+Output only the persona description. No preamble, no headers, no explanation."""
+
+
 class RubricAgent:
     """Independent rubric creation agent with isolated context window.
 
@@ -2790,7 +2806,8 @@ RUBRIC DESIGN PRINCIPLES:
                  learning_integrator: LearningIntegrator = None,
                  enable_research: bool = True,
                  research_model: str = "claude-sonnet-4-20250514",
-                 enable_tracing: bool = True):
+                 enable_tracing: bool = True,
+                 enable_expert_persona: bool = True):
         if Anthropic is None:
             raise ImportError("anthropic package required: pip install anthropic")
         self.client = Anthropic()  # Fresh client, separate from generation/scoring/evaluation agents
@@ -2800,6 +2817,7 @@ RUBRIC DESIGN PRINCIPLES:
         self.enable_research = enable_research
         self.enable_tracing = enable_tracing
         self.research_model = research_model
+        self.enable_expert_persona = enable_expert_persona
         # Research tracer (verifies rubric grounding) — has its own isolated client
         self.tracer = ResearchTracer(model=model, verbose=verbose) if enable_tracing else None
 
@@ -2807,7 +2825,35 @@ RUBRIC DESIGN PRINCIPLES:
         if self.verbose:
             print(f"[RubricAgent] {msg}" if not msg.startswith("[Rubric") else msg)
 
-    def _research_best_practices(self, task: str) -> str:
+    def _elicit_expert_persona(self, task: str) -> str:
+        """Generate a domain expert persona for the given task.
+
+        Makes one short LLM call to produce a 3-5 sentence expert persona that
+        describes what credentials/experience the ideal evaluator would have, what
+        domain-specific things they would focus on, and what professional standards
+        they would apply. This persona is injected into rubric generation and research
+        prompts to ground criteria in genuine expert perspective.
+
+        Returns:
+            Expert persona description as a string, or "" on failure.
+        """
+        self._log("Eliciting expert persona for task domain...")
+        prompt = EXPERT_PERSONA_PROMPT.format(task=task)
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=500,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            persona = response.content[0].text.strip()
+            if persona:
+                self._log(f"Expert persona elicited ({len(persona)} chars)")
+            return persona
+        except Exception as e:
+            self._log(f"Expert persona elicitation failed (non-fatal): {e}")
+            return ""
+
+    def _research_best_practices(self, task: str, persona: str = "") -> str:
         """Deep research step: use web search to find what domain experts consider
         best practices and quality standards for this task type.
 
@@ -2820,6 +2866,19 @@ RUBRIC DESIGN PRINCIPLES:
         self._log("Researching best practices for task domain...")
 
         prompt = RESEARCH_PROMPT.format(task=task)
+
+        # If a persona is available, append a note to steer search queries toward
+        # domain-specific professional standards rather than generic best practices.
+        if persona:
+            prompt += (
+                "\n\nEXPERT EVALUATOR CONTEXT:\n"
+                + persona
+                + "\n\nBased on this expert profile, prioritize searches for domain-specific "
+                "professional standards, certification bodies, practitioner frameworks, "
+                "and field-specific failure modes that this expert would reference. "
+                "Go beyond generic 'best practices' — search for what this particular "
+                "type of expert uses as their professional evaluation criteria."
+            )
 
         try:
             response = self.client.messages.create(
@@ -2882,10 +2941,15 @@ RUBRIC DESIGN PRINCIPLES:
         if seed_section:
             examples_section += "\n\n" + seed_section
 
+        # Step 0: Expert persona elicitation — who is the ideal evaluator for this task?
+        expert_persona = ""
+        if self.enable_expert_persona:
+            expert_persona = self._elicit_expert_persona(task)
+
         # Step 1: Deep research — what do domain experts consider best practices?
         research_section = ""
         if self.enable_research:
-            research_section = self._research_best_practices(task)
+            research_section = self._research_best_practices(task, persona=expert_persona)
 
         # Step 2: Inject learning context from prior evaluations
         learning_section = ""
@@ -2909,11 +2973,26 @@ RUBRIC DESIGN PRINCIPLES:
         if learning_section:
             prompt += "\n" + learning_section
 
+        # Build system prompt — inject expert persona if available so the rubric
+        # architect adopts the perspective of the domain's ideal evaluator
+        system_prompt = self.RUBRIC_AGENT_SYSTEM_PROMPT
+        if expert_persona:
+            system_prompt = (
+                system_prompt
+                + "\n\nEXPERT EVALUATOR PERSONA:\n"
+                + expert_persona
+                + "\n\nYou are generating evaluation criteria from this expert's perspective. "
+                "Focus on what separates truly expert-level output from competent-but-generic "
+                "work in this domain. Include criteria that only someone with this specific "
+                "background would know to check — the kind of thing a generalist would miss "
+                "but this expert would flag immediately."
+            )
+
         self._log("[RubricAgent] Generating rubric (isolated agent)...")
         response = self.client.messages.create(
             model=self.model,
             max_tokens=16000,
-            system=self.RUBRIC_AGENT_SYSTEM_PROMPT,
+            system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = response.content[0].text
@@ -4190,6 +4269,7 @@ class RubricLoop:
         repo_path: str = ".",
         enable_self_improve: bool = True,
         enable_research: bool = True,
+        enable_expert_persona: bool = True,
         auto_improve_interval: int = 3,
         auto_improve_min_uses: int = 10,
         auto_improve_max_edits: int = 3,
@@ -4233,6 +4313,7 @@ class RubricLoop:
             verbose=verbose,
         )
         self.enable_research = enable_research
+        self.enable_expert_persona = enable_expert_persona
         self.auto_improve_interval = auto_improve_interval
         self.auto_improve_min_uses = auto_improve_min_uses
         self.auto_improve_max_edits = auto_improve_max_edits
@@ -4906,6 +4987,7 @@ class RubricLoop:
                 model=self.model, verbose=self.verbose,
                 learning_integrator=self.learning_integrator if self.enable_self_improve else None,
                 enable_research=self.enable_research,
+                enable_expert_persona=self.enable_expert_persona,
             )
             rubric = generator.generate(task, context=context)
             matched_name = f"generated:{rubric.domain}"
@@ -5487,6 +5569,8 @@ async def main():
                         help="Disable automatic self-editing (keeps learning active)")
     parser.add_argument("--no-research", action="store_true",
                         help="Skip deep research step during rubric generation")
+    parser.add_argument("--no-expert-persona", action="store_true",
+                        help="Skip expert persona elicitation step during rubric generation")
     parser.add_argument("--lean", action="store_true",
                         help="Lean mode: strip iteration-aware scaffolding (early/mid/late strategy) "
                              "for A/B testing whether that guidance is still necessary with newer models")
@@ -5559,6 +5643,7 @@ async def main():
         verbose=not args.quiet,
         enable_self_improve=not args.no_learn,
         enable_research=not args.no_research,
+        enable_expert_persona=not args.no_expert_persona,
         auto_improve_interval=0 if args.no_auto_improve else 3,
         lean_mode=args.lean,
     )
