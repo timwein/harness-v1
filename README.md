@@ -1,6 +1,6 @@
 # Rubric System
 
-A generation-verification loop harness. GAN-inspired: Claude generates output, scores it against a task-specific rubric, and iterates until quality threshold is met — with each agent operating in an isolated context window to prevent self-leniency bias.
+A generation-verification loop harness. GAN-inspired: Claude creates a rubric, then generates output, scores it against the task-specific rubric, and iterates until quality threshold is met — with each agent operating in an isolated context window to prevent self-leniency bias.
 
 ## Architecture
 
