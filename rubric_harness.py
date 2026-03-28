@@ -5212,7 +5212,7 @@ class RubricLoop:
 
         result = LoopResult(
             success=False,
-            output=best.attempt,
+            output=self._resolve_attempt(best.attempt),
             iterations=len(history),
             final_score=best.total_score,
             final_percentage=best.percentage,
