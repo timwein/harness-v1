@@ -32,11 +32,17 @@ The GAN-inspired separation between generator and evaluator is the core fix for 
 
 ## Key Features
 
-**Web-research-grounded rubric generation** — Before generating any rubric, the system calls Claude with `web_search` (uncapped — the model searches as much as needed) to ground criteria in real professional standards, not generic LLM intuitions. Each criterion is traced back to the research via `ResearchTracer`; ungrounded criteria are patched or removed.
+**Web-research-grounded rubric generation** — Before generating any rubric, the system calls Claude with `web_search` (uncapped — the model searches as much as needed) to ground criteria in real professional standards, not generic LLM intuitions. Each criterion is traced back to the research via `ResearchTracer`; ungrounded criteria are patched or removed. Research runs in three phases: (A) professional standards and frameworks, (B) expert failure modes and common mistakes, (C) expert exemplar retrieval for contrastive criterion extraction.
+
+**Expert persona elicitation** — Before rubric generation, the system synthesizes a domain expert persona: credentials, focus areas, and what they'd catch that a generalist would miss. This persona is injected into both the rubric generation and web research prompts, shifting criteria from generic quality dimensions toward domain-specific substance. One short LLM call; disable with `--no-expert-persona`.
+
+**Exemplar retrieval + contrastive criterion extraction** — During research, the system searches for expert-quality example outputs for similar tasks (published templates, award-winning examples, professional samples). It also generates a quick single-shot baseline. The gap between expert exemplar and baseline is fed to the RubricAgent: "For each dimension where the expert is clearly superior, generate a criterion that scores the expert at 90-100% and the baseline at 40-60%." This produces the most discriminative criteria — derived from observed differences, not abstract quality dimensions. Disable with `--no-exemplar`.
 
 **8–12 criteria per rubric, 6 scoring methods** — `BINARY`, `PERCENTAGE`, `WEIGHTED_COMPONENTS`, `PENALTY_BASED`, `THRESHOLD_TIERS`, `COUNT_BASED`. Sub-attribute decomposition gives fine-grained per-dimension measurement.
 
-**Two-stage checklist scoring** — Stage 1: binary fact extraction (YES/NO observations with evidence quotes). Stage 2: mechanical score mapping from Stage 1 facts. No impressionistic holistic ratings.
+**Two-stage checklist scoring** — Stage 1: binary fact extraction (YES/NO observations with evidence quotes). Stage 2: mechanical score mapping from Stage 1 facts. No impressionistic holistic ratings. Criteria that are programmatically verifiable are routed to deterministic checks instead of LLM judgment.
+
+**Deterministic verifiers** — Before LLM scoring, the `DeterministicVerifier` scans each criterion for programmatically checkable sub-attributes: count-based ("at least N items"), length-based ("under X words"), format-based ("includes headers"), code syntax (Python `ast.parse`, SQL, bash), and presence-based ("mentions X"). Matching criteria are scored with zero-variance code checks; the rest fall through to the LLM scorer. Evidence shows the exact check result (e.g., "Word count: 247, target: under 300 ✓"). Disable with `--no-deterministic`.
 
 **Rubric negotiation** — After rubric generation and before iteration 1, `RubricNegotiationAgent` reviews each criterion for ambiguity or untestability and returns a refined rubric. This "sprint contract" ensures the rubric is objective before any generation begins. One extra LLM call; skipped if `--no-generate` is active.
 
@@ -134,6 +140,11 @@ python rubric_harness.py --json "any task"
 | `--no-auto-improve` | off | Disable automatic self-editing (keeps learning active) |
 | `--self-improve` | off | Dry run: propose source code edits based on learning data |
 | `--self-improve-apply` | off | Apply proposed source code edits |
+| `--no-expert-persona` | off | Skip expert persona elicitation in rubric generation |
+| `--no-exemplar` | off | Skip exemplar retrieval and contrastive criterion extraction |
+| `--no-deterministic` | off | Disable deterministic verifiers, use all-LLM scoring |
+| `--no-tradeoff-detection` | off | Skip trade-off detection between criteria |
+| `--no-rubric-critic` | off | Skip rubric critic calibration step |
 | `--no-paired-trajectories` | off | Disable ACON paired trajectory collection |
 | `--paired-iteration` | `2` | Which iteration to run paired paths on |
 | `--json / -j` | off | Emit result as JSON |
@@ -163,6 +174,7 @@ rubric_system/
 ├── rubric_ci.py               # GitHub Actions CI integration
 ├── metrics_dashboard.py       # Chart.js metrics dashboard
 ├── test_generator.py          # Auto-generate tests from rubric criteria
+├── deterministic_verifier.py   # Programmatic scoring for checkable criteria (counts, lengths, syntax)
 ├── acon_trajectory.py          # ACON paired trajectory system (cross-task compression learning)
 ├── sample_rubrics.py          # 10 task-specific rubrics + RubricRegistry
 ├── rubric_library.md          # 8 domain templates (API, Auth, DB, React, etc.)
