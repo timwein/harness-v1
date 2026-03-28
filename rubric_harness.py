@@ -2085,6 +2085,217 @@ Return JSON in this exact format:
         return dc_replace(rubric, criteria=new_criteria), flag_messages
 
 
+class TradeoffDetector:
+    """Detects inversely correlated criteria pairs in a rubric and resolves them.
+
+    Isolated context window — only sees the rubric criteria (no task history,
+    no prior iterations).  Runs after rubric negotiation, before the main
+    gen-verify loop starts.
+
+    Resolution strategies:
+      MERGE     — combine into a single balanced criterion
+      PRIORITIZE — keep both, annotate the lower-priority one
+      RELAX     — reduce max_points of the less-important criterion by 30 %
+    """
+
+    SYSTEM_PROMPT = """You are a rubric trade-off analyst. Your job is to identify \
+pairs of scoring criteria that are inversely correlated — where genuinely optimizing \
+for one criterion would necessarily hurt the other.
+
+Common trade-off patterns (non-exhaustive):
+- Concision vs completeness/depth/nuance
+- Simplicity vs thoroughness
+- Brevity vs evidence richness
+- Accessibility vs technical precision
+- Speed vs accuracy
+- Specificity vs generalizability
+- Formality vs approachability
+
+Important constraints:
+- Only flag pairs that are GENUINELY in tension based on their descriptions and pass conditions.
+- Do NOT flag pairs that merely cover different aspects of quality.
+- Be conservative — it is better to miss a subtle trade-off than to incorrectly merge independent criteria.
+- You must be GENERAL PURPOSE: do not assume any particular domain or subject matter.
+
+For each trade-off pair found, recommend exactly one resolution:
+  MERGE       — combine both into a single criterion that explicitly balances them
+  PRIORITIZE  — keep both, but state which takes precedence when they conflict
+  RELAX       — lower the weight of the less important criterion in the pair
+
+Return only JSON — no prose outside the JSON block."""
+
+    def __init__(self, model: str = "claude-sonnet-4-20250514", verbose: bool = True):
+        if Anthropic is None:
+            raise ImportError("anthropic package required: pip install anthropic")
+        self.client = Anthropic()
+        self.model = model
+        self.verbose = verbose
+
+    def _log(self, msg: str) -> None:
+        if self.verbose:
+            print(f"[TradeoffDetector] {msg}")
+
+    def detect_and_resolve(self, rubric: "Rubric") -> tuple["Rubric", List[str]]:
+        """Analyse rubric criteria for inverse correlations and return a resolved rubric.
+
+        Returns:
+            (refined_rubric, resolution_messages) — resolution_messages is empty
+            when no trade-offs were detected.
+        """
+        from dataclasses import replace as dc_replace
+
+        if len(rubric.criteria) < 2:
+            return rubric, []
+
+        criteria_json = [
+            {
+                "id": c.id,
+                "description": c.description,
+                "pass_condition": c.pass_condition,
+                "max_points": c.scoring.max_points,
+            }
+            for c in rubric.criteria
+        ]
+
+        prompt = f"""RUBRIC CRITERIA:
+{json.dumps(criteria_json, indent=2)}
+
+Analyze these criteria pairwise for inverse correlation — cases where genuinely \
+optimizing for one would necessarily hurt the other.
+
+For each detected trade-off pair, choose a resolution:
+- MERGE: combine into one balanced criterion (provide merged_description + merged_pass_condition)
+- PRIORITIZE: keep both, note which takes precedence (provide primary_criterion + priority_note)
+- RELAX: reduce max_points of the less important one by 30% (provide relax_criterion)
+
+Return JSON in this exact format:
+{{
+  "tradeoffs": [
+    {{
+      "criterion_a": "criterion_id_1",
+      "criterion_b": "criterion_id_2",
+      "explanation": "Why these are in tension (1-2 sentences)",
+      "resolution": "merge|prioritize|relax",
+      "merged_description": "...",
+      "merged_pass_condition": "...",
+      "primary_criterion": "criterion_id",
+      "priority_note": "...",
+      "relax_criterion": "criterion_id"
+    }}
+  ]
+}}
+
+Only include the keys relevant to the chosen resolution.
+If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
+
+        self._log(f"Analysing {len(rubric.criteria)} criteria for inverse correlations...")
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=4000,
+            system=self.SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text
+
+        result: dict = {}
+        m = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', raw)
+        raw_json = m.group(1) if m else raw
+        try:
+            result = json.loads(raw_json.strip())
+        except Exception:
+            m2 = re.search(r'\{[\s\S]*\}', raw)
+            if m2:
+                try:
+                    result = json.loads(m2.group())
+                except Exception:
+                    pass
+
+        tradeoffs = result.get("tradeoffs", [])
+        if not tradeoffs:
+            self._log("No trade-offs detected.")
+            return rubric, []
+
+        # Build a mutable lookup; track criteria absorbed by a MERGE.
+        criteria_map = {c.id: c for c in rubric.criteria}
+        merged_ids: set = set()
+        resolution_messages: List[str] = []
+
+        for t in tradeoffs:
+            cid_a = t.get("criterion_a", "")
+            cid_b = t.get("criterion_b", "")
+            resolution = t.get("resolution", "")
+            explanation = t.get("explanation", "")
+
+            if cid_a not in criteria_map or cid_b not in criteria_map:
+                self._log(f"  Skipping unknown criterion pair: {cid_a!r}, {cid_b!r}")
+                continue
+            if cid_a in merged_ids or cid_b in merged_ids:
+                continue  # one side already consumed by a prior merge
+
+            if resolution == "merge":
+                merged_desc = t.get("merged_description", "")
+                merged_pass = t.get("merged_pass_condition", "")
+                if not merged_desc:
+                    self._log(f"  Skipping merge for ({cid_a}, {cid_b}): no merged_description")
+                    continue
+                base = criteria_map[cid_a]
+                criteria_map[cid_a] = dc_replace(
+                    base,
+                    description=merged_desc,
+                    pass_condition=merged_pass or base.pass_condition,
+                )
+                merged_ids.add(cid_b)
+                msg = f"[merge] {cid_a} + {cid_b} → {cid_a} (balanced): {explanation[:80]}"
+                resolution_messages.append(msg)
+                self._log(f"  {msg}")
+
+            elif resolution == "prioritize":
+                primary = t.get("primary_criterion", cid_a)
+                note = t.get("priority_note", f"{primary} takes precedence")
+                secondary = cid_b if primary == cid_a else cid_a
+                if secondary not in criteria_map:
+                    secondary = cid_b
+                sec = criteria_map[secondary]
+                new_desc = sec.description + f" [Lower priority when in tension with {primary}: {note}]"
+                criteria_map[secondary] = dc_replace(sec, description=new_desc)
+                msg = f"[prioritize] {primary} > {secondary}: {explanation[:80]}"
+                resolution_messages.append(msg)
+                self._log(f"  {msg}")
+
+            elif resolution == "relax":
+                relax_id = t.get("relax_criterion", cid_b)
+                if relax_id not in criteria_map:
+                    relax_id = cid_b
+                relax_c = criteria_map[relax_id]
+                old_pts = relax_c.scoring.max_points
+                new_pts = max(1, int(old_pts * 0.7))
+                new_scoring = dc_replace(relax_c.scoring, max_points=new_pts)
+                criteria_map[relax_id] = dc_replace(relax_c, scoring=new_scoring)
+                msg = f"[relax] {relax_id} max_points {old_pts} → {new_pts}: {explanation[:80]}"
+                resolution_messages.append(msg)
+                self._log(f"  {msg}")
+
+            else:
+                self._log(f"  Unknown resolution {resolution!r} for ({cid_a}, {cid_b}), skipping")
+
+        # Reconstruct criteria in original order, dropping merged-away criteria.
+        new_criteria = [
+            criteria_map[c.id]
+            for c in rubric.criteria
+            if c.id not in merged_ids
+        ]
+        new_total = sum(c.scoring.max_points for c in new_criteria)
+        refined_rubric = dc_replace(rubric, criteria=new_criteria, total_points=new_total)
+
+        self._log(
+            f"Resolved {len(tradeoffs)} trade-off(s): "
+            f"{len(new_criteria)} criteria remain (was {len(rubric.criteria)}), "
+            f"{new_total}pts total (was {rubric.total_points}pts)."
+        )
+        return refined_rubric, resolution_messages
+
+
 class GenerationAgent:
     """Isolated content generation agent.
 
@@ -4195,6 +4406,7 @@ class RubricLoop:
         auto_improve_max_edits: int = 3,
         lean_mode: bool = False,
         iterations_dir: str = ".rubric_iterations",
+        enable_tradeoff_detection: bool = True,
     ):
         if Anthropic is None:
             raise ImportError("anthropic package is required: pip install anthropic")
@@ -4254,6 +4466,11 @@ class RubricLoop:
 
         # Component 9: Independent feedback agent (translates scores → actionable diagnostics)
         self.feedback_agent = FeedbackAgent(model=model, verbose=verbose)
+
+        # Component 10: Trade-off detector (isolated context — resolves inversely
+        # correlated criteria before the gen-verify loop begins)
+        self.enable_tradeoff_detection = enable_tradeoff_detection
+        self.tradeoff_detector = TradeoffDetector(model=model, verbose=verbose)
 
         # Lean mode: strips iteration-aware scaffolding for A/B testing
         self.lean_mode = lean_mode
@@ -4455,6 +4672,23 @@ class RubricLoop:
         else:
             self._log("  All criteria approved — no refinements.")
         return refined
+
+    def _resolve_tradeoffs(self, rubric: "Rubric") -> "Rubric":
+        """Detect and resolve inversely correlated criteria before iteration 1.
+
+        One extra LLM call — the TradeoffDetector (isolated context) analyses
+        all criteria pairwise, identifies inverse correlations that would cause
+        the loop to ping-pong, and returns a resolved rubric.
+        """
+        self._log("\n[Trade-off Detection] Analysing criteria for inverse correlations...")
+        resolved, messages = self.tradeoff_detector.detect_and_resolve(rubric)
+        if messages:
+            self._log(f"  {len(messages)} trade-off(s) resolved:")
+            for msg in messages:
+                self._log(f"    {msg}")
+        else:
+            self._log("  No trade-offs detected.")
+        return resolved
 
     # -------------------------------------------------------------------------
     # File-based artifact handoff helpers (improvements #2 and #3)
@@ -4921,6 +5155,12 @@ class RubricLoop:
         # Skip on resume — the rubric was already negotiated and saved in the prior run.
         if not _resuming:
             rubric = self._negotiate_rubric(rubric, task)
+
+        # Trade-off detection: resolve inversely correlated criteria before the loop
+        # starts so that feedback never ping-pongs between opposing objectives.
+        # Skip on resume — the rubric was already resolved in the prior run.
+        if not _resuming and self.enable_tradeoff_detection:
+            rubric = self._resolve_tradeoffs(rubric)
 
         domain = rubric.domain
 
@@ -5487,6 +5727,9 @@ async def main():
                         help="Disable automatic self-editing (keeps learning active)")
     parser.add_argument("--no-research", action="store_true",
                         help="Skip deep research step during rubric generation")
+    parser.add_argument("--no-tradeoff-detection", action="store_true",
+                        help="Skip trade-off detection step (the pass that resolves inversely "
+                             "correlated criteria before the gen-verify loop starts)")
     parser.add_argument("--lean", action="store_true",
                         help="Lean mode: strip iteration-aware scaffolding (early/mid/late strategy) "
                              "for A/B testing whether that guidance is still necessary with newer models")
@@ -5561,6 +5804,7 @@ async def main():
         enable_research=not args.no_research,
         auto_improve_interval=0 if args.no_auto_improve else 3,
         lean_mode=args.lean,
+        enable_tradeoff_detection=not args.no_tradeoff_detection,
     )
 
     result = await loop.run(
