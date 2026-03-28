@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """
 Rubric Loop Harness - Generation/Verification Loop with Granular Scoring
 
