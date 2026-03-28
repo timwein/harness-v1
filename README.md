@@ -58,6 +58,22 @@ The GAN-inspired separation between generator and evaluator is the core fix for 
 
 **Rubric markdown export** — Every run saves the full rubric to `rubrics/rubric_<timestamp>_<hash>.md` capturing all criteria, scoring methods, sub-attributes, penalties, and research basis.
 
+**ACON paired trajectories (cross-task compression learning)** — After every run, the system automatically generates content twice: once with full iteration history, once with compressed history (3-line summaries + file pointers). Both paths are scored, and per-criterion deltas are recorded. After 5+ runs in a domain, `AconGuidelineLearner` classifies each criterion type as:
+
+- **SAFE** (max delta <2pp): compression has no measurable effect — always compress
+- **CAUTION** (mean delta <3pp, stddev <4pp): minor risk — compress with monitoring
+- **UNSAFE** (otherwise): compression degrades quality — keep full context
+
+This learns which types of criteria are sensitive to context loss *across tasks within a domain*, not just within a single run. Guidelines are stored in `~/.rubric_loop/acon_guidelines/{domain}/` and automatically applied to future runs in the same domain.
+
+Paired trajectories run by default. Disable with `--no-paired-trajectories`. Control which iteration is used for the paired comparison with `--paired-iteration N` (default: 2).
+
+Data storage:
+- `~/.rubric_loop/acon_paired_results.json` — raw paired results per run
+- `~/.rubric_loop/acon_guidelines/{domain}/` — learned compression guidelines per domain
+
+**Observation masking + filesystem fallback** — Older iterations are replaced in-context with 3-line summaries (score, delta, top focus areas) while full artifacts live in `.rubric_iterations/`. The scoring agent can selectively re-read specific iterations from disk when needed. This prevents context bloat from killing late-iteration quality.
+
 ## CLI Usage
 
 ```bash
@@ -118,6 +134,8 @@ python rubric_harness.py --json "any task"
 | `--no-auto-improve` | off | Disable automatic self-editing (keeps learning active) |
 | `--self-improve` | off | Dry run: propose source code edits based on learning data |
 | `--self-improve-apply` | off | Apply proposed source code edits |
+| `--no-paired-trajectories` | off | Disable ACON paired trajectory collection |
+| `--paired-iteration` | `2` | Which iteration to run paired paths on |
 | `--json / -j` | off | Emit result as JSON |
 | `--quiet / -q` | off | Suppress verbose logging |
 | `--list-rubrics` | — | Print all registered rubrics and exit |
@@ -145,6 +163,7 @@ rubric_system/
 ├── rubric_ci.py               # GitHub Actions CI integration
 ├── metrics_dashboard.py       # Chart.js metrics dashboard
 ├── test_generator.py          # Auto-generate tests from rubric criteria
+├── acon_trajectory.py          # ACON paired trajectory system (cross-task compression learning)
 ├── sample_rubrics.py          # 10 task-specific rubrics + RubricRegistry
 ├── rubric_library.md          # 8 domain templates (API, Auth, DB, React, etc.)
 ├── knowledge_work_rubric.md   # 28-criteria research document rubric
@@ -156,6 +175,7 @@ tests/
 rubrics/                       # Generated rubric .md files (one per run)
 .rubric_iterations/            # Per-iteration artifact files (file-based handoff)
 .rubric_feedback/              # Persistent feedback store (created at runtime)
+~/.rubric_loop/                # ACON data (paired results + per-domain compression guidelines)
 ```
 
 ## Requirements

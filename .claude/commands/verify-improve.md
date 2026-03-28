@@ -6,8 +6,6 @@ Run the rubric harness self-improvement cycle.
 
 ## Instructions
 
-$ARGUMENTS
-
 1. Change to the rubric_system/ directory
 2. Run self-improvement in dry-run mode first:
 ```bash
@@ -26,3 +24,5 @@ python -m rubric_system.self_improve auto --max-edits 3 2>&1
 ```
 
 5. If edits were applied, show a git diff of what changed.
+
+$ARGUMENTS

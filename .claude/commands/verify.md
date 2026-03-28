@@ -32,7 +32,7 @@ python3 rubric_harness.py "$ARGUMENTS" --json 2>&1
 - `--explain` to just show rubric resolution without running the loop
 - `--seed ./draft.md` to warm-start from an existing draft (skips initial generation, scores the draft directly)
 - `--context ./notes.md ./summary.txt` for supplementary context files injected into rubric generation and edit prompts
-- `--lean` strips the iteration-aware generation scaffolding (early/mid/late strategy prompts) and runs with a simpler prompt. Use this to A/B test whether the scaffolding is still necessary with newer models. Compare score trajectories between a normal run and a `--lean` run on the same task.
+- `--lean` strips the iteration-aware generation scaffolding (early/mid/late strategy prompts) and runs with a simpler prompt. Use this to A/B test whether the scaffolding is still necessary with newer models. Compare score trajectories between a normal run and a --lean run on the same task.
 
 ## Examples
 - `/verify Write a cold outreach email to a Series B SaaS founder`
