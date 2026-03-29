@@ -2644,14 +2644,15 @@ Make surgical, targeted improvements. Do NOT rewrite from scratch.
 RUBRIC CRITERIA:
 {rubric_summary}
 
-CURRENT BEST ATTEMPT (score: {best_score}):
+CURRENT DRAFT (score: {current_score}):
 --- BEGIN CONTENT ---
-{best_content}
+{current_content}
 --- END CONTENT ---
 
 SCORING BREAKDOWN (KEEP = already passing, IMPROVE = needs work):
 {score_breakdown}
 
+{regression_section}
 {focus_section}
 
 {iteration_guidance}
@@ -5438,11 +5439,51 @@ class RubricLoop:
         )
 
         if history:
-            # Edit mode: improve the best prior attempt
+            # Edit mode: improve the most recent draft, using best as a learning signal
+            current = history[-1]
             best = max(history, key=lambda h: h.percentage)
             # Resolve content from disk if it was offloaded to save context
-            best_content = self._resolve_attempt(best.attempt)
-            score_breakdown = self._format_score_breakdown(best.criterion_scores)
+            current_content = self._resolve_attempt(current.attempt)
+            score_breakdown = self._format_score_breakdown(current.criterion_scores)
+
+            # Build regression recovery section when current draft fell behind the peak
+            regression_section = ""
+            if current.percentage < best.percentage - 0.005 and best.number != current.number:
+                current_pct = int(round(current.percentage * 100))
+                best_pct = int(round(best.percentage * 100))
+                # Per-criterion comparison: list criteria where best scored higher
+                best_scores = {cs.criterion_id: cs.percentage for cs in best.criterion_scores}
+                current_scores = {cs.criterion_id: cs.percentage for cs in current.criterion_scores}
+                comparison_lines = []
+                for crit_id, b_pct in sorted(best_scores.items()):
+                    c_pct = current_scores.get(crit_id, 0.0)
+                    if b_pct > c_pct + 0.01:
+                        delta = int(round((b_pct - c_pct) * 100))
+                        comparison_lines.append(
+                            f"  - {crit_id}: iteration {best.number} scored {b_pct:.0%} "
+                            f"vs your current {c_pct:.0%} (delta: +{delta}%)"
+                        )
+                criterion_comparison = "\n".join(comparison_lines) if comparison_lines else "  (no per-criterion data)"
+                # Excerpt from best version — first ~1200 chars as reference
+                best_content = self._resolve_attempt(best.attempt)
+                excerpt = best_content[:1200].rstrip()
+                if len(best_content) > 1200:
+                    excerpt += "\n[... excerpt truncated ...]"
+                regression_section = (
+                    f"⚠ REGRESSION DETECTED: Your current draft scored {current_pct}%, "
+                    f"but iteration {best.number} scored {best_pct}%.\n\n"
+                    f"Here is what iteration {best.number} did well that you should learn from:\n"
+                    f"{criterion_comparison}\n\n"
+                    f"Your task: incorporate the strengths from iteration {best.number} into your "
+                    f"CURRENT DRAFT. Do NOT replace your current draft with the old version — instead, "
+                    f"surgically improve the areas where you regressed while keeping your current "
+                    f"structure and narrative intact.\n\n"
+                    f"For reference, here are the relevant sections from the higher-scoring version "
+                    f"(use as inspiration, do not copy verbatim):\n"
+                    f"--- BEGIN REFERENCE EXCERPT (iteration {best.number}) ---\n"
+                    f"{excerpt}\n"
+                    f"--- END REFERENCE EXCERPT ---"
+                )
 
             # Iteration-aware strategy guidance (improvement #5: --lean disables this)
             # In lean mode, skip scaffolding entirely — lets you A/B test whether
@@ -5467,21 +5508,23 @@ class RubricLoop:
                     "Do not reorganize — make targeted, minimal changes to the weakest spots."
                 )
 
-            _protected = [cs.criterion_id for cs in best.criterion_scores if cs.percentage >= 0.75]
-            _weak = [cs.criterion_id for cs in best.criterion_scores if cs.percentage < 0.75]
+            _protected = [cs.criterion_id for cs in current.criterion_scores if cs.percentage >= 0.75]
+            _weak = [cs.criterion_id for cs in current.criterion_scores if cs.percentage < 0.75]
             prompt = EDIT_PROMPT.format(
                 task=rubric.task,
                 rubric_summary=rubric_summary,
-                best_score=f"{best.percentage:.0%}",
-                best_content=best_content,
+                current_score=f"{current.percentage:.0%}",
+                current_content=current_content,
                 score_breakdown=score_breakdown,
+                regression_section=regression_section,
                 focus_section=focus_section,
                 iteration_guidance=iteration_guidance,
                 protected_criteria_list=", ".join(_protected) if _protected else "(none)",
                 improvement_targets_list=", ".join(_weak) if _weak else "(none)",
             )
             mode_tag = "[lean]" if self.lean_mode else f"[iter {current_iter}/{max_iterations}]"
-            self._log(f"Editing best attempt ({best.percentage:.0%}) {mode_tag}...")
+            regression_tag = f" [REGRESSION from iter {best.number} {best.percentage:.0%}]" if regression_section else ""
+            self._log(f"Editing current draft ({current.percentage:.0%}){regression_tag} {mode_tag}...")
         else:
             # First iteration: generate from scratch
             history_section = format_history_for_generation(history)
@@ -5862,10 +5905,10 @@ class RubricLoop:
                         _cp_best = max(history, key=lambda h: h.percentage) if history else None
                         return LoopResult(
                             success=False,
-                            output=self._resolve_attempt(_cp_best.attempt) if _cp_best else content,
+                            output=content,
                             iterations=i,
-                            final_score=_cp_best.total_score if _cp_best else total,
-                            final_percentage=_cp_best.percentage if _cp_best else percentage,
+                            final_score=total,
+                            final_percentage=percentage,
                             rubric=rubric,
                             history=history,
                             improvement_summary=[f"Stopped at {checkpoint.checkpoint_type} checkpoint"],
@@ -5927,10 +5970,14 @@ class RubricLoop:
                 self._log(f"  [Feedback] Generation failed (non-fatal): {e}")
                 last_feedback_text = ""
 
-        # Use best iteration, not last (scores can regress)
+        # Return the last iteration's output (regression recovery teaches the model in-band)
         best = max(history, key=lambda h: h.percentage)
+        last = history[-1]
         limit_msg = f"Max iterations ({self.max_iterations}) reached" if self.max_iterations > 0 else "Loop ended"
-        self._log(f"\n{limit_msg}. Best iteration: {best.number}/{len(history)} ({best.percentage:.1%})")
+        self._log(
+            f"\n{limit_msg}. Last: {last.percentage:.1%} (iter {last.number}), "
+            f"Best was: {best.percentage:.1%} (iter {best.number})"
+        )
         self.tracker.complete()
 
         improvements = []
@@ -5980,10 +6027,10 @@ class RubricLoop:
 
         result = LoopResult(
             success=False,
-            output=self._resolve_attempt(best.attempt),
+            output=self._resolve_attempt(last.attempt),
             iterations=len(history),
-            final_score=best.total_score,
-            final_percentage=best.percentage,
+            final_score=last.total_score,
+            final_percentage=last.percentage,
             rubric=rubric,
             history=history,
             improvement_summary=improvements,
