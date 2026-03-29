@@ -5870,6 +5870,38 @@ class RubricLoop:
                     criterion_scores=criterion_scores,
                     iteration=i,
                 )
+                # Persist feedback to disk alongside iter meta files for auditability
+                try:
+                    _fb_run_dir = Path(self.iterations_dir) / run_id
+                    _fb_path = _fb_run_dir / f"iter_{i + 1:03d}_feedback.json"
+                    _fb_record = {
+                        "iteration": i + 1,
+                        "feedback_text": last_feedback_text,
+                        "focus_areas": [
+                            cs.criterion_id
+                            for cs in criterion_scores
+                            if cs.percentage < 0.75
+                        ],
+                        "protected_criteria": [
+                            cs.criterion_id
+                            for cs in criterion_scores
+                            if cs.percentage >= 0.75
+                        ],
+                        "improvement_targets": [
+                            cs.criterion_id
+                            for cs in criterion_scores
+                            if cs.percentage < 0.75
+                        ],
+                        "prior_score": round(percentage, 4),
+                        "prior_criterion_scores": {
+                            cs.criterion_id: round(cs.percentage, 4)
+                            for cs in criterion_scores
+                        },
+                    }
+                    _fb_path.write_text(json.dumps(_fb_record, indent=2))
+                    self._log(f"  [Feedback] Persisted → {_fb_path.name}")
+                except Exception as _fb_exc:
+                    self._log(f"  [Feedback] Could not write feedback file (non-fatal): {_fb_exc}")
             except Exception as e:
                 self._log(f"  [Feedback] Generation failed (non-fatal): {e}")
                 last_feedback_text = ""
