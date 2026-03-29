@@ -5565,6 +5565,7 @@ class RubricLoop:
                 )
 
         consecutive_regressions = 0
+        stall_count = 0  # consecutive iterations without score improvement
         regression_note = ""
         last_feedback_text = ""  # Structured feedback from FeedbackAgent for next iteration
 
@@ -5715,6 +5716,31 @@ class RubricLoop:
             if eval_result.get("convergence") and i >= 3:
                 self._log(f"\nConverged at iteration {i} — scores plateaued. Stopping.")
                 break
+
+            # Stall detection: stop if score hasn't improved for stall_threshold consecutive iterations
+            if len(history) >= 2:
+                best_before_last = max(h.percentage for h in history[:-1])
+                if history[-1].percentage > best_before_last + 0.005:
+                    stall_count = 0
+                else:
+                    stall_count += 1
+                if stall_count >= self.stall_threshold:
+                    self._log(
+                        f"\n[Stall detected] Stopping after iter {i} — "
+                        f"no improvement for {stall_count} consecutive iterations"
+                    )
+                    break
+
+            # Focus-area stall: if the same focus areas appear in 3+ consecutive iterations,
+            # the generation agent is stuck and cannot fix those criteria.
+            if len(history) >= 3:
+                last_3_focus = [frozenset(h.focus_areas) for h in history[-3:]]
+                if last_3_focus[0] and last_3_focus[0] == last_3_focus[1] == last_3_focus[2]:
+                    self._log(
+                        f"\n[Stall detected] Same focus areas repeated 3 consecutive times "
+                        f"({', '.join(sorted(last_3_focus[0]))}) — generation agent is stuck. Stopping."
+                    )
+                    break
 
             # Checkpoint check (after scoring, before next iteration)
             if self.enable_checkpoints:
