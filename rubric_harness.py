@@ -47,6 +47,7 @@ except ImportError:
     Anthropic = None
 
 from rubric_system.rubric_learning import RubricStore, RubricLearner
+from rubric_system.rubric_store import RubricStore as RubricRAGStore
 from rubric_system.self_improve import OutcomeTracker, LearningIntegrator, SelfEditor
 
 # Ensure API key is available
@@ -3091,7 +3092,9 @@ RUBRIC DESIGN PRINCIPLES:
                  research_model: str = "claude-sonnet-4-20250514",
                  enable_tracing: bool = True,
                  enable_expert_persona: bool = True,
-                 enable_exemplar: bool = True):
+                 enable_exemplar: bool = True,
+                 enable_rubric_store: bool = True,
+                 rag_store: Optional[RubricRAGStore] = None):
         if Anthropic is None:
             raise ImportError("anthropic package required: pip install anthropic")
         self.client = Anthropic()  # Fresh client, separate from generation/scoring/evaluation agents
@@ -3103,6 +3106,8 @@ RUBRIC DESIGN PRINCIPLES:
         self.research_model = research_model
         self.enable_expert_persona = enable_expert_persona
         self.enable_exemplar = enable_exemplar
+        self.enable_rubric_store = enable_rubric_store
+        self.rag_store = rag_store
         # Research tracer (verifies rubric grounding) — has its own isolated client
         self.tracer = ResearchTracer(model=model, verbose=verbose) if enable_tracing else None
 
@@ -3408,6 +3413,21 @@ RUBRIC DESIGN PRINCIPLES:
         if self.enable_research:
             research_section = self._research_best_practices(task, persona=expert_persona)
 
+        # Phase C: Exemplar retrieval + contrastive criterion extraction
+        contrastive_section = ""
+        if self.enable_exemplar:
+            contrastive_section = self._run_exemplar_pipeline(task)
+
+        # Step 1.5: RubricRAG — retrieve seed criteria from similar prior rubrics
+        retrieval_section = ""
+        if self.enable_rubric_store and self.rag_store is not None:
+            try:
+                retrieval_section = self.rag_store.format_retrieval_section(task)
+                if retrieval_section:
+                    self._log(f"[RubricRAG] Injected retrieval context ({len(retrieval_section)} chars)")
+            except Exception as e:
+                self._log(f"[RubricRAG] Retrieval unavailable (non-fatal): {e}")
+
         # Step 2: Inject learning context from prior evaluations
         learning_section = ""
         if self.learning_integrator:
@@ -3429,6 +3449,8 @@ RUBRIC DESIGN PRINCIPLES:
             prompt += "\n" + research_section
         if contrastive_section:
             prompt += "\n" + contrastive_section
+        if retrieval_section:
+            prompt += "\n" + retrieval_section
         if learning_section:
             prompt += "\n" + learning_section
 
@@ -4730,6 +4752,7 @@ class RubricLoop:
         enable_research: bool = True,
         enable_expert_persona: bool = True,
         enable_exemplar: bool = True,
+        enable_rubric_store: bool = True,
         auto_improve_interval: int = 3,
         auto_improve_min_uses: int = 10,
         auto_improve_max_edits: int = 3,
@@ -4777,6 +4800,8 @@ class RubricLoop:
         self.enable_research = enable_research
         self.enable_expert_persona = enable_expert_persona
         self.enable_exemplar = enable_exemplar
+        self.enable_rubric_store = enable_rubric_store
+        self.rag_store: Optional[RubricRAGStore] = RubricRAGStore() if enable_rubric_store else None
         self.auto_improve_interval = auto_improve_interval
         self.auto_improve_min_uses = auto_improve_min_uses
         self.auto_improve_max_edits = auto_improve_max_edits
@@ -5508,6 +5533,8 @@ class RubricLoop:
                 enable_research=self.enable_research,
                 enable_expert_persona=self.enable_expert_persona,
                 enable_exemplar=self.enable_exemplar,
+                enable_rubric_store=self.enable_rubric_store,
+                rag_store=self.rag_store,
             )
             rubric = generator.generate(task, context=context)
             matched_name = f"generated:{rubric.domain}"
@@ -5872,6 +5899,14 @@ class RubricLoop:
             self.rubric_store.save_rubric(record)
             self._log(f"[Loop3] Saved scored rubric: {rubric_id}")
 
+            # RubricRAG: persist rubric for future retrieval-augmented generation
+            if self.enable_rubric_store and self.rag_store is not None:
+                try:
+                    self.rag_store.save(result.rubric.task, result.rubric, result.final_percentage)
+                    self._log("[RubricRAG] Saved rubric to retrieval store")
+                except Exception as _e:
+                    self._log(f"[RubricRAG] Save failed (non-fatal): {_e}")
+
             # Scan for outcome signals from prior runs
             signals = self.outcome_tracker.scan_git_outcomes(
                 repo_path=self.repo_path, lookback_days=14
@@ -6102,6 +6137,8 @@ async def main():
                         help="Skip expert persona elicitation step during rubric generation")
     parser.add_argument("--no-exemplar", action="store_true",
                         help="Skip exemplar retrieval and contrastive criterion extraction")
+    parser.add_argument("--no-rubric-store", action="store_true",
+                        help="Disable RubricRAG retrieval store (skip retrieval seeding and persistence)")
     parser.add_argument("--lean", action="store_true",
                         help="Lean mode: strip iteration-aware scaffolding (early/mid/late strategy) "
                              "for A/B testing whether that guidance is still necessary with newer models")
@@ -6178,6 +6215,7 @@ async def main():
         enable_research=not args.no_research,
         enable_expert_persona=not args.no_expert_persona,
         enable_exemplar=not args.no_exemplar,
+        enable_rubric_store=not args.no_rubric_store,
         auto_improve_interval=0 if args.no_auto_improve else 3,
         lean_mode=args.lean,
         use_deterministic=not args.no_deterministic,
