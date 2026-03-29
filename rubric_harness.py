@@ -2146,7 +2146,7 @@ Return only JSON — no prose outside the JSON block."""
         from dataclasses import replace as dc_replace
 
         if len(rubric.criteria) < 2:
-            return rubric, []
+            return rubric, [], []
 
         criteria_json = [
             {
@@ -2215,12 +2215,13 @@ If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
         tradeoffs = result.get("tradeoffs", [])
         if not tradeoffs:
             self._log("No trade-offs detected.")
-            return rubric, []
+            return rubric, [], []
 
         # Build a mutable lookup; track criteria absorbed by a MERGE.
         criteria_map = {c.id: c for c in rubric.criteria}
         merged_ids: set = set()
         resolution_messages: List[str] = []
+        tradeoff_context_blocks: List[str] = []
 
         for t in tradeoffs:
             cid_a = t.get("criterion_a", "")
@@ -2257,9 +2258,13 @@ If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
                 secondary = cid_b if primary == cid_a else cid_a
                 if secondary not in criteria_map:
                     secondary = cid_b
-                sec = criteria_map[secondary]
-                new_desc = sec.description + f" [Lower priority when in tension with {primary}: {note}]"
-                criteria_map[secondary] = dc_replace(sec, description=new_desc)
+                # Do NOT mutate the criterion description — emit a generation context
+                # note instead so the rubric criteria remain clean.  The note is
+                # injected into the generation agent's prompt as a separate block.
+                tradeoff_context_blocks.append(
+                    f"PRIORITY NOTE: When '{primary}' and '{secondary}' are in tension, "
+                    f"prioritize '{primary}'. {note}"
+                )
                 msg = f"[prioritize] {primary} > {secondary}: {explanation[:80]}"
                 resolution_messages.append(msg)
                 self._log(f"  {msg}")
@@ -2294,7 +2299,7 @@ If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
             f"{len(new_criteria)} criteria remain (was {len(rubric.criteria)}), "
             f"{new_total}pts total (was {rubric.total_points}pts)."
         )
-        return refined_rubric, resolution_messages
+        return refined_rubric, resolution_messages, tradeoff_context_blocks
 
 
 class GenerationAgent:
@@ -5064,22 +5069,27 @@ class RubricLoop:
             self._log("  All criteria approved — no refinements.")
         return refined
 
-    def _resolve_tradeoffs(self, rubric: "Rubric") -> "Rubric":
+    def _resolve_tradeoffs(self, rubric: "Rubric") -> "tuple[Rubric, List[str]]":
         """Detect and resolve inversely correlated criteria before iteration 1.
 
         One extra LLM call — the TradeoffDetector (isolated context) analyses
         all criteria pairwise, identifies inverse correlations that would cause
         the loop to ping-pong, and returns a resolved rubric.
+
+        Returns:
+            (resolved_rubric, tradeoff_context) — tradeoff_context is a list of
+            priority-note strings to inject into the generation agent's prompt.
+            Criterion descriptions are NOT modified; the notes live separately.
         """
         self._log("\n[Trade-off Detection] Analysing criteria for inverse correlations...")
-        resolved, messages = self.tradeoff_detector.detect_and_resolve(rubric)
+        resolved, messages, tradeoff_context = self.tradeoff_detector.detect_and_resolve(rubric)
         if messages:
             self._log(f"  {len(messages)} trade-off(s) resolved:")
             for msg in messages:
                 self._log(f"    {msg}")
         else:
             self._log("  No trade-offs detected.")
-        return resolved
+        return resolved, tradeoff_context
 
     # -------------------------------------------------------------------------
     # File-based artifact handoff helpers (improvements #2 and #3)
@@ -5368,6 +5378,7 @@ class RubricLoop:
         regression_note: str = "",
         context: str = None,
         structured_feedback: str = "",
+        tradeoff_context: Optional[List[str]] = None,
     ) -> str:
         """Generate content optimized for rubric scores, with feedback injection.
 
@@ -5439,6 +5450,14 @@ class RubricLoop:
 
         if feedback_section:
             prompt += "\n" + feedback_section
+
+        # Inject trade-off priority notes as generation context (not baked into
+        # the rubric descriptions).  These notes come from TradeoffDetector and
+        # tell the generator which criterion wins when two are in tension.
+        if tradeoff_context:
+            prompt += "\n\nCRITERIA PRIORITY NOTES (apply when criteria are in tension):\n"
+            for note in tradeoff_context:
+                prompt += f"  - {note}\n"
 
         # Inject structured feedback from the FeedbackAgent (iteration 2+)
         # This is the rich, actionable diagnostic that tells the generator
@@ -5554,8 +5573,9 @@ class RubricLoop:
         # Trade-off detection: resolve inversely correlated criteria before the loop
         # starts so that feedback never ping-pongs between opposing objectives.
         # Skip on resume — the rubric was already resolved in the prior run.
+        tradeoff_context: List[str] = []
         if not _resuming and self.enable_tradeoff_detection:
-            rubric = self._resolve_tradeoffs(rubric)
+            rubric, tradeoff_context = self._resolve_tradeoffs(rubric)
 
         domain = rubric.domain
 
@@ -5639,6 +5659,7 @@ class RubricLoop:
                     regression_note=regression_note,
                     context=context if context else None,
                     structured_feedback=last_feedback_text,
+                    tradeoff_context=tradeoff_context,
                 )
 
             # Track verification iteration
