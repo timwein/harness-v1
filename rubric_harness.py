@@ -2976,6 +2976,78 @@ Write the persona in second person ("You are..."). Be specific and concrete — 
 Output only the persona description. No preamble, no headers, no explanation."""
 
 
+EXEMPLAR_SEARCH_PROMPT = """You are an exemplar research specialist. Your job is to find real, high-quality example outputs for a specific type of task — the kind produced by top practitioners in the field.
+
+TASK TYPE TO FIND EXAMPLES FOR:
+{task}
+
+SEARCH GOALS:
+1. Find 2-4 actual expert-quality example outputs or templates for this task type
+2. Focus on what makes them distinctively better than average — not just "well-written" but specifically expert
+3. Extract the most discriminating features: what would a naive LLM miss that an expert gets right?
+
+SEARCH APPROACH:
+- Search for "example [task type] by expert", "award-winning [task type]", "professional [task type] sample", "model [task type] template"
+- Look for examples cited by practitioners as exemplary, not just any available example
+- Target industry publications, professional portfolios, award winners, canonical references
+
+OUTPUT FORMAT:
+Provide an EXEMPLAR BRIEF with these sections:
+
+EXEMPLAR SOURCES: What sources/examples did you find? (2-4 examples, with their notable qualities)
+
+DISTINCTIVE EXPERT FEATURES: For each exemplar, extract 3-5 specific features that distinguish expert work from default output. Be concrete — not "high quality" but "uses specific technique X" or "avoids common error Y".
+
+EXPERT-VS-DEFAULT GAP: What are the top 3-5 dimensions where expert output is most clearly superior to what a default LLM would produce? What would the LLM get approximately right but subtly wrong?
+
+Be specific and concrete. The goal is to identify criteria that require real domain knowledge to evaluate — not just "is it clear?" but "does it use technique X?" or "does it avoid failure mode Y that beginners commonly hit?" """
+
+
+CONTRASTIVE_CRITERIA_PROMPT = """You are a rubric calibration specialist. Your job is to derive DISCRIMINATIVE scoring criteria by analyzing the gap between expert-quality outputs and what a default LLM produces.
+
+TASK:
+{task}
+
+EXPERT EXEMPLAR BRIEF:
+{exemplar_brief}
+
+BASELINE OUTPUT (what Claude produces without guidance):
+{baseline}
+
+YOUR JOB:
+Analyze where the baseline output falls short of the expert exemplars. For each dimension where expert output is clearly superior, generate ONE criterion that:
+1. Would score the expert output at 90-100%
+2. Would score the baseline output at 40-60%
+3. Requires domain knowledge to evaluate — not just "is it clear?" but something that a generalist reviewer would likely miss
+4. Is specific and measurable — has concrete pass/fail indicators
+
+CRITICAL: These criteria must be discriminating. If the baseline and expert output would score similarly, the criterion is not discriminating enough. Only include criteria where you can clearly see the gap.
+
+OUTPUT FORMAT:
+Generate 3-6 contrastive criteria as a JSON array:
+
+```json
+[
+  {{
+    "id": "contrastive_[descriptive_name]",
+    "category": "[category]",
+    "description": "[what this criterion measures — be specific]",
+    "pass_condition": "[concrete, specific condition for passing — cite the expert technique/standard]",
+    "expert_score_rationale": "[why expert output scores high — what specifically they do]",
+    "baseline_gap": "[what the baseline gets wrong or misses — be concrete]",
+    "domain_signal": "[why this requires domain knowledge to evaluate]"
+  }}
+]
+```
+
+RULES:
+- Generate ONLY criteria where you can see a clear, specific gap between expert and baseline
+- Each criterion must be grounded in the expert exemplar brief — not invented
+- If you cannot find 3 genuinely discriminating criteria, generate fewer — quality over quantity
+- Do NOT generate criteria the baseline already satisfies well
+- Do NOT generate generic quality criteria (e.g., "is clear", "is organized") — these are not discriminating"""
+
+
 class RubricAgent:
     """Independent rubric creation agent with isolated context window.
 
@@ -3018,7 +3090,8 @@ RUBRIC DESIGN PRINCIPLES:
                  enable_research: bool = True,
                  research_model: str = "claude-sonnet-4-20250514",
                  enable_tracing: bool = True,
-                 enable_expert_persona: bool = True):
+                 enable_expert_persona: bool = True,
+                 enable_exemplar: bool = True):
         if Anthropic is None:
             raise ImportError("anthropic package required: pip install anthropic")
         self.client = Anthropic()  # Fresh client, separate from generation/scoring/evaluation agents
@@ -3029,6 +3102,7 @@ RUBRIC DESIGN PRINCIPLES:
         self.enable_tracing = enable_tracing
         self.research_model = research_model
         self.enable_expert_persona = enable_expert_persona
+        self.enable_exemplar = enable_exemplar
         # Research tracer (verifies rubric grounding) — has its own isolated client
         self.tracer = ResearchTracer(model=model, verbose=verbose) if enable_tracing else None
 
@@ -3128,6 +3202,178 @@ RUBRIC DESIGN PRINCIPLES:
             self._log(f"Research step failed (non-fatal): {e}")
             return ""
 
+    def _retrieve_exemplars(self, task: str) -> str:
+        """Phase C — web search for expert-quality example outputs for similar tasks.
+
+        Dynamically generates search queries from the task description and searches
+        for exemplary outputs produced by top practitioners. Works for any task type.
+
+        Returns:
+            Formatted exemplar brief with distinctive excerpts, or empty string
+            if no relevant exemplars are found.
+        """
+        self._log("Phase C: Searching for expert exemplars...")
+
+        prompt = EXEMPLAR_SEARCH_PROMPT.format(task=task)
+
+        try:
+            response = self.client.messages.create(
+                model=self.research_model,
+                max_tokens=4000,
+                tools=[{
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                }],
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            # Extract text blocks from response (may include tool_use + text blocks)
+            text_parts = []
+            for block in response.content:
+                if hasattr(block, "text"):
+                    text_parts.append(block.text)
+
+            exemplar_brief = "\n".join(text_parts)
+
+            if exemplar_brief.strip():
+                n_searches = sum(
+                    1 for b in response.content
+                    if hasattr(b, "type") and b.type == "web_search_tool_result"
+                )
+                self._log(f"Exemplar search complete ({len(exemplar_brief)} chars, "
+                          f"{n_searches} searches)")
+                return exemplar_brief
+            else:
+                self._log("Exemplar search returned no results — skipping")
+                return ""
+
+        except Exception as e:
+            self._log(f"Exemplar search failed (non-fatal): {e}")
+            return ""
+
+    def _generate_baseline(self, task: str) -> str:
+        """Generate a cheap single-shot baseline representing what Claude produces
+        without guidance. Max 2000 tokens, no system prompt engineering.
+
+        Returns:
+            Baseline text, or empty string if generation fails.
+        """
+        self._log("Phase C: Generating quick baseline...")
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                messages=[{"role": "user", "content": f"Please complete the following task:\n\n{task}"}],
+            )
+            baseline = response.content[0].text if response.content else ""
+            if baseline.strip():
+                self._log(f"Baseline generated ({len(baseline)} chars)")
+            return baseline
+        except Exception as e:
+            self._log(f"Baseline generation failed (non-fatal): {e}")
+            return ""
+
+    def _extract_contrastive_criteria(self, task: str, exemplar_brief: str, baseline: str) -> str:
+        """Extract discriminative criteria from the gap between expert exemplars and baseline.
+
+        Feeds both the expert exemplar brief and the quick baseline to the model and
+        asks it to identify criteria that score experts high and baseline medium — i.e.,
+        criteria that only domain knowledge reveals.
+
+        Returns:
+            Formatted criteria seeds to inject into rubric generation prompt, or empty
+            string if extraction fails or produces no discriminating criteria.
+        """
+        self._log("Phase C: Extracting contrastive criteria...")
+
+        prompt = CONTRASTIVE_CRITERIA_PROMPT.format(
+            task=task,
+            exemplar_brief=exemplar_brief[:3000],  # cap to avoid oversized prompts
+            baseline=baseline[:2000],
+        )
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=3000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = response.content[0].text if response.content else ""
+
+            # Try to extract JSON array of criteria
+            match = re.search(r'```(?:json)?\s*(\[[\s\S]*?\])\s*```', raw)
+            if not match:
+                match = re.search(r'(\[[\s\S]*\])', raw)
+
+            if not match:
+                self._log("Contrastive extraction returned no parseable criteria — skipping")
+                return ""
+
+            try:
+                criteria_specs = json.loads(match.group(1))
+            except (json.JSONDecodeError, ValueError):
+                self._log("Contrastive criteria JSON parse failed — skipping")
+                return ""
+
+            if not criteria_specs:
+                self._log("Contrastive extraction found 0 discriminating criteria — skipping")
+                return ""
+
+            self._log(f"Extracted {len(criteria_specs)} contrastive criteria")
+
+            # Format as a prompt injection block
+            lines = [
+                "\nCONTRASTIVE CRITERIA SEEDS — derived by comparing expert exemplars against a "
+                "default LLM baseline. These represent dimensions where expert output is clearly "
+                "superior to what Claude produces without guidance. Prioritize these as high-signal "
+                "criteria in the rubric. De-duplicate against criteria already derived from domain "
+                "research.\n"
+            ]
+            for c in criteria_specs:
+                lines.append(f"  [{c.get('id', 'contrastive')}] {c.get('description', '')}")
+                if c.get("pass_condition"):
+                    lines.append(f"    Pass condition: {c['pass_condition']}")
+                if c.get("baseline_gap"):
+                    lines.append(f"    Baseline gap: {c['baseline_gap']}")
+                if c.get("domain_signal"):
+                    lines.append(f"    Domain signal: {c['domain_signal']}")
+                lines.append("")
+
+            return "\n".join(lines)
+
+        except Exception as e:
+            self._log(f"Contrastive extraction failed (non-fatal): {e}")
+            return ""
+
+    def _run_exemplar_pipeline(self, task: str) -> str:
+        """Orchestrate the full exemplar retrieval + contrastive criterion extraction pipeline.
+
+        Phase C of rubric generation — runs after best-practice web research (Phase A)
+        and before the main rubric generation call:
+          C1. Search the web for expert-quality exemplar outputs (web search)
+          C2. Generate a cheap single-shot baseline (what Claude produces without guidance)
+          C3. Extract discriminative criteria from the expert-vs-baseline gap
+
+        Returns:
+            Formatted contrastive criteria section for injection into the rubric
+            generation prompt, or empty string if the pipeline finds nothing useful.
+        """
+        # C1: Search for expert exemplars
+        exemplar_brief = self._retrieve_exemplars(task)
+        if not exemplar_brief:
+            self._log("No exemplars found — skipping contrastive extraction")
+            return ""
+
+        # C2: Generate a quick baseline
+        baseline = self._generate_baseline(task)
+        if not baseline:
+            self._log("Baseline generation failed — skipping contrastive extraction")
+            return ""
+
+        # C3: Extract contrastive criteria from the gap
+        return self._extract_contrastive_criteria(task, exemplar_brief, baseline)
+
     def generate(self, task: str, context: str = "", seed_rubrics: list[Rubric] = None) -> Rubric:
         """Generate a bespoke rubric for the given task.
 
@@ -3181,6 +3427,8 @@ RUBRIC DESIGN PRINCIPLES:
         # has full domain context before generating criteria
         if research_section:
             prompt += "\n" + research_section
+        if contrastive_section:
+            prompt += "\n" + contrastive_section
         if learning_section:
             prompt += "\n" + learning_section
 
@@ -4481,6 +4729,7 @@ class RubricLoop:
         enable_self_improve: bool = True,
         enable_research: bool = True,
         enable_expert_persona: bool = True,
+        enable_exemplar: bool = True,
         auto_improve_interval: int = 3,
         auto_improve_min_uses: int = 10,
         auto_improve_max_edits: int = 3,
@@ -4527,6 +4776,7 @@ class RubricLoop:
         )
         self.enable_research = enable_research
         self.enable_expert_persona = enable_expert_persona
+        self.enable_exemplar = enable_exemplar
         self.auto_improve_interval = auto_improve_interval
         self.auto_improve_min_uses = auto_improve_min_uses
         self.auto_improve_max_edits = auto_improve_max_edits
@@ -5257,6 +5507,7 @@ class RubricLoop:
                 learning_integrator=self.learning_integrator if self.enable_self_improve else None,
                 enable_research=self.enable_research,
                 enable_expert_persona=self.enable_expert_persona,
+                enable_exemplar=self.enable_exemplar,
             )
             rubric = generator.generate(task, context=context)
             matched_name = f"generated:{rubric.domain}"
@@ -5844,11 +6095,13 @@ async def main():
                         help="Disable automatic self-editing (keeps learning active)")
     parser.add_argument("--no-research", action="store_true",
                         help="Skip deep research step during rubric generation")
-parser.add_argument("--no-tradeoff-detection", action="store_true",
+    parser.add_argument("--no-tradeoff-detection", action="store_true",
                         help="Skip trade-off detection step (the pass that resolves inversely "
                              "correlated criteria before the gen-verify loop starts)")
     parser.add_argument("--no-expert-persona", action="store_true",
                         help="Skip expert persona elicitation step during rubric generation")
+    parser.add_argument("--no-exemplar", action="store_true",
+                        help="Skip exemplar retrieval and contrastive criterion extraction")
     parser.add_argument("--lean", action="store_true",
                         help="Lean mode: strip iteration-aware scaffolding (early/mid/late strategy) "
                              "for A/B testing whether that guidance is still necessary with newer models")
@@ -5924,6 +6177,7 @@ parser.add_argument("--no-tradeoff-detection", action="store_true",
         enable_self_improve=not args.no_learn,
         enable_research=not args.no_research,
         enable_expert_persona=not args.no_expert_persona,
+        enable_exemplar=not args.no_exemplar,
         auto_improve_interval=0 if args.no_auto_improve else 3,
         lean_mode=args.lean,
         use_deterministic=not args.no_deterministic,
