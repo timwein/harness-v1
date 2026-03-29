@@ -5785,7 +5785,8 @@ class RubricLoop:
                     final_score=total,
                     final_percentage=percentage,
                     rubric=rubric,
-                    history=history
+                    history=history,
+                    best_iteration=i,
                 )
                 self._post_run(result)
                 return result
@@ -5837,15 +5838,17 @@ class RubricLoop:
                         )
                     if action == "stop":
                         self.tracker.complete()
+                        _cp_best = max(history, key=lambda h: h.percentage) if history else None
                         return LoopResult(
                             success=False,
-                            output=content,
+                            output=self._resolve_attempt(_cp_best.attempt) if _cp_best else content,
                             iterations=i,
-                            final_score=total,
-                            final_percentage=percentage,
+                            final_score=_cp_best.total_score if _cp_best else total,
+                            final_percentage=_cp_best.percentage if _cp_best else percentage,
                             rubric=rubric,
                             history=history,
-                            improvement_summary=[f"Stopped at {checkpoint.checkpoint_type} checkpoint"]
+                            improvement_summary=[f"Stopped at {checkpoint.checkpoint_type} checkpoint"],
+                            best_iteration=_cp_best.number if _cp_best else i,
                         )
 
             # Generate structured feedback for the next iteration's generator
@@ -5874,7 +5877,7 @@ class RubricLoop:
         # Use best iteration, not last (scores can regress)
         best = max(history, key=lambda h: h.percentage)
         limit_msg = f"Max iterations ({self.max_iterations}) reached" if self.max_iterations > 0 else "Loop ended"
-        self._log(f"\n{limit_msg}. Best: {best.percentage:.1%} (iteration {best.number})")
+        self._log(f"\n{limit_msg}. Best iteration: {best.number}/{len(history)} ({best.percentage:.1%})")
         self.tracker.complete()
 
         improvements = []
@@ -5930,7 +5933,8 @@ class RubricLoop:
             final_percentage=best.percentage,
             rubric=rubric,
             history=history,
-            improvement_summary=improvements
+            improvement_summary=improvements,
+            best_iteration=best.number,
         )
         self._post_run(result)
         return result
@@ -6344,6 +6348,7 @@ async def main():
         print(json.dumps({
             "success": result.success,
             "iterations": result.iterations,
+            "best_iteration": result.best_iteration,
             "final_score": result.final_score,
             "final_percentage": result.final_percentage,
             "max_points": result.rubric.total_points,

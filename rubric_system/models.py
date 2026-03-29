@@ -130,6 +130,7 @@ class LoopResult:
     rubric: Rubric
     history: list[Iteration]
     improvement_summary: list[str] = field(default_factory=list)
+    best_iteration: int = 0
 
 
 # ============================================================================
