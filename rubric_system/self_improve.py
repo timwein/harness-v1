@@ -14,6 +14,7 @@ that produces X, then applies them. The harness literally edits its own source f
 """
 
 import json
+import math
 import re
 import os
 import sys
@@ -297,6 +298,16 @@ class LearningIntegrator:
             feedback_section = injector.format_for_rubric_generation(task, domain)
             if feedback_section:
                 parts.append(feedback_section)
+
+        # 4. Cross-domain strategy transfer hints (DGM-H Upgrade 4)
+        try:
+            from rubric_system.meta_strategy import MetaStrategyStore
+            meta_store = MetaStrategyStore()
+            transfer_hints = meta_store.get_transfer_hints(target_domain=domain)
+            if transfer_hints:
+                parts.append(transfer_hints)
+        except Exception:
+            pass  # non-fatal — missing file or import is fine
 
         if not parts:
             return ""
@@ -644,6 +655,7 @@ class SelfEditProposal:
     edits: list[dict]  # [{"old": str, "new": str, "rationale": str}]
     rationale: str
     performance_data: dict
+    edit_type: str = "unknown"  # maps to MetaProposalStrategy.signal_weights keys
     proposed_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     applied: bool = False
     outcome: str = ""  # filled in after observing impact
@@ -706,6 +718,13 @@ class SelfEditor:
         self.edit_history_path = Path(edit_history_path)
         self.edit_history: list[dict] = self._load_history()
 
+        # Upgrade 1: Editable meta-level proposal strategy (DGM-H)
+        from rubric_system.meta_strategy import MetaProposalStrategy, MetaStrategyEditor
+        self.meta_strategy = MetaProposalStrategy.load()
+        self.meta_strategy_editor = MetaStrategyEditor(
+            self.meta_strategy, str(self.edit_history_path)
+        )
+
     def _log(self, msg: str):
         if self.verbose:
             print(f"[SelfEditor] {msg}")
@@ -743,37 +762,43 @@ class SelfEditor:
                     feedback_by_criterion.setdefault(entry.criterion_id, []).append(entry.content)
 
         # === Mode 1: Per-criterion edits (pre-built rubrics) ===
-        for criterion_info in insights.get("low_value_criteria", []):
-            cid = criterion_info["id"]
-            proposal = self._propose_edit_for_criterion(
-                cid, criterion_info, stats, source_code,
-                feedback_by_criterion.get(cid, []),
-                reason="high_false_positive",
-            )
-            if proposal:
-                proposals.append(proposal)
+        # Signal weights gate whether each proposal type runs (DGM-H Upgrade 1)
+        sw = self.meta_strategy.signal_weights
 
-        for criterion_info in insights.get("suggested_removals", []):
-            cid = criterion_info["id"]
-            proposal = self._propose_edit_for_criterion(
-                cid, criterion_info, stats, source_code,
-                feedback_by_criterion.get(cid, []),
-                reason="always_passes",
-            )
-            if proposal:
-                proposals.append(proposal)
-
-        for criterion_info in insights.get("high_value_criteria", []):
-            cid = criterion_info["id"]
-            stat = next((s for s in stats if s.criterion_id == cid), None)
-            if stat and stat.pass_rate < 0.5:
+        if sw.get("high_false_positive", 0.5) > 0.3:
+            for criterion_info in insights.get("low_value_criteria", []):
+                cid = criterion_info["id"]
                 proposal = self._propose_edit_for_criterion(
                     cid, criterion_info, stats, source_code,
                     feedback_by_criterion.get(cid, []),
-                    reason="high_value_low_pass",
+                    reason="high_false_positive",
                 )
                 if proposal:
                     proposals.append(proposal)
+
+        if sw.get("always_passes", 0.5) > 0.3:
+            for criterion_info in insights.get("suggested_removals", []):
+                cid = criterion_info["id"]
+                proposal = self._propose_edit_for_criterion(
+                    cid, criterion_info, stats, source_code,
+                    feedback_by_criterion.get(cid, []),
+                    reason="always_passes",
+                )
+                if proposal:
+                    proposals.append(proposal)
+
+        if sw.get("high_value_low_pass", 0.5) > 0.3:
+            for criterion_info in insights.get("high_value_criteria", []):
+                cid = criterion_info["id"]
+                stat = next((s for s in stats if s.criterion_id == cid), None)
+                if stat and stat.pass_rate < 0.5:
+                    proposal = self._propose_edit_for_criterion(
+                        cid, criterion_info, stats, source_code,
+                        feedback_by_criterion.get(cid, []),
+                        reason="high_value_low_pass",
+                    )
+                    if proposal:
+                        proposals.append(proposal)
 
         # === Mode 2: Feedback-pattern edits (generated rubrics) ===
         # When criterion IDs don't repeat, per-criterion stats are empty.
@@ -788,7 +813,50 @@ class SelfEditor:
             proposals.append(prompt_proposal)
 
         self._log(f"Generated {len(proposals)} edit proposals")
-        return proposals
+        # Upgrade 3 (DGM-H): UCB-rank proposals before returning
+        return self._rank_proposals_ucb(proposals)
+
+    # --- Upgrade 3: UCB proposal selection (DGM-H) ---
+
+    def _ucb_score(self, edit_type: str, t: int, c: float = 1.4) -> float:
+        """UCB1 score for an edit type.
+
+        Args:
+            edit_type: one of the signal_weights keys
+            t: total number of proposals attempted (across all types)
+            c: exploration coefficient (1.4 = moderate exploration)
+
+        Returns float — higher = more likely to attempt this edit type next.
+        """
+        history = [
+            e for e in self.edit_history
+            if e.get("edit_type", "unknown") == edit_type
+        ]
+        if not history:
+            return float('inf')  # always explore unvisited types at least once
+
+        n = len(history)
+        wins = sum(
+            1 for e in history
+            if e.get("accepted", False) and e.get("score_delta", 0) > 0
+        )
+        mu = wins / n  # exploitation term
+        exploration = c * math.sqrt(math.log(max(t, 1)) / n)
+        return mu + exploration
+
+    def _rank_proposals_ucb(self, proposals: list) -> list:
+        """Re-rank proposals using UCB scores before applying.
+
+        Called at the end of analyze_and_propose() to reorder the list.
+        """
+        if not proposals:
+            return proposals
+        t = len(self.edit_history)
+        return sorted(
+            proposals,
+            key=lambda p: self._ucb_score(getattr(p, 'edit_type', 'unknown'), t),
+            reverse=True,
+        )
 
     def _propose_feedback_based_edits(self, source_code: str) -> list[SelfEditProposal]:
         """Analyze feedback patterns to propose systemic edits for generated rubrics."""
@@ -962,6 +1030,7 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
                 edits=edits,
                 rationale=spec.get("rationale", ""),
                 performance_data=performance_data,
+                edit_type=reason,
             )
         except Exception as e:
             self._log(f"Edit proposal failed for {criterion_id}: {e}")
@@ -1157,6 +1226,9 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
                     "edits_applied": edits_applied,
                     "performance_data": proposal.performance_data,
                 },
+                "edit_type": getattr(proposal, "edit_type", "unknown"),
+                "accepted": edits_applied > 0 and not dry_run,
+                "score_delta": 0,  # backfilled on next auto_improve() run
                 "applied_at": datetime.utcnow().isoformat(),
                 "dry_run": dry_run,
             }
@@ -1206,27 +1278,71 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
         """
         self._log("Starting self-improvement cycle...")
 
+        # 0. Backfill score_delta on previous edit history entries (DGM-H Upgrade 2)
+        from rubric_system.improvement_velocity import (
+            ImprovementVelocityTracker, backfill_score_delta,
+        )
+        backfill_score_delta(str(self.edit_history_path), self.store)
+        # Reload history in case backfill modified it
+        self.edit_history = self._load_history()
+
         # 1. Scan for new outcome signals
-        tracker = OutcomeTracker(self.store, verbose=self.verbose)
+        outcome_tracker = OutcomeTracker(self.store, verbose=self.verbose)
         try:
-            tracker.scan_git_outcomes()
+            outcome_tracker.scan_git_outcomes()
         except Exception as e:
             self._log(f"Git scan skipped: {e}")
 
-        # 2. Analyze and propose
+        # 2. Capture baseline for imp@k tracking
+        velocity_tracker = ImprovementVelocityTracker()
+        all_rubrics = self.store.list_all()
+        baseline_score = all_rubrics[-1].overall_score if all_rubrics else 0.0
+        task_hash = all_rubrics[-1].task_hash if all_rubrics else "unknown"
+        velocity_tracker.start_run(
+            strategy_version=self.meta_strategy.version,
+            domain=getattr(all_rubrics[-1], "project", "") if all_rubrics else "",
+            task_hash=task_hash,
+            baseline_score=baseline_score,
+        )
+
+        # 3. Analyze and propose
         proposals = self.analyze_and_propose(min_uses=min_uses)
 
         if not proposals:
             self._log("No improvements identified")
             return []
 
-        # 3. Limit and apply
+        # 4. Limit and apply
         proposals = proposals[:max_edits]
         self._log(f"Applying {len(proposals)} proposals (max: {max_edits})")
 
         results = self.apply_proposals(proposals, dry_run=dry_run)
 
-        # 4. Summary
+        # 5. Finish imp@k tracking
+        applied_ids = [
+            r["proposal"]["target_function"]
+            for r in results if r["proposal"]["edits_applied"] > 0
+        ]
+        rejected_ids = [
+            r["proposal"]["target_function"]
+            for r in results if r["proposal"]["edits_applied"] == 0
+        ]
+        # Final score will be from next run; use baseline as placeholder
+        velocity_tracker.finish_run(
+            task_hash=task_hash,
+            final_score=baseline_score,  # updated on next run via backfill
+            proposals_applied=applied_ids,
+            proposals_rejected=rejected_ids,
+        )
+
+        # 6. Update the meta strategy itself every 3 runs (DGM-H Upgrade 1)
+        if len(self.edit_history) % 3 == 0 and len(self.edit_history) > 0:
+            self.meta_strategy_editor.update_signal_weights()
+            self._log(
+                f"MetaProposalStrategy updated to v{self.meta_strategy.version}"
+            )
+
+        # 7. Summary
         applied_count = sum(1 for r in results if r["proposal"]["edits_applied"] > 0)
         self._log(f"Self-improvement complete: {applied_count} edits applied")
 
