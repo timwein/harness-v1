@@ -1,0 +1,180 @@
+{
+  "run_id": "643cd4ad_20260330_182402",
+  "iteration": 4,
+  "content": "**1. Redlinear**\nA sophisticated evolution of the legal practice of \"redlining\" contracts\u2014marking changes and revisions in red ink. This coined term immediately signals contract review expertise while conveying precision and editorial rigor.\n\n**2. Covenmark**\nDrawing from contract law terminology for binding agreements, this compound name evokes trust and legal precision. The name carries gravitas that would resonate with law firm partners while suggesting both covenant protection and quality marking.\n\n**3. Clausebound**\nA powerful coined term suggesting the binding nature of contract clauses and the platform's comprehensive analysis capabilities. This compound name implies both legal expertise and technological precision in contract review workflows.\n\n**4. Vexis**\nA completely invented brand name derived from the legal concept of \"vexata quaestio\" (a settled legal question), shortened to create a modern, memorable identity. This two-syllable coined term suggests legal authority and resolution while ensuring clear domain availability.\n\n**5. Contractus**\nDrawing from classical Latin legal terminology, this three-syllable name evokes the foundational concept of contracts while creating a distinctive, professional identity. The classical reference positions the platform as authoritative and trustworthy for sophisticated legal work.",
+  "total_score": 15.5,
+  "max_score": 33,
+  "percentage": 0.4696969696969697,
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Binary: full points if pass, zero if fail",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Exactly 5 names provided? YES. Evidence: \"1. Redlinear\", \"2. Covenmark\", \"3. Clausebound\", \"4. Vexis\", \"5. Contractus\"\n- Each name has 1-2 sentence rationale explaining the thinking? YES. Evidence: Each name has explanatory text like \"A sophisticated evolution of the legal practice of 'redlining' contracts\" for Redlinear, \"Drawing from contract law terminology for binding agreements\" for Covenmark, etc."
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 3.5,
+      "max_points": 7,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "pronounceability",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "distinctiveness",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pronounceability: 50%x40% + brevity: 50%x30% + distinctiveness: 50%x30%",
+      "improvement_hints": [
+        "pronounceability: 50% -> 80% (+0.8 pts)",
+        "brevity: 50% -> 80% (+0.6 pts)",
+        "distinctiveness: 50% -> 80% (+0.6 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute pronounceability:\n- Names can be said aloud without confusion? YES. Evidence: \"Redlinear\" (3 syllables, clear), \"Covenmark\" (3 syllables, clear), \"Clausebound\" (2 syllables, clear), \"Vexis\" (2 syllables, clear), \"Contractus\" (3 syllables, clear)\n- No consonant clusters (3+ consecutive consonants)? YES. Evidence: All names avoid problematic consonant clusters\n- Pass radio test (clear when spoken over poor audio)? YES. Evidence: All names use common phonetic patterns\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard naming approach without specialized branding insights\n\nSub-attribute brevity:\n- Names are \u22643 syllables? YES. Evidence: Redlinear (3), Covenmark (3), Clausebound (2), Vexis (2), Contractus (3) - all meet requirement\n- Names are short and punchy? YES. Evidence: All names are concise, no lengthy compounds\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard brevity considerations without advanced naming theory\n\nSub-attribute distinctiveness:\n- Names don't blend in with existing brands? YES. Evidence: \"Redlinear\", \"Covenmark\", \"Clausebound\", \"Vexis\", \"Contractus\" are all distinctive coined/compound terms\n- Names avoid generic patterns? YES. Evidence: No obvious generic legal tech naming patterns used\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard distinctiveness approach without competitive analysis depth"
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.0,
+      "max_points": 10,
+      "percentage": 0.6000000000000001,
+      "sub_scores": [
+        {
+          "sub_id": "domain_signal",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "avoids_generic_ai",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "trust_register",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_signal: 75%x40% + avoids_generic_ai: 50%x30% + trust_register: 50%x30%",
+      "improvement_hints": [
+        "avoids_generic_ai: 50% -> 80% (+0.9 pts)",
+        "trust_register: 50% -> 80% (+0.9 pts)",
+        "domain_signal: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_signal:\n- Names evoke legal/contract/precision concepts? YES. Evidence: \"redlining contracts\", \"contract law terminology\", \"binding nature of contract clauses\", \"legal concept of 'vexata quaestio'\", \"classical Latin legal terminology\"\n- Names use subtle domain resonance rather than literal terms? YES. Evidence: Uses metaphorical and etymological connections rather than literal \"contract\" or \"legal\" prefixes\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Demonstrates deep knowledge of legal terminology like \"vexata quaestio\" and sophisticated understanding of redlining practice evolution\n\nSub-attribute avoids_generic_ai:\n- No 'AI' prefix/suffix used? YES. Evidence: None of the 5 names contain \"AI\"\n- No '-ify' suffix used? YES. Evidence: No names end in \"-ify\"\n- No 'Smart[X]' pattern used? YES. Evidence: No names use \"Smart\" prefix\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard avoidance of generic patterns without deeper branding strategy insights\n\nSub-attribute trust_register:\n- Names feel professional enough for legal market? YES. Evidence: \"carries gravitas that would resonate with law firm partners\", \"classical reference positions the platform as authoritative and trustworthy\"\n- Names use formal/professional language registers? YES. Evidence: All names avoid casual/playful tone, use sophisticated terminology\n- Would a law firm partner take a meeting with this company? YES. Evidence: Explicit mention of resonating \"with law firm partners\"\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard professional positioning without specific legal market insights"
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "domain_plausibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "no_trademark_conflicts",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_plausibility: 50%x50% + no_trademark_conflicts: 50%x50%",
+      "improvement_hints": [
+        "domain_plausibility: 50% -> 80% (+0.9 pts)",
+        "no_trademark_conflicts: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_plausibility:\n- Names are not common English dictionary words? YES. Evidence: \"Redlinear\", \"Covenmark\", \"Clausebound\", \"Vexis\", \"Contractus\" are all coined/compound terms\n- Names likely have .com available or reasonable variant? YES. Evidence: Text explicitly mentions \"ensuring clear domain availability\" for Vexis, and other names are sufficiently unique\n- At least 3/5 names avoid common dictionary words? YES. Evidence: All 5 names are coined/compound terms\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard availability considerations without domain research specifics\n\nSub-attribute no_trademark_conflicts:\n- Names are not existing well-known brand names? YES. Evidence: All names appear to be original creations\n- No obvious trademark conflicts present? YES. Evidence: Names are sufficiently distinctive and domain-specific\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard trademark avoidance without legal clearance analysis"
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "strategy_diversity",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "range_of_tone",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: strategy_diversity: 50%x50% + range_of_tone: 50%x50%",
+      "improvement_hints": [
+        "strategy_diversity: 50% -> 80% (+0.9 pts)",
+        "range_of_tone: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute strategy_diversity:\n- At least 3 different naming strategies used? YES. Evidence: Compound evolution (\"Redlinear\"), compound coining (\"Covenmark\", \"Clausebound\"), invented brand (\"Vexis\"), classical Latin (\"Contractus\") - 4+ strategies\n- Mix of metaphorical, coined, compound, classical approaches? YES. Evidence: Clear variety in naming approaches across the 5 names\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard variety without naming methodology expertise\n\nSub-attribute range_of_tone:\n- Mix of serious/approachable/bold tones present? YES. Evidence: \"Redlinear\" (sophisticated), \"Covenmark\" (trustworthy), \"Clausebound\" (powerful), \"Vexis\" (modern), \"Contractus\" (authoritative)\n- Clear tonal range across names? YES. Evidence: Names span from modern/tech-forward to classical/authoritative\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard tonal variation without brand positioning strategy depth"
+    }
+  ],
+  "focus_areas": [
+    "name_memorability.brevity",
+    "name_domain_resonance.avoids_generic_ai",
+    "name_availability.domain_plausibility",
+    "name_availability.no_trademark_conflicts",
+    "name_memorability.pronounceability"
+  ]
+}

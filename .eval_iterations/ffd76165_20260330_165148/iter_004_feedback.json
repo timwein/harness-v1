@@ -1,0 +1,31 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: The email is well-structured with excellent opening and tone, but loses points on specificity and restraint. The subject line needs more compelling curiosity, the CTA should be lower friction with clearer purpose, and the social proof section includes too many credentials that should be consolidated to 2 key points.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: Perfect score (8/8) - keep the specific TechCrunch reference opening\n  \u2713 email_tone: Perfect score (6/6) - maintain the peer-to-peer, confident tone\n  \u2713 email_length: Strong score (5.8/6) - preserve the concise structure and paragraph breaks\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_subject.specificity (current: 50%, 4.0 pts at stake)\n    Failed check: Subject line scored only 50% on specificity despite meeting basic requirements\n    Expected: 1.0 score for naming company or specific context\n    Found: References DataVault and CyberTech but lacks deeper contextual specificity\n    \u2192 ACTION: Enhance the subject line to include more specific context about their Series A or recent milestone. Try: 'DataVault Series A \u2014 your CyberTech compliance win caught my attention' or 'DataVault \u2014 loved your zero-trust approach from the TechCrunch piece'\n\n  FIX 2: email_subject.curiosity_hook (current: 50%, 3.5 pts at stake)\n    Failed check: Curiosity hook scored 50% despite being compelling and honest\n    Expected: 1.0 score for compelling + honest hook\n    Found: Creates curiosity but could be more compelling\n    \u2192 ACTION: Strengthen the curiosity element in the subject line by adding intrigue about the connection. Try: 'DataVault \u2014 the CyberTech compliance story reminded me of something' or 'DataVault \u2014 your zero-trust timing is perfect (here's why)'\n\n  FIX 3: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Failed check: CTA clarity scored 50% despite having single clear ask\n    Expected: 1.0 score for one clear ask\n    Found: Clear call request but could be more specific about purpose\n    \u2192 ACTION: Make the CTA more specific about the call's purpose. Change 'free for a quick 20-minute call' to 'free for a 20-minute call to discuss how I can help accelerate your Series A with Fortune 500 intros'\n\n  FIX 4: email_cta.low_friction (current: 50%, 2.8 pts at stake)\n    Failed check: Low friction scored 50% despite 20-minute call request\n    Expected: 1.0 score for 15-min call or async option\n    Found: 20-minute call request with schedule acknowledgment\n    \u2192 ACTION: Reduce the time commitment to 15 minutes and add an async option. Change to: 'free for a quick 15-minute call or happy to share specific CISO contacts via email if that's easier given your Series A timeline'\n\n  FIX 5: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Failed check: Credibility scored 50% despite verifiable claims\n    Expected: 1.0 score for verifiable claims with measurable outcomes\n    Found: Specific numbers and company names but could be more verifiable\n    \u2192 ACTION: Add more specific, verifiable details to strengthen credibility. Change 'warm intros to Fortune 500 CISOs' to 'direct intros to CISOs at 3 Fortune 100 companies who've bought similar solutions' and specify 'helped portfolio companies close $40M+ in enterprise deals in 2023'\n\n  FIX 6: email_social_proof.restraint (current: 25%, 1.5 pts at stake)\n    Failed check: Restraint scored 25% for including more than 2 proof points\n    Expected: 1.0 score for 1-2 tight proof points\n    Found: CyberTech scaling, Microsoft acquisition, portfolio network, and regulatory expertise - 4+ points\n    \u2192 ACTION: Consolidate to 2 proof points maximum. Keep only: (1) 'scaled CyberTech from 50 to 2,000+ enterprise customers before Microsoft acquired us' and (2) 'guided 3 portfolio companies through SOC2 Type II audits in under 90 days each.' Remove the portfolio network performance details.\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.7268,
+  "prior_criterion_scores": {
+    "email_subject": 0.5,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.55,
+    "email_cta": 0.5,
+    "email_tone": 1.0,
+    "email_length": 0.9615
+  }
+}

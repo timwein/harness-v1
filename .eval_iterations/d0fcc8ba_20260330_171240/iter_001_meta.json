@@ -1,0 +1,36 @@
+{
+  "run_id": "d0fcc8ba_20260330_171240",
+  "iteration": 1,
+  "total_score": 22.05,
+  "max_score": 34,
+  "percentage": 0.6485294117647059,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/d0fcc8ba_20260330_171240/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "code_correctness",
+      "points_earned": 7.05,
+      "max_points": 12,
+      "percentage": 0.5874999999999999
+    },
+    {
+      "criterion_id": "code_api_design",
+      "points_earned": 4.0,
+      "max_points": 8,
+      "percentage": 0.49999999999999994
+    },
+    {
+      "criterion_id": "code_idiomaticness",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    },
+    {
+      "criterion_id": "code_testability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5
+    }
+  ]
+}

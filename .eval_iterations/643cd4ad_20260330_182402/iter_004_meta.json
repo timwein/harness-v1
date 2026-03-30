@@ -1,0 +1,48 @@
+{
+  "run_id": "643cd4ad_20260330_182402",
+  "iteration": 4,
+  "total_score": 15.5,
+  "max_score": 33,
+  "percentage": 0.4696969696969697,
+  "delta_from_prior": -0.1055,
+  "focus_areas": [
+    "name_memorability.brevity",
+    "name_domain_resonance.avoids_generic_ai",
+    "name_availability.domain_plausibility",
+    "name_availability.no_trademark_conflicts",
+    "name_memorability.pronounceability"
+  ],
+  "content_path": ".eval_iterations/643cd4ad_20260330_182402/iter_004_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 3.5,
+      "max_points": 7,
+      "percentage": 0.5
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.0,
+      "max_points": 10,
+      "percentage": 0.6000000000000001
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5
+    }
+  ]
+}

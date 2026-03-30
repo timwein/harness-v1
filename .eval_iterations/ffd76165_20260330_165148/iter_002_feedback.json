@@ -1,0 +1,31 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: The email has strong fundamentals (perfect opening, good tone) but loses points on subject line length, social proof restraint, and missed opportunities to demonstrate exceptional domain expertise. The biggest wins come from shortening the subject line and condensing the credentials section.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: Perfect score (8/8) - keep the specific TechCrunch reference opener unchanged\n  \u2713 email_tone: Strong score (5/6) - maintain the peer-to-peer conversational style\n  \u2713 email_length: Good score (5.1/6) - keep the paragraph structure and visual breaks\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_subject.curiosity_hook (current: 50%, 3.5 pts at stake)\n    Failed check: Goes beyond rubric guidance with independent domain expertise\n    Expected: Compelling hook that exceeds standard construction with domain insight\n    Found: Standard hook construction without independent insight\n    \u2192 ACTION: Enhance curiosity hook with specific domain insight. Replace current subject with: 'DataVault Series A \u2014 solved your exact compliance maze at CyberTech' (59 chars)\n\n  FIX 2: email_cta.low_friction (current: 25%, 2.8 pts at stake)\n    Failed check: Acknowledges busy schedule check\n    Expected: CTA should acknowledge recipient's busy schedule\n    Found: 'Free for a 20-minute call' implies availability check but doesn't explicitly acknowledge busy schedule\n    \u2192 ACTION: Replace 'Free for a 20-minute call Wednesday or Thursday afternoon?' with 'Know you're swamped with Series A prep \u2014 free for a quick 20-minute call Wednesday or Thursday afternoon?'\n\n  FIX 3: email_subject.brevity (current: 0%, 2.5 pts at stake)\n    Failed check: Under 60 characters check and under 80 characters check\n    Expected: Subject line \u226460 characters for full points, \u226480 for partial\n    Found: 81 characters: '$500K angel check for DataVault's Series A \u2014 built similar at CyberTech (exit)'\n    \u2192 ACTION: Shorten subject line to exactly 60 characters or fewer. Try: '$500K for DataVault Series A \u2014 built similar (CyberTech exit)' (59 chars)\n\n  FIX 4: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Failed check: Goes beyond rubric guidance with independent domain expertise\n    Expected: Verifiable claims that exceed standard credibility requirements\n    Found: Claims are verifiable but don't exceed rubric guidance\n    \u2192 ACTION: Add one specific, verifiable detail that demonstrates exceptional domain expertise: 'I've guided 3 portfolio companies through SOC2 Type II audits in under 90 days each' or similar quantified compliance achievement.\n\n  FIX 5: email_social_proof.restraint (current: 0%, 1.5 pts at stake)\n    Failed check: Limited to 1-2 key proof points check\n    Expected: 1-2 tight proof points maximum\n    Found: Multiple proof points: operating background, acquisition, scaling metrics, network results, portfolio companies\n    \u2192 ACTION: Condense social proof to exactly 2 points: (1) 'Built CyberTech from 50 to 2,000+ enterprise customers before Microsoft acquisition' and (2) 'My network closed $40M+ in deals last year.' Remove all other credentials.\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.6523,
+  "prior_criterion_scores": {
+    "email_subject": 0.375,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.475,
+    "email_cta": 0.4125,
+    "email_tone": 0.8333,
+    "email_length": 0.8571
+  }
+}

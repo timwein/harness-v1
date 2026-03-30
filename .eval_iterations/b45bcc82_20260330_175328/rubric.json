@@ -1,0 +1,177 @@
+{
+  "task": "Create a SQL query to find the top 10 customers by lifetime value excluding refunds, from a schema you define",
+  "domain": "sql_query",
+  "total_points": 36,
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "sql_schema",
+      "category": "design",
+      "description": "Schema is realistic, normalized, and supports the query requirements",
+      "pass_condition": "Schema must include: (1) Proper 3NF normalization with customers, orders, order_items, and separate transactions table, (2) Realistic data types (e.g., DECIMAL for amounts, TIMESTAMP for dates), (3) Proper constraints (NOT NULL, CHECK constraints for positive amounts), (4) Foreign key relationships explicitly defined, (5) Refunds as separate records with clear relationship to original transactions, (6) At least 5 realistic columns per table with business-appropriate naming.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "normalization",
+            "description": "Proper 3NF with PKs/FKs",
+            "weight": 0.3,
+            "measurement": "1.0 if 3NF, 0.5 if some denormalization, 0.0 if flat",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "refund_modeling",
+            "description": "Refunds modeled as distinct records, not negative amounts",
+            "weight": 0.35,
+            "measurement": "1.0 if refund table or refund_type flag, 0.5 if negative amounts, 0.0 if not modeled",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "realistic_columns",
+            "description": "Realistic types, constraints, timestamps",
+            "weight": 0.35,
+            "measurement": "% of tables with appropriate types and constraints",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "customers, orders, order_items, payments (with type: 'charge'|'refund') + indexes"
+      ],
+      "fail_examples": [
+        "Single 'transactions' table with all data flattened"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sql_correctness",
+      "category": "functionality",
+      "description": "Query returns correct results \u2014 top 10 by LTV excluding refunds",
+      "pass_condition": "Correctly aggregates payments minus refunds per customer. Uses proper GROUP BY, HAVING, ORDER BY DESC LIMIT 10. Handles NULL edge cases.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "aggregation_logic",
+            "description": "SUM(charges) - SUM(refunds) or equivalent",
+            "weight": 0.4,
+            "measurement": "1.0 if correct LTV calc, 0.5 if close, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "grouping",
+            "description": "Proper GROUP BY customer with ORDER BY + LIMIT",
+            "weight": 0.3,
+            "measurement": "1.0 if correct, 0.0 if missing or wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "null_handling",
+            "description": "COALESCE or equivalent for customers with no refunds",
+            "weight": 0.3,
+            "measurement": "1.0 if handles nulls, 0.5 if partially, 0.0 if would fail on nulls",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "COALESCE(SUM(CASE WHEN type='charge' THEN amount END), 0) - COALESCE(SUM(CASE WHEN type='refund' THEN amount END), 0)"
+      ],
+      "fail_examples": [
+        "SELECT * FROM customers ORDER BY amount \u2014 no aggregation"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sql_readability",
+      "category": "quality",
+      "description": "Query is well-formatted, commented, and uses CTEs appropriately",
+      "pass_condition": "Uses CTEs for complex subqueries. Consistent formatting. Meaningful aliases. Comments on non-obvious logic.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "cte_usage",
+            "description": "Uses CTEs for readability instead of nested subqueries",
+            "weight": 0.35,
+            "measurement": "1.0 if CTEs for distinct logical steps, 0.5 if inline subqueries, 0.0 if spaghetti",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "formatting",
+            "description": "Consistent capitalization, indentation, line breaks",
+            "weight": 0.3,
+            "measurement": "1.0 if clean formatting, 0.5 if mostly ok, 0.0 if unformatted",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "documentation",
+            "description": "Comments on key logic, meaningful aliases",
+            "weight": 0.35,
+            "measurement": "1.0 if commented + good aliases, 0.5 if one, 0.0 if neither",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "WITH customer_charges AS (...), customer_refunds AS (...) SELECT ..."
+      ],
+      "fail_examples": [
+        "One-liner with nested subqueries and single-letter aliases"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sql_performance",
+      "category": "optimization",
+      "description": "Query demonstrates performance-conscious design patterns",
+      "pass_condition": "Avoids SELECT *. Uses appropriate JOINs instead of correlated subqueries. Includes comment suggesting relevant indexes (e.g., on customer_id, transaction_date). No obvious anti-patterns like DISTINCT without GROUP BY.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 6,
+        "sub_attributes": [],
+        "penalties": {
+          "select_star": -1.5,
+          "correlated_subquery": -2.0,
+          "missing_index_suggestion": -1.0,
+          "cartesian_join_risk": -2.5,
+          "function_on_indexed_column": -1.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Index on payments(customer_id, type, amount), avoids correlated subqueries"
+      ],
+      "fail_examples": [
+        "SELECT * with correlated subquery per customer row"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

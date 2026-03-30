@@ -1,0 +1,27 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: The naming set shows strong domain expertise and variety but loses points on technical compliance issues. The primary problems are potential trademark/domain conflicts and one name exceeding syllable limits, while the exact count scoring appears to be a formatting issue rather than content problem.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 name_variety: 4.5/6 points - strong strategy diversity and tonal range, keep the variety of naming approaches\n  \u2713 name_memorability distinctiveness: 75% score - names are well-differentiated from competitors, maintain this uniqueness\n  \u2713 name_domain_resonance domain_signal: 75% score - good use of legal terminology and metaphors, preserve these connections\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: name_count.exact_count (current: 0%, 4.0 pts at stake)\n    Failed check: Exactly 5 names provided check\n    Expected: Exactly 5 names provided, each with rationale\n    Found: Only 5 names found but scorer marked as fail - likely formatting issue\n    \u2192 ACTION: Ensure the 5 names are clearly numbered and formatted as a proper list (1. Name, 2. Name, etc.) with each rationale immediately following its name in a separate paragraph.\n\n  FIX 2: name_domain_resonance.avoids_generic_ai (current: 50%, 3.0 pts at stake)\n    Failed check: No 'AI' prefix/suffix check\n    Expected: % of names avoiding generic tech naming patterns\n    Found: 'Intellilaw' contains 'intelli' suggesting intelligence/AI\n    \u2192 ACTION: Replace 'Intellilaw' with a name that avoids any AI/intelligence references. Consider a legal-domain name like 'Draftmark' or 'Contractus' that maintains the professional tone without tech implications.\n\n  FIX 3: name_availability.domain_plausibility (current: 50%, 3.0 pts at stake)\n    Failed check: Names likely have .com available check\n    Expected: % of names where .com is plausible (not a common English word)\n    Found: 50% of names may have domain availability issues\n    \u2192 ACTION: Replace 2-3 names with more unique coined terms that are virtually guaranteed to have .com availability. Focus on truly invented words rather than compound terms that might already be registered.\n\n  FIX 4: name_availability.no_trademark_conflicts (current: 50%, 3.0 pts at stake)\n    Failed check: Names avoid obvious trademark issues check\n    Expected: % of names with no obvious trademark conflict\n    Found: 50% of names may have trademark concerns\n    \u2192 ACTION: Research and replace any names that might conflict with existing legal software or services. Prioritize completely invented terms over compound words that might already be in use in the legal tech space.\n\n  FIX 5: name_memorability.brevity (current: 50%, 2.1 pts at stake)\n    Failed check: Short, punchy \u2014 ideally \u22643 syllables check\n    Expected: % of names at \u22643 syllables\n    Found: 'Intellilaw' (4 syllables) exceeds the 3-syllable limit\n    \u2192 ACTION: When replacing 'Intellilaw', ensure the new name has exactly 3 syllables or fewer. Test by clapping out the syllables: Red-li-near (3), Cov-en-mark (3), Clause-bound (2).\n",
+  "focus_areas": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "protected_criteria": [
+    "name_variety"
+  ],
+  "improvement_targets": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "prior_score": 0.5752,
+  "prior_criterion_scores": {
+    "name_count": 0.0,
+    "name_memorability": 0.675,
+    "name_domain_resonance": 0.675,
+    "name_availability": 0.5,
+    "name_variety": 0.75
+  }
+}

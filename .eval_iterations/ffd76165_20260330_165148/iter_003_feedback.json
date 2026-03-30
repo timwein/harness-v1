@@ -1,0 +1,31 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The email has strong fundamentals (perfect opening, tone, and length) but loses points on specificity and focus. The main issues are an overly long subject line, too many social proof points diluting impact, and a CTA that offers multiple options instead of one clear ask.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: Perfect score (8/8) - keep the TechCrunch interview reference opening unchanged\n  \u2713 email_tone: Perfect score (6/6) - maintain the peer-to-peer, confident tone throughout\n  \u2713 email_length: Strong score (5.1/6) - preserve the concise structure and paragraph breaks\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_value_prop.relevance (current: 50%, 3.5 pts at stake)\n    Failed check: Clearly relevant to their domain/stage\n    Expected: Value prop clearly relevant to data governance domain and Series A stage\n    Found: Generic relevance without specific DataVault context\n    \u2192 ACTION: Make value prop more DataVault-specific. Change 'warm intros to enterprise buyers' to 'warm intros to Fortune 500 CISOs who need zero-trust data governance' and reference their specific TechCrunch interview points about regulatory challenges.\n\n  FIX 2: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Failed check: Single unambiguous ask\n    Expected: One clear ask with no competing requests\n    Found: Mixed ask: call request plus offer to 'share thesis first'\n    \u2192 ACTION: Simplify to single clear ask. Remove 'Happy to share my thesis on the data governance market first if that's helpful' and keep only the direct call request to eliminate competing options.\n\n  FIX 3: email_subject.brevity (current: 25%, 2.5 pts at stake)\n    Failed check: Under 60 characters total\n    Expected: Subject line \u226460 characters for full points\n    Found: 73 characters: 'DataVault Series A \u2014 solved your exact compliance maze at CyberTech'\n    \u2192 ACTION: Shorten subject line to under 60 characters. Try: 'DataVault Series A \u2014 solved compliance at CyberTech' (54 chars) or 'DataVault \u2014 solved your compliance maze at CyberTech' (52 chars)\n\n  FIX 4: email_cta.specificity (current: 50%, 2.4 pts at stake)\n    Failed check: Includes proposed specific times\n    Expected: Specific availability times, not just days\n    Found: Only 'Wednesday or Thursday afternoon' without specific hours\n    \u2192 ACTION: Add specific time slots. Change to: 'free for a quick 20-minute call Wednesday 2-4pm or Thursday 1-3pm EST?' to provide concrete scheduling options.\n\n  FIX 5: email_social_proof.restraint (current: 25%, 1.5 pts at stake)\n    Failed check: Limited to 1-2 key proof points\n    Expected: 1-2 tight proof points maximum\n    Found: Multiple proof points: CyberTech acquisition, network results, portfolio guidance, and current investments\n    \u2192 ACTION: Reduce to maximum 2 proof points. Keep only: (1) 'CyberTech acquisition by Microsoft' and (2) 'network closed $40M+ in deals last year'. Remove portfolio guidance details and current investment mentions.\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.6732,
+  "prior_criterion_scores": {
+    "email_subject": 0.4375,
+    "email_opening": 1.0,
+    "email_value_prop": 0.6125,
+    "email_social_proof": 0.425,
+    "email_cta": 0.5,
+    "email_tone": 1.0,
+    "email_length": 0.8427
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "task": "Generate a Python function that parses messy CSV data with inconsistent delimiters and missing headers",
+  "domain": "code_generation",
+  "total_points": 44,
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "code_correctness",
+      "category": "functionality",
+      "description": "Function handles the stated requirements: inconsistent delimiters, missing headers",
+      "pass_condition": "Detects and handles comma/tab/pipe/semicolon delimiters. Generates synthetic headers (col_0, col_1, etc.) when missing. Handles empty rows by skipping them, preserves quoted fields with embedded delimiters, and strips trailing delimiters from rows.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "delimiter_detection",
+            "description": "Auto-detects or handles multiple delimiter types",
+            "weight": 0.35,
+            "measurement": "1.0 if auto-detects from data, 0.5 if parameterized, 0.0 if hardcoded",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "header_handling",
+            "description": "Generates headers when missing, detects when present",
+            "weight": 0.35,
+            "measurement": "1.0 if auto-detects + generates, 0.5 if one or other, 0.0 if assumes headers",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "edge_case_resilience",
+            "description": "Handles empty rows, mixed quoting, trailing delimiters",
+            "weight": 0.3,
+            "measurement": "% of edge cases handled without crash",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Uses csv.Sniffer for delimiter detection, heuristic for header presence"
+      ],
+      "fail_examples": [
+        "Hardcodes comma delimiter, assumes first row is header"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "code_robustness",
+      "category": "reliability",
+      "description": "Graceful error handling, doesn't silently corrupt data",
+      "pass_condition": "Try/except blocks with specific exception types and descriptive messages. Collects warnings for problematic rows (don't use print or logging). Returns structured result with metadata: total_rows, parsed_rows, skipped_rows, warnings_list.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "error_handling",
+            "description": "Catches and reports errors meaningfully",
+            "weight": 0.4,
+            "measurement": "1.0 if structured error reporting, 0.5 if basic try/except, 0.0 if bare",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "data_integrity",
+            "description": "Never silently drops or corrupts data",
+            "weight": 0.35,
+            "measurement": "1.0 if reports all anomalies, 0.0 if silently swallows",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "return_metadata",
+            "description": "Returns parse stats (rows, skips, warnings)",
+            "weight": 0.25,
+            "measurement": "1.0 if structured result object, 0.5 if just data, 0.0 if raw list",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Returns ParseResult(data=..., warnings=[...], rows_skipped=2)"
+      ],
+      "fail_examples": [
+        "Bare except: pass, returns partial data silently"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "code_api_design",
+      "category": "usability",
+      "description": "Function signature is clean, well-typed, with sensible defaults",
+      "pass_condition": "Type hints for all parameters and return value. Docstring with description, parameters, returns, and usage example. Function parameter uses Union/str|Path type hints indicating multiple input types, with code that branches on input type (isinstance checks or similar).",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "type_hints",
+            "description": "Full type annotations on params and return",
+            "weight": 0.35,
+            "measurement": "1.0 if complete, 0.5 if partial, 0.0 if none",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "docstring",
+            "description": "Docstring with description, args, returns, example",
+            "weight": 0.3,
+            "measurement": "1.0 if complete with example, 0.5 if basic, 0.0 if missing",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "input_flexibility",
+            "description": "Accepts file path, string, or file object",
+            "weight": 0.35,
+            "measurement": "1.0 if multiple input types, 0.5 if one type, 0.0 if unclear",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "def parse_csv(source: str | Path | IO, ...) -> ParseResult:"
+      ],
+      "fail_examples": [
+        "def parse(f):  # no types, no docs"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "code_idiomaticness",
+      "category": "quality",
+      "description": "Uses Python idioms and stdlib appropriately",
+      "pass_condition": "Uses csv module for parsing (not regex-only). Uses appropriate data structures (dataclasses, NamedTuple, or TypedDict) for structured returns. Leverages stdlib modules appropriately rather than reimplementing functionality.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 8,
+        "sub_attributes": [],
+        "penalties": {
+          "reinvents_csv_module": -3.0,
+          "regex_only_parsing": -2.0,
+          "no_type_structures": -1.5,
+          "mutable_default_args": -1.5,
+          "global_state": -2.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Builds on csv.reader/csv.Sniffer, returns dataclass"
+      ],
+      "fail_examples": [
+        "Regex-only CSV parsing, returns list of dicts with no structure"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "code_testability",
+      "category": "quality",
+      "description": "Code is structured for easy testing",
+      "pass_condition": "Pure function with no side effects, includes at least 3 specific test cases covering edge cases (empty file, single column, mixed delimiters), and implements at least 2 separate helper functions for distinct parsing subtasks.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 6,
+        "sub_attributes": [
+          {
+            "sub_id": "pure_function",
+            "description": "No side effects, deterministic",
+            "weight": 0.4,
+            "measurement": "1.0 if pure, 0.5 if minor side effects (logging ok), 0.0 if writes files",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "modularity",
+            "description": "Logic decomposed into testable helpers",
+            "weight": 0.3,
+            "measurement": "1.0 if 3+ focused helpers, 0.5 if 2, 0.0 if monolith",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "test_examples",
+            "description": "Includes example test cases or assertions",
+            "weight": 0.3,
+            "measurement": "1.0 if test cases included, 0.5 if doctest, 0.0 if none",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Separate detect_delimiter(), detect_headers(), parse_rows() + tests"
+      ],
+      "fail_examples": [
+        "Single 80-line function with no tests"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

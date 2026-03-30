@@ -1,0 +1,163 @@
+{
+  "run_id": "d0fcc8ba_20260330_172041",
+  "iteration": 1,
+  "content": "```python\nfrom typing import Union, List, Dict, Any, TextIO\nfrom dataclasses import dataclass\nfrom pathlib import Path\nimport csv\nimport io\nimport re\n\n\n@dataclass\nclass ParseResult:\n    \"\"\"Result of CSV parsing operation.\"\"\"\n    data: List[Dict[str, str]]\n    warnings: List[str]\n    rows_processed: int\n    rows_skipped: int\n    delimiter: str\n    has_header: bool\n\n\ndef detect_delimiter(sample: str) -> str:\n    \"\"\"\n    Detect the most likely delimiter in a CSV sample.\n    \n    Args:\n        sample: Sample text from CSV file\n        \n    Returns:\n        Detected delimiter character\n    \"\"\"\n    try:\n        sniffer = csv.Sniffer()\n        delimiter = sniffer.sniff(sample, delimiters=',;\\t|').delimiter\n        return delimiter\n    except csv.Error:\n        # Fallback: count occurrences of common delimiters\n        delimiters = [',', ';', '\\t', '|']\n        counts = {d: sample.count(d) for d in delimiters}\n        return max(counts, key=counts.get) or ','\n\n\ndef detect_headers(first_row: List[str], second_row: List[str] = None) -> bool:\n    \"\"\"\n    Heuristically determine if first row contains headers.\n    \n    Args:\n        first_row: First row of data\n        second_row: Second row of data (optional, improves accuracy)\n        \n    Returns:\n        True if first row appears to be headers\n    \"\"\"\n    if not first_row:\n        return False\n    \n    # Check for numeric patterns - headers are rarely all numeric\n    numeric_count = sum(1 for cell in first_row if cell.strip().replace('.', '').replace('-', '').isdigit())\n    if numeric_count == len(first_row) and len(first_row) > 1:\n        return False\n    \n    # Headers often contain letters and common header words\n    header_indicators = ['id', 'name', 'date', 'time', 'value', 'count', 'type', 'status']\n    has_header_words = any(any(indicator in cell.lower() for indicator in header_indicators) \n                          for cell in first_row)\n    \n    # Compare with second row if available\n    if second_row and len(second_row) == len(first_row):\n        # If second row is more numeric than first, first is likely header\n        first_numeric = sum(1 for cell in first_row if cell.strip().replace('.', '').replace('-', '').isdigit())\n        second_numeric = sum(1 for cell in second_row if cell.strip().replace('.', '').replace('-', '').isdigit())\n        if second_numeric > first_numeric:\n            return True\n    \n    return has_header_words or len([cell for cell in first_row if cell.strip().isalpha()]) >= len(first_row) // 2\n\n\ndef generate_headers(num_columns: int) -> List[str]:\n    \"\"\"\n    Generate default column headers.\n    \n    Args:\n        num_columns: Number of columns needed\n        \n    Returns:\n        List of generated header names\n    \"\"\"\n    return [f'column_{i+1}' for i in range(num_columns)]\n\n\ndef clean_row(row: List[str], expected_columns: int) -> List[str]:\n    \"\"\"\n    Clean and normalize a row of data.\n    \n    Args:\n        row: Raw row data\n        expected_columns: Expected number of columns\n        \n    Returns:\n        Cleaned row with consistent column count\n    \"\"\"\n    # Strip whitespace from all cells\n    cleaned = [cell.strip() for cell in row]\n    \n    # Handle column count mismatches\n    if len(cleaned) > expected_columns:\n        # Truncate extra columns\n        cleaned = cleaned[:expected_columns]\n    elif len(cleaned) < expected_columns:\n        # Pad with empty strings\n        cleaned.extend([''] * (expected_columns - len(cleaned)))\n    \n    return cleaned\n\n\ndef parse_csv_content(content: str, \n                     delimiter: str = None,\n                     has_header: bool = None,\n                     skip_empty_rows: bool = True) -> ParseResult:\n    \"\"\"\n    Parse messy CSV data with inconsistent delimiters and missing headers.\n    \n    This function automatically detects delimiters and headers in CSV data,\n    handling common formatting issues like mixed quoting, empty rows, and\n    inconsistent column counts.\n    \n    Args:\n        content: CSV content as string\n        delimiter: Force specific delimiter (None for auto-detection)\n        has_header: Force header presence (None for auto-detection)  \n        skip_empty_rows: Whether to skip completely empty rows\n        \n    Returns:\n        ParseResult containing:\n            - data: List of dictionaries with parsed rows\n            - warnings: List of parsing warnings\n            - rows_processed: Number of data rows processed\n            - rows_skipped: Number of rows skipped\n            - delimiter: Delimiter used for parsing\n            - has_header: Whether headers were detected/used\n            \n    Example:\n        >>> content = '''name;age;city\n        ... John;30;New York\n        ... Jane,25,Boston'''\n        >>> result = parse_csv_content(content)\n        >>> result.data[0]\n        {'name': 'John', 'age': '30', 'city': 'New York'}\n        \n    Raises:\n        ValueError: If content is empty or unparseable\n        TypeError: If content is not a string\n    \"\"\"\n    if not isinstance(content, str):\n        raise TypeError(\"Content must be a string\")\n    \n    content = content.strip()\n    if not content:\n        raise ValueError(\"Content cannot be empty\")\n    \n    warnings = []\n    rows_skipped = 0\n    \n    try:\n        # Auto-detect delimiter if not provided\n        if delimiter is None:\n            delimiter = detect_delimiter(content)\n            \n        # Parse all rows\n        reader = csv.reader(io.StringIO(content), delimiter=delimiter, quoting=csv.QUOTE_MINIMAL)\n        all_rows = []\n        \n        for row_num, row in enumerate(reader, 1):\n            # Skip completely empty rows if requested\n            if skip_empty_rows and not any(cell.strip() for cell in row):\n                rows_skipped += 1\n                continue\n                \n            all_rows.append(row)\n        \n        if not all_rows:\n            return ParseResult(\n                data=[],\n                warnings=[\"No data rows found\"],\n                rows_processed=0,\n                rows_skipped=rows_skipped,\n                delimiter=delimiter,\n                has_header=False\n            )\n        \n        # Auto-detect headers if not specified\n        if has_header is None:\n            second_row = all_rows[1] if len(all_rows) > 1 else None\n            has_header = detect_headers(all_rows[0], second_row)\n        \n        # Determine column count and headers\n        max_columns = max(len(row) for row in all_rows)\n        \n        if has_header:\n            headers = clean_row(all_rows[0], max_columns)\n            data_rows = all_rows[1:]\n        else:\n            headers = generate_headers(max_columns)\n            data_rows = all_rows\n            warnings.append(\"No headers detected, generated default column names\")\n        \n        # Process data rows\n        processed_data = []\n        for row_num, row in enumerate(data_rows, 1):\n            try:\n                cleaned_row = clean_row(row, len(headers))\n                row_dict = dict(zip(headers, cleaned_row))\n                processed_data.append(row_dict)\n            except Exception as e:\n                warnings.append(f\"Error processing row {row_num}: {str(e)}\")\n                rows_skipped += 1\n                continue\n        \n        # Add warnings for data quality issues\n        if any(len(row) != max_columns for row in all_rows):\n            warnings.append(\"Inconsistent column counts detected and normalized\")\n            \n        return ParseResult(\n            data=processed_data,\n            warnings=warnings,\n            rows_processed=len(processed_data),\n            rows_skipped=rows_skipped,\n            delimiter=delimiter,\n            has_header=has_header\n        )\n        \n    except csv.Error as e:\n        raise ValueError(f\"CSV parsing error: {str(e)}\")\n    except Exception as e:\n        raise ValueError(f\"Unexpected error during parsing: {str(e)}\")\n\n\n# Example test cases\ndef test_parse_csv_content():\n    \"\"\"Test cases demonstrating the function's capabilities.\"\"\"\n    \n    # Test 1: Mixed delimiters with headers\n    content1 = \"\"\"name,age;city\nJohn,30;New York\nJane,25;Boston\"\"\"\n    result1 = parse_csv_content(content1)\n    assert result1.has_header == True\n    assert len(result1.data) == 2\n    assert result1.data[0]['name'] == 'John'\n    \n    # Test 2: No headers, inconsistent columns\n    content2 = \"\"\"John,30\nJane,25,Boston,Extra\"\"\"\n    result2 = parse_csv_content(content2)\n    assert result2.has_header == False\n    assert len(result2.data) == 2\n    assert 'column_1' in result2.data[0]\n    \n    # Test 3: Empty rows and whitespace\n    content3 = \"\"\"name,age\n    \nJohn, 30 \n    \nJane,25\"\"\"\n    result3 = parse_csv_content(content3)\n    assert result3.rows_skipped == 2\n    assert len(result3.data) == 2\n    \n    print(\"All tests passed!\")\n\n\nif __name__ == \"__main__\":\n    test_parse_csv_content()\n```",
+  "total_score": 29.0,
+  "max_score": 44,
+  "percentage": 0.6590909090909091,
+  "criterion_scores": [
+    {
+      "criterion_id": "code_correctness",
+      "points_earned": 6.0,
+      "max_points": 12,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "delimiter_detection",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "header_handling",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "edge_case_resilience",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: delimiter_detection: 50%x35% + header_handling: 50%x35% + edge_case_resilience: 50%x30%",
+      "improvement_hints": [
+        "delimiter_detection: 50% -> 80% (+1.3 pts)",
+        "header_handling: 50% -> 80% (+1.3 pts)",
+        "edge_case_resilience: 50% -> 80% (+1.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute delimiter_detection:\n  - Auto-detects delimiters from data using csv.Sniffer? YES. Evidence: \"sniffer = csv.Sniffer(); delimiter = sniffer.sniff(sample, delimiters=',;\\t|').delimiter\"\n  - Has fallback mechanism when csv.Sniffer fails? YES. Evidence: \"except csv.Error: # Fallback: count occurrences of common delimiters\"\n  - Handles at least 4 delimiter types (comma/tab/pipe/semicolon)? YES. Evidence: \"delimiters = [',', ';', '\\t', '|']\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Implementation follows standard csv.Sniffer pattern without novel insights\n\nSub-attribute header_handling:\n  - Auto-detects header presence using heuristics? YES. Evidence: \"detect_headers(first_row: List[str], second_row: List[str] = None) -> bool\"\n  - Generates sequential column names when headers missing? YES. Evidence: \"return [f'column_{i+1}' for i in range(num_columns)]\"\n  - Uses meaningful heuristics for header detection? YES. Evidence: Checks numeric patterns, header indicator words, and comparison with second row\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard heuristic approach without domain-specific insights\n\nSub-attribute edge_case_resilience:\n  - Handles empty rows without crashing? YES. Evidence: \"if skip_empty_rows and not any(cell.strip() for cell in row): rows_skipped += 1; continue\"\n  - Handles jagged rows (inconsistent column counts)? YES. Evidence: \"clean_row\" function pads/truncates to expected columns\n  - Handles quoted fields with embedded delimiters? YES. Evidence: Uses csv.reader with \"quoting=csv.QUOTE_MINIMAL\"\n  - Handles files with only whitespace? YES. Evidence: \"content = content.strip(); if not content: raise ValueError('Content cannot be empty')\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard CSV handling patterns without novel edge case solutions"
+    },
+    {
+      "criterion_id": "code_robustness",
+      "points_earned": 4.0,
+      "max_points": 10,
+      "percentage": 0.4,
+      "sub_scores": [
+        {
+          "sub_id": "error_handling",
+          "raw_value": 0.25,
+          "weighted_value": 0.1,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "data_integrity",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "return_metadata",
+          "raw_value": 0.5,
+          "weighted_value": 0.125,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: error_handling: 25%x40% + data_integrity: 50%x35% + return_metadata: 50%x25%",
+      "improvement_hints": [
+        "error_handling: 25% -> 80% (+2.2 pts)",
+        "data_integrity: 50% -> 80% (+1.1 pts)",
+        "return_metadata: 50% -> 80% (+0.8 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute error_handling:\n  - Uses try/except blocks around parsing operations? YES. Evidence: Multiple try/except blocks including \"try:\" around main parsing logic\n  - Catches specific exception types (csv.Error, ValueError, TypeError)? YES. Evidence: \"except csv.Error as e:\", \"except TypeError\", \"except ValueError\"\n  - Never raises exceptions to caller for parsing errors? NO. Evidence: \"raise ValueError(f'CSV parsing error: {str(e)}')\" and other raise statements\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard exception handling without advanced error recovery techniques\n\nSub-attribute data_integrity:\n  - Reports all data anomalies in warnings? YES. Evidence: \"warnings.append('Inconsistent column counts detected and normalized')\"\n  - Never silently drops data without notification? YES. Evidence: Tracks \"rows_skipped\" and includes in warnings\n  - Preserves original row structure information? YES. Evidence: Returns delimiter, has_header, and other metadata\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard data integrity practices without advanced validation\n\nSub-attribute return_metadata:\n  - Returns structured result object with parse statistics? YES. Evidence: \"ParseResult\" dataclass with data, warnings, rows_processed, etc.\n  - Includes rows processed and skipped counts? YES. Evidence: \"rows_processed: int\" and \"rows_skipped: int\" in ParseResult\n  - Includes parsing warnings list? YES. Evidence: \"warnings: List[str]\" in ParseResult\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard metadata reporting without advanced analytics"
+    },
+    {
+      "criterion_id": "code_api_design",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "Headers: 1 found \u2713",
+      "methodology": "Deterministic: markdown header presence check",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "Sub-attribute type_hints:\n  - Has complete type annotations on function parameters? YES. Evidence: \"content: str, delimiter: str = None, has_header: bool = None, skip_empty_rows: bool = True\"\n  - Has type annotation on return value? YES. Evidence: \"-> ParseResult\"\n  - Uses proper typing imports for complex types? YES. Evidence: \"from typing import Union, List, Dict, Any, TextIO\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard typing practices without advanced type system usage\n\nSub-attribute docstring:\n  - Has comprehensive docstring with description? YES. Evidence: Multi-line docstring with detailed description\n  - Includes Args section with parameter descriptions? YES. Evidence: \"Args:\" section with all parameters documented\n  - Includes Returns section describing return structure? YES. Evidence: \"Returns:\" section describing ParseResult\n  - Includes Examples section with realistic input/output? YES. Evidence: \"Example:\" section with sample usage\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard docstring format without domain-specific insights\n\nSub-attribute input_flexibility:\n  - Accepts string content as input? YES. Evidence: \"content: str\" parameter\n  - Accepts multiple input types (file path, string, file object)? NO. Evidence: Only accepts string content, not Path or TextIO\n  - Has sensible parameter defaults? YES. Evidence: \"delimiter: str = None, has_header: bool = None, skip_empty_rows: bool = True\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Limited to string input without file handling flexibility"
+    },
+    {
+      "criterion_id": "code_idiomaticness",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Penalty: 8 - 0.0",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Violation \"reinvents_csv_module\": ABSENT. Evidence: Uses csv.reader and csv.Sniffer properly\n  - Violation \"regex_only_parsing\": ABSENT. Evidence: Uses csv module, not regex for parsing\n  - Violation \"no_type_structures\": ABSENT. Evidence: Uses @dataclass for ParseResult\n  - Violation \"mutable_default_args\": ABSENT. Evidence: No mutable defaults found\n  - Violation \"global_state\": ABSENT. Evidence: Pure functions without global variables"
+    },
+    {
+      "criterion_id": "code_testability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "pure_function",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "modularity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "test_examples",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pure_function: 50%x40% + modularity: 50%x30% + test_examples: 50%x30%",
+      "improvement_hints": [
+        "pure_function: 50% -> 80% (+0.7 pts)",
+        "modularity: 50% -> 80% (+0.5 pts)",
+        "test_examples: 50% -> 80% (+0.5 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute pure_function:\n  - Function has no side effects? YES. Evidence: Only processes input string, no file I/O or external state modification\n  - Function is deterministic? YES. Evidence: Same input produces same output\n  - Function doesn't write files or modify global state? YES. Evidence: No file writing or global variable modification\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard pure function design without advanced functional programming concepts\n\nSub-attribute modularity:\n  - Logic decomposed into helper functions? YES. Evidence: \"detect_delimiter\", \"detect_headers\", \"generate_headers\", \"clean_row\" functions\n  - Has 3+ focused helper functions? YES. Evidence: 4 helper functions identified above\n  - Each helper has single responsibility? YES. Evidence: Each function has clear, focused purpose\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard modular design without advanced architectural patterns\n\nSub-attribute test_examples:\n  - Includes concrete test cases? YES. Evidence: \"test_parse_csv_content()\" function with multiple test cases\n  - Test cases cover different CSV formats? YES. Evidence: Tests mixed delimiters, no headers, empty rows\n  - Test cases include assertions? YES. Evidence: Multiple \"assert\" statements in test function\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Basic test cases without advanced testing strategies"
+    }
+  ],
+  "focus_areas": []
+}

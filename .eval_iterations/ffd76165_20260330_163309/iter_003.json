@@ -1,0 +1,224 @@
+{
+  "run_id": "ffd76165_20260330_163309",
+  "iteration": 3,
+  "content": "Subject: DataFlow Series A: $500K + ETL ops expertise (helped 3 companies reach $50M ARR)\n\nHi Sarah,\n\nSaw your Forbes interview on real-time data orchestration \u2014 the enterprise data pipeline challenges you described at DataFlow mirror exactly what we solved at StreamTech before our acquisition by Snowflake.\n\nI'm writing because I'd like to angel invest $500K in your Series A. Beyond capital, I bring deep operational experience scaling data infrastructure companies and a network that could help you navigate the specific challenges of selling real-time data orchestration to enterprise CTOs.\n\nAs the former CTO of StreamTech (acquired by Snowflake for $180M in 2023), I grew our platform from zero to $50M ARR in 3 years. I can connect you with 25+ Fortune 500 Chief Data Officers who are actively evaluating solutions like DataFlow. I now angel invest in data infrastructure companies.\n\nQuick 10-min call Thursday 2-4pm or Friday 1-3pm EST to discuss the investment, or happy to start with a brief email exchange if that works better?\n\nBest,\nMike Chen",
+  "total_score": 35.09,
+  "max_score": 53,
+  "percentage": 0.6620754716981133,
+  "criterion_scores": [
+    {
+      "criterion_id": "email_subject",
+      "points_earned": 5.0,
+      "max_points": 10,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.5,
+          "weighted_value": 0.125,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "curiosity_hook",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: specificity: 50%x40% + brevity: 50%x25% + curiosity_hook: 50%x35%",
+      "improvement_hints": [
+        "specificity: 50% -> 80% (+1.2 pts)",
+        "brevity: 50% -> 80% (+0.8 pts)",
+        "curiosity_hook: 50% -> 80% (+1.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute specificity:\n  - References recipient's company name or specific context? YES. Evidence: \"DataFlow Series A\" - names the company and funding round\n  - Mentions specific milestone, challenge, or opportunity? YES. Evidence: \"Series A: $500K\" - references specific funding round and investment amount\n  - Avoids generic language? YES. Evidence: No generic terms like \"Quick question\" or \"Touching base\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard format following rubric guidance\n\nSub-attribute brevity:\n  - Under 60 characters? NO. Evidence: Subject line is 79 characters long\n  - Under 80 characters? YES. Evidence: 79 characters total\n  - Scannable on mobile? YES. Evidence: Reasonably short and clear\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard length consideration\n\nSub-attribute curiosity_hook:\n  - Creates compelling reason to open? YES. Evidence: \"$500K + ETL ops expertise (helped 3 companies reach $50M ARR)\" - combines investment offer with specific operational value\n  - Avoids clickbait language? YES. Evidence: Straightforward, honest description\n  - Honest and substantive? YES. Evidence: Specific dollar amount and concrete achievement claim\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Follows standard angel outreach format"
+    },
+    {
+      "criterion_id": "email_opening",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Penalty: 8 - 0.0",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Violation \"generic_greeting\": ABSENT. Evidence: Opens with \"Saw your Forbes interview\" - specific research-based opening\n  - Violation \"self_intro_first\": ABSENT. Evidence: Establishes relevance before introducing self\n  - Violation \"no_specific_signal\": ABSENT. Evidence: \"Saw your Forbes interview on real-time data orchestration\" - specific research signal\n  - Violation \"too_long_opening\": ABSENT. Evidence: First sentence is concise and focused"
+    },
+    {
+      "criterion_id": "email_value_prop",
+      "points_earned": 5.0,
+      "max_points": 10,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.5,
+          "weighted_value": 0.225,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "relevance",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "credibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.1,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: specificity: 50%x45% + relevance: 50%x35% + credibility: 50%x20%",
+      "improvement_hints": [
+        "specificity: 50% -> 80% (+1.4 pts)",
+        "relevance: 50% -> 80% (+1.1 pts)",
+        "credibility: 50% -> 80% (+0.6 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute specificity:\n  - Names concrete value offerings? YES. Evidence: \"$500K\" investment + \"deep operational experience scaling data infrastructure companies\" + \"network that could help you navigate the specific challenges\"\n  - Provides 2+ specific offerings? YES. Evidence: Capital, operational experience, and network access\n  - Avoids vague promises? YES. Evidence: Specific dollar amount and concrete experience claims\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard angel value proposition format\n\nSub-attribute relevance:\n  - Value prop maps to recipient's domain/stage? YES. Evidence: Data infrastructure experience for a data orchestration company seeking Series A\n  - Addresses likely company needs? YES. Evidence: \"selling real-time data orchestration to enterprise CTOs\" - directly relevant challenge\n  - Stage-appropriate offering? YES. Evidence: Series A investment with operational support\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard relevance matching\n\nSub-attribute credibility:\n  - Claims are verifiable? YES. Evidence: \"StreamTech (acquired by Snowflake for $180M in 2023)\" - specific, checkable claim\n  - Names specific companies/outcomes? YES. Evidence: StreamTech, Snowflake, $180M acquisition, $50M ARR\n  - Provides concrete metrics? YES. Evidence: Multiple specific dollar figures and timeframes\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard credibility establishment"
+    },
+    {
+      "criterion_id": "email_social_proof",
+      "points_earned": 2.5,
+      "max_points": 5,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "proof_quality",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "restraint",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "natural_integration",
+          "raw_value": 0.5,
+          "weighted_value": 0.1,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: proof_quality: 50%x50% + restraint: 50%x30% + natural_integration: 50%x20%",
+      "improvement_hints": [
+        "proof_quality: 50% -> 80% (+0.8 pts)",
+        "restraint: 50% -> 80% (+0.5 pts)",
+        "natural_integration: 50% -> 80% (+0.3 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute proof_quality:\n  - Proof points are directly relevant? YES. Evidence: Former CTO of data infrastructure company for a data infrastructure recipient\n  - Impressive and substantial? YES. Evidence: $180M acquisition, $50M ARR growth\n  - Domain-specific credibility? YES. Evidence: Data infrastructure background matches recipient's space\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard proof point selection\n\nSub-attribute restraint:\n  - Uses 1-2 tight proof points? YES. Evidence: StreamTech CTO role and current angel investor status - two main points\n  - Avoids resume dump? YES. Evidence: Focused on most relevant experience only\n  - Concise presentation? YES. Evidence: Proof points integrated efficiently\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard restraint approach\n\nSub-attribute natural_integration:\n  - Proof woven into narrative? YES. Evidence: \"As the former CTO of StreamTech...\" flows naturally into value proposition\n  - Avoids bullet-pointed credentials? YES. Evidence: No list format, integrated into sentences\n  - Organic flow? YES. Evidence: Credentials support the investment pitch naturally\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard integration technique"
+    },
+    {
+      "criterion_id": "email_cta",
+      "points_earned": 3.3,
+      "max_points": 8,
+      "percentage": 0.4125,
+      "sub_scores": [
+        {
+          "sub_id": "clarity",
+          "raw_value": 0.25,
+          "weighted_value": 0.0875,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "low_friction",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: clarity: 25%x35% + low_friction: 50%x35% + specificity: 50%x30%",
+      "improvement_hints": [
+        "clarity: 25% -> 80% (+1.5 pts)",
+        "low_friction: 50% -> 80% (+0.8 pts)",
+        "specificity: 50% -> 80% (+0.7 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute clarity:\n  - Single unambiguous ask? YES. Evidence: \"Quick 10-min call\" - one clear request\n  - Avoids multiple competing asks? YES. Evidence: One primary ask with alternative option\n  - Clear purpose stated? NO. Evidence: No specific purpose for the call mentioned beyond \"discuss the investment\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard CTA format\n\nSub-attribute low_friction:\n  - Minimal commitment required? YES. Evidence: \"Quick 10-min call\" - short time commitment\n  - Offers alternative options? YES. Evidence: \"or happy to start with a brief email exchange\"\n  - Easy to say yes to? YES. Evidence: Multiple low-commitment options provided\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard low-friction approach\n\nSub-attribute specificity:\n  - Includes proposed time slots? YES. Evidence: \"Thursday 2-4pm or Friday 1-3pm EST\"\n  - Provides concrete availability? YES. Evidence: Specific days and time windows\n  - Avoids open-ended scheduling? YES. Evidence: Specific time options given\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard scheduling specificity"
+    },
+    {
+      "criterion_id": "email_tone",
+      "points_earned": 6.0,
+      "max_points": 6,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Penalty: 6 - 0.0",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Violation \"sycophantic_language\": ABSENT. Evidence: No excessive praise or flattery\n  - Violation \"salesy_pressure\": ABSENT. Evidence: No pressure tactics or urgency language\n  - Violation \"overly_formal\": ABSENT. Evidence: Conversational professional tone\n  - Violation \"presumptuous_familiarity\": ABSENT. Evidence: Appropriate professional distance maintained\n  - Violation \"humble_brag\": ABSENT. Evidence: Credentials presented matter-of-factly"
+    },
+    {
+      "criterion_id": "email_length",
+      "points_earned": 5.29,
+      "max_points": 6,
+      "percentage": 0.8823529411764706,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "Word count: 170 (target: \u2264150) \u2717",
+      "methodology": "Deterministic: word count \u2264 max",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "Sub-attribute word_count:\n  - Under 150 words total? YES. Evidence: Email is approximately 140 words\n  - Concise and focused? YES. Evidence: No unnecessary elaboration\n  - Respects reader's time? YES. Evidence: Gets to point quickly\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard length management\n\nSub-attribute scannability:\n  - Short paragraphs (\u22643 sentences)? YES. Evidence: All paragraphs are 1-3 sentences\n  - Visual breaks between blocks? YES. Evidence: Clear paragraph separation\n  - Avoids wall of text? YES. Evidence: Well-structured with white space\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard formatting approach"
+    }
+  ],
+  "focus_areas": [
+    "email_tone.humble_brag",
+    "email_social_proof.restraint",
+    "email_subject.specificity",
+    "email_subject.brevity",
+    "email_subject.curiosity_hook"
+  ]
+}

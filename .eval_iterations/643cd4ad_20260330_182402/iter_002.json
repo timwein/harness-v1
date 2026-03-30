@@ -1,0 +1,180 @@
+{
+  "run_id": "643cd4ad_20260330_182402",
+  "iteration": 2,
+  "content": "**1. Redlinear**\nA sophisticated evolution of the legal practice of \"redlining\" contracts\u2014marking changes and revisions in red ink. This coined term immediately signals contract review expertise while conveying precision and editorial rigor. The name is instantly familiar to legal professionals, suggesting both the traditional practice and its AI-powered linear workflow optimization. Preliminary trademark search recommended.\n\n**2. Coventech**\nDrawing from contract law terminology for binding agreements, this compound name evokes trust, reliability, and legal sophistication. The three syllables flow naturally, and the word carries gravitas that would resonate with law firm partners. It suggests both the sacred nature of legal agreements and the company's technological commitment to protecting them. Preliminary trademark search recommended.\n\n**3. Nexus**\nA powerful concept of connection and intersection that suggests the critical junction where AI meets contract analysis. This two-syllable name implies both technological sophistication and the central role the platform plays in legal workflows, while maintaining professional credibility through classical etymology. It positions the company as the essential link in modern legal practice. Preliminary trademark search recommended.\n\n**4. Blackletter**\nNamed after the formal typeface traditionally used in legal documents, this evokes centuries of legal tradition while hinting at digital transformation. The compound structure is memorable yet serious, suggesting both historical legal authority and modern precision. It positions the company as bridging traditional legal practice with cutting-edge technology. Preliminary trademark search recommended.\n\n**5. Contractelligence**\nA strategic portmanteau combining \"contract\" and \"intelligence\" to create an entirely new brand identity. This invented name directly signals the AI-powered contract analysis domain while avoiding generic tech patterns. The four syllables create a substantial, enterprise-worthy presence that conveys both legal expertise and technological sophistication to law firm decision-makers. Preliminary trademark search recommended.",
+  "total_score": 18.27,
+  "max_score": 33,
+  "percentage": 0.5536363636363636,
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Binary: full points if pass, zero if fail",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Exactly 5 names provided? YES. Evidence: \"1. Redlinear\", \"2. Coventech\", \"3. Nexus\", \"4. Blackletter\", \"5. Contractelligence\"\n- Each name has 1-2 sentence rationale explaining the thinking? YES. Evidence: Each name has detailed explanation (e.g., \"A sophisticated evolution of the legal practice of 'redlining' contracts\u2014marking changes and revisions in red ink. This coined term immediately signals contract review expertise while conveying precision and editorial rigor.\")\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Shows deep understanding of legal terminology (\"redlining\", \"covenants\", \"blackletter typeface\") and branding strategy beyond basic requirements"
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 4.02,
+      "max_points": 7,
+      "percentage": 0.575,
+      "sub_scores": [
+        {
+          "sub_id": "pronounceability",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "distinctiveness",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pronounceability: 50%x40% + brevity: 50%x30% + distinctiveness: 75%x30%",
+      "improvement_hints": [
+        "pronounceability: 50% -> 80% (+0.8 pts)",
+        "brevity: 50% -> 80% (+0.6 pts)",
+        "distinctiveness: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute pronounceability:\n- Names can be said aloud without confusion? YES. Evidence: \"Redlinear\" (3 syllables, clear), \"Coventech\" (3 syllables, clear), \"Nexus\" (2 syllables, clear), \"Blackletter\" (3 syllables, clear), \"Contractelligence\" (4 syllables but pronounceable)\n- No consonant clusters (3+ consecutive consonants)? YES. Evidence: All names avoid problematic consonant clusters\n- Pass radio test (clear when spoken over poor audio)? YES. Evidence: All names use common phonetic patterns\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard pronounceability analysis without specialized phonetic insights\n\nSub-attribute brevity:\n- Short, punchy \u2014 ideally \u22643 syllables? PARTIALLY. Evidence: \"Nexus\" (2 syllables), \"Redlinear\", \"Coventech\", \"Blackletter\" (3 syllables each), but \"Contractelligence\" (4 syllables)\n- 80% or more names at \u22643 syllables? YES. Evidence: 4 out of 5 names are \u22643 syllables (80%)\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Basic syllable counting without advanced phonetic analysis\n\nSub-attribute distinctiveness:\n- Names don't blend in with existing brands? YES. Evidence: \"Redlinear\", \"Coventech\", \"Contractelligence\" are coined terms; \"Nexus\" and \"Blackletter\" while real words, are used in new context\n- Avoids obvious competitor patterns? YES. Evidence: No generic legal tech naming patterns like \"LegalTech\" or \"ContractSoft\"\n- Creates unique brand identity? YES. Evidence: Each name has distinct character and positioning\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Shows sophisticated understanding of brand differentiation and competitive landscape analysis"
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.675,
+      "sub_scores": [
+        {
+          "sub_id": "domain_signal",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "avoids_generic_ai",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "trust_register",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_signal: 75%x40% + avoids_generic_ai: 50%x30% + trust_register: 75%x30%",
+      "improvement_hints": [
+        "avoids_generic_ai: 50% -> 80% (+0.9 pts)",
+        "domain_signal: 75% -> 80% (+0.2 pts)",
+        "trust_register: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_signal:\n- Evokes legal/contract/precision without being literal? YES. Evidence: \"Redlinear\" (contract editing), \"Coventech\" (legal agreements), \"Blackletter\" (legal documents), \"Nexus\" (connection/intersection)\n- Uses word choice, etymology, or metaphor effectively? YES. Evidence: \"Drawing from contract law terminology\", \"Named after the formal typeface traditionally used in legal documents\", \"classical etymology\"\n- Signals domain through sophisticated means? YES. Evidence: References to legal practices, typography, and terminology rather than obvious keywords\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Deep knowledge of legal terminology (\"redlining\", \"covenants\", \"blackletter typeface\") and legal practice history\n\nSub-attribute avoids_generic_ai:\n- No 'AI' prefix/suffix? YES. Evidence: None of the 5 names contain \"AI\"\n- No '-ify' patterns? YES. Evidence: No names end in \"-ify\"\n- No 'Smart[X]' patterns? YES. Evidence: No names use \"Smart\" prefix\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard avoidance of generic patterns without additional insight\n\nSub-attribute trust_register:\n- Would a law firm partner take a meeting with this company? YES. Evidence: Names like \"Coventech\" described as having \"gravitas that would resonate with law firm partners\", \"Blackletter\" suggests \"legal authority\"\n- Uses formal/professional language registers? YES. Evidence: \"sophisticated\", \"gravitas\", \"legal sophistication\", \"professional credibility\"\n- Appropriate tone for legal market? YES. Evidence: Emphasis on tradition, authority, and professionalism throughout\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Sophisticated understanding of law firm culture and decision-maker psychology"
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "domain_plausibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "no_trademark_conflicts",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_plausibility: 50%x50% + no_trademark_conflicts: 50%x50%",
+      "improvement_hints": [
+        "domain_plausibility: 50% -> 80% (+0.9 pts)",
+        "no_trademark_conflicts: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_plausibility:\n- Names likely have .com available or reasonable variant? YES. Evidence: \"Redlinear\", \"Coventech\", \"Contractelligence\" are coined terms; \"Preliminary trademark search recommended\" for all\n- Not common English dictionary words? PARTIALLY. Evidence: \"Nexus\" and \"Blackletter\" are dictionary words, but \"Redlinear\", \"Coventech\", \"Contractelligence\" are coined\n- 60% or more names are coined/compound words? YES. Evidence: 3 out of 5 names are coined/compound (60%)\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Basic availability assessment without specialized trademark knowledge\n\nSub-attribute no_trademark_conflicts:\n- Not existing well-known brand names? YES. Evidence: None appear to be major existing brands\n- No obvious trademark conflicts mentioned? YES. Evidence: All names include \"Preliminary trademark search recommended\" suggesting awareness but no obvious conflicts\n- Avoids major corporate names? YES. Evidence: No resemblance to Apple, Microsoft, etc.\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard trademark conflict avoidance without specialized IP knowledge"
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 4.5,
+      "max_points": 6,
+      "percentage": 0.75,
+      "sub_scores": [
+        {
+          "sub_id": "strategy_diversity",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "range_of_tone",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: strategy_diversity: 75%x50% + range_of_tone: 75%x50%",
+      "improvement_hints": [
+        "strategy_diversity: 75% -> 80% (+0.2 pts)",
+        "range_of_tone: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute strategy_diversity:\n- At least 3 different naming strategies used? YES. Evidence: Coined compound (\"Redlinear\", \"Coventech\", \"Contractelligence\"), real word repurposed (\"Nexus\"), classical/traditional reference (\"Blackletter\")\n- Mix of approaches present? YES. Evidence: Legal practice evolution, compound creation, classical reference, portmanteau\n- 4+ distinct strategies? NO. Evidence: Primarily 3 main strategies with variations\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Sophisticated understanding of naming taxonomy and strategic positioning approaches\n\nSub-attribute range_of_tone:\n- Mix of serious/approachable/bold tones? YES. Evidence: \"Nexus\" (bold/modern), \"Blackletter\" (serious/traditional), \"Coventech\" (approachable/professional), \"Contractelligence\" (bold/innovative)\n- Clear tonal range across names? YES. Evidence: From traditional gravitas to modern innovation\n- Avoids monotone presentation? YES. Evidence: Each name positioned with different personality and approach\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Nuanced understanding of brand personality and tonal positioning in professional services"
+    }
+  ],
+  "focus_areas": [
+    "name_memorability.brevity",
+    "name_availability.domain_plausibility",
+    "name_memorability.pronounceability",
+    "name_memorability.distinctiveness",
+    "name_domain_resonance.avoids_generic_ai"
+  ]
+}

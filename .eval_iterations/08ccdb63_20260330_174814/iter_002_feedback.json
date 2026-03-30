@@ -1,0 +1,24 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: The summary has strong content fidelity and actionability but fails on compression and technical accessibility. Primary issues are compound sentence structure inflating word count and undefined technical jargon creating barriers for non-technical readers.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 sum_fidelity.thesis_capture: Strong central claim capture with specific metrics (92% cost reduction)\n  \u2713 sum_fidelity.evidence_capture: Key data points well preserved (price points, timelines)\n  \u2713 sum_exec_value.actionability: Clear decision implications provided\n  \u2713 sum_exec_value.quantification: Multiple specific metrics included\n  \u2713 sum_exec_value.declarative_framing: Direct declarative statements throughout\n  \u2713 sum_compression.bullet_count: Exactly 3 bullets as required\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sum_fidelity.no_hallucination (current: 50%, 3.6 pts at stake)\n    Failed check: Cannot verify claims against source material\n    Expected: All claims traceable to source content with no invented statistics\n    Found: Unable to verify specific numbers like 92% reduction, $0.0003 pricing, or 8-month halving cycle\n    \u2192 ACTION: Verify all quantitative claims (92% cost reduction, $0.0003 per 1K tokens, 8-month halving cycle, 24-month timeline) against the source material and remove or modify any statistics that cannot be directly traced to the original content.\n\n  FIX 2: sum_compression.bullet_density (current: 50%, 3.5 pts at stake)\n    Failed check: Bullets contain compound sentences with comma splices\n    Expected: Each bullet is 1-2 sentences with no semicolons, em-dashes, or compound sentences\n    Found: First bullet has compound sentence with comma splice, second bullet is compound with comma\n    \u2192 ACTION: Break compound sentences into separate simple sentences. Split 'This dramatic cost reduction stems from architectural improvements, making previously expensive operations affordable' into two sentences. Do the same for the second bullet's compound structure.\n\n  FIX 3: sum_compression.total_length (current: 30%, 3.5 pts at stake)\n    Failed check: Content exceeds 100-word target\n    Expected: Total word count under 100 words for 1.0 score\n    Found: Content approximately 120-130 words\n    \u2192 ACTION: Reduce total word count to under 100 words by removing redundant phrases, combining related concepts, and using more concise language while preserving all key quantitative data.\n\n  FIX 4: sum_standalone.undefined_jargon (current: 62%, 1.5 pts at stake)\n    Failed check: Technical terms used without explanation\n    Expected: No undefined jargon that requires domain knowledge\n    Found: Terms like 'H100 clusters,' 'tensor processing units,' 'transformer operations' used without explanation\n    \u2192 ACTION: Replace or briefly define technical terms: change 'H100 clusters' to 'AI processing clusters,' 'tensor processing units' to 'specialized AI chips,' and 'transformer operations' to 'AI model computations' or provide one-word explanations in parentheses.\n",
+  "focus_areas": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value",
+    "sum_standalone"
+  ],
+  "protected_criteria": [],
+  "improvement_targets": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value",
+    "sum_standalone"
+  ],
+  "prior_score": 0.525,
+  "prior_criterion_scores": {
+    "sum_compression": 0.5396,
+    "sum_fidelity": 0.5,
+    "sum_exec_value": 0.5,
+    "sum_standalone": 0.625
+  }
+}

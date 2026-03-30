@@ -1,0 +1,36 @@
+{
+  "run_id": "7fa8e462_20260330_181927",
+  "iteration": 2,
+  "total_score": 11.34,
+  "max_score": 30,
+  "percentage": 0.378,
+  "delta_from_prior": 0.0347,
+  "focus_areas": [
+    "expl_accuracy.qkv_correctness",
+    "expl_accuracy.attention_math",
+    "expl_accuracy.multihead_purpose",
+    "expl_accessibility.jargon_handling",
+    "expl_accessibility.analogy_quality"
+  ],
+  "content_path": ".eval_iterations/7fa8e462_20260330_181927/iter_002_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "expl_accuracy",
+      "points_earned": 6.0,
+      "max_points": 12,
+      "percentage": 0.5
+    },
+    {
+      "criterion_id": "expl_accessibility",
+      "points_earned": 5.0,
+      "max_points": 10,
+      "percentage": 0.49999999999999994
+    },
+    {
+      "criterion_id": "expl_engagement",
+      "points_earned": 0.34,
+      "max_points": 8,
+      "percentage": 0.042105263157894736
+    }
+  ]
+}

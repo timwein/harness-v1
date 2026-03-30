@@ -1,0 +1,180 @@
+{
+  "run_id": "643cd4ad_20260330_182402",
+  "iteration": 3,
+  "content": "**1. Redlinear**\nA sophisticated evolution of the legal practice of \"redlining\" contracts\u2014marking changes and revisions in red ink. This coined term immediately signals contract review expertise while conveying precision and editorial rigor.\n\n**2. Covenmark**\nDrawing from contract law terminology for binding agreements, this compound name evokes trust and legal precision. The name carries gravitas that would resonate with law firm partners while suggesting both covenant protection and quality marking.\n\n**3. Clausebound**\nA powerful coined term suggesting the binding nature of contract clauses and the platform's comprehensive analysis capabilities. This compound name implies both legal expertise and technological precision in contract review workflows.\n\n**4. Blackletter**\nNamed after the formal typeface traditionally used in legal documents, this evokes centuries of legal tradition while hinting at digital transformation. The compound structure is memorable yet serious, suggesting both historical legal authority and modern precision.\n\n**5. Intellilaw**\nA strategic portmanteau combining \"intelligence\" and \"law\" to create an entirely new brand identity. This invented name directly signals AI-powered legal analysis while maintaining professional credibility and three-syllable memorability.",
+  "total_score": 18.98,
+  "max_score": 33,
+  "percentage": 0.5751515151515152,
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Binary: full points if pass, zero if fail",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Exactly 5 names provided? YES. Evidence: \"1. Redlinear\", \"2. Covenmark\", \"3. Clausebound\", \"4. Blackletter\", \"5. Intellilaw\"\n- Each name has 1-2 sentence rationale explaining the thinking? YES. Evidence: Each name has explanatory text like \"A sophisticated evolution of the legal practice of 'redlining' contracts\u2014marking changes and revisions in red ink. This coined term immediately signals contract review expertise while conveying precision and editorial rigor.\"\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Shows deep understanding of legal terminology (\"redlining\", \"covenant\", \"clause\", \"blackletter typeface\") and strategic branding concepts beyond basic requirements."
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 4.73,
+      "max_points": 7,
+      "percentage": 0.675,
+      "sub_scores": [
+        {
+          "sub_id": "pronounceability",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "distinctiveness",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pronounceability: 75%x40% + brevity: 50%x30% + distinctiveness: 75%x30%",
+      "improvement_hints": [
+        "brevity: 50% -> 80% (+0.6 pts)",
+        "pronounceability: 75% -> 80% (+0.1 pts)",
+        "distinctiveness: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute pronounceability:\n- Names can be said aloud without confusion? YES. Evidence: \"Redlinear\" (3 syllables), \"Covenmark\" (3 syllables), \"Clausebound\" (2 syllables), \"Blackletter\" (3 syllables), \"Intellilaw\" (4 syllables) - all pronounceable\n- No consonant clusters (3+ consecutive consonants)? YES. Evidence: No problematic consonant clusters found in any names\n- Pass radio test (clear when spoken over poor audio)? YES. Evidence: All names use clear vowel-consonant patterns\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Demonstrates understanding of phonetic branding principles and \"phone test\" concept\n\nSub-attribute brevity:\n- Short, punchy \u2014 ideally \u22643 syllables? PARTIAL. Evidence: \"Clausebound\" (2 syllables), \"Redlinear\" (3 syllables), \"Covenmark\" (3 syllables), \"Blackletter\" (3 syllables) meet criteria, but \"Intellilaw\" (4 syllables) exceeds\n- Names are concise and memorable? YES. Evidence: All names are single compound words, not lengthy phrases\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard application of brevity principles without additional insight\n\nSub-attribute distinctiveness:\n- Doesn't blend in with existing brands? YES. Evidence: Names like \"Redlinear\", \"Covenmark\", \"Clausebound\" are coined terms unlikely to conflict with major brands\n- Names are distinct from obvious competitors? YES. Evidence: Avoids generic legal tech naming patterns, creates unique identities\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Shows sophisticated understanding of brand differentiation in legal tech space"
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.675,
+      "sub_scores": [
+        {
+          "sub_id": "domain_signal",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "avoids_generic_ai",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "trust_register",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_signal: 75%x40% + avoids_generic_ai: 50%x30% + trust_register: 75%x30%",
+      "improvement_hints": [
+        "avoids_generic_ai: 50% -> 80% (+0.9 pts)",
+        "domain_signal: 75% -> 80% (+0.2 pts)",
+        "trust_register: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_signal:\n- Evokes legal/contract/precision without being literal? YES. Evidence: \"Redlinear\" evokes contract redlining, \"Covenmark\" uses covenant terminology, \"Clausebound\" references contract clauses, \"Blackletter\" references legal document typography\n- Uses word choice, etymology, or metaphor effectively? YES. Evidence: Strategic use of legal terminology and metaphorical connections\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Deep knowledge of legal practice terminology (\"redlining\", \"covenant\", \"blackletter typeface\") and their cultural significance\n\nSub-attribute avoids_generic_ai:\n- No 'AI' prefix/suffix? PARTIAL. Evidence: \"Intellilaw\" contains \"intelli\" suggesting intelligence/AI, others avoid AI references\n- No '-ify', no 'Smart[X]' patterns? YES. Evidence: No generic tech naming patterns found\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard avoidance of generic patterns without additional insight\n\nSub-attribute trust_register:\n- Would a law firm partner take a meeting with this company? YES. Evidence: Names like \"Covenmark\", \"Blackletter\", \"Clausebound\" convey professional gravitas appropriate for legal market\n- Uses formal/professional language registers? YES. Evidence: All names use serious, professional tone rather than casual/playful\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Understanding of legal market culture and what resonates with law firm decision-makers"
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "domain_plausibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "no_trademark_conflicts",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_plausibility: 50%x50% + no_trademark_conflicts: 50%x50%",
+      "improvement_hints": [
+        "domain_plausibility: 50% -> 80% (+0.9 pts)",
+        "no_trademark_conflicts: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_plausibility:\n- Names likely have .com available or reasonable variant? YES. Evidence: \"Redlinear\", \"Covenmark\", \"Clausebound\", \"Blackletter\", \"Intellilaw\" are all coined/compound terms likely available\n- Not common English dictionary words? YES. Evidence: All are invented or compound terms, not standard dictionary words\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Standard application of availability principles\n\nSub-attribute no_trademark_conflicts:\n- Not an existing well-known brand name? YES. Evidence: No obvious conflicts with major existing brands identified\n- Names avoid obvious trademark issues? YES. Evidence: All appear to be original coined terms\n- Does the content go BEYOND rubric guidance with independent domain expertise? NO. Evidence: Basic trademark avoidance without deeper analysis"
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 4.5,
+      "max_points": 6,
+      "percentage": 0.75,
+      "sub_scores": [
+        {
+          "sub_id": "strategy_diversity",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "range_of_tone",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: strategy_diversity: 75%x50% + range_of_tone: 75%x50%",
+      "improvement_hints": [
+        "strategy_diversity: 75% -> 80% (+0.2 pts)",
+        "range_of_tone: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute strategy_diversity:\n- At least 3 different naming strategies used? YES. Evidence: Compound evolution (\"Redlinear\"), legal terminology (\"Covenmark\", \"Clausebound\"), traditional reference (\"Blackletter\"), portmanteau (\"Intellilaw\") - 4+ strategies\n- Mix of approaches: metaphorical, coined, compound, classical? YES. Evidence: Clear variety in naming approaches demonstrated\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Sophisticated understanding of different naming methodologies and strategic application\n\nSub-attribute range_of_tone:\n- Mix of serious/approachable/bold tones? YES. Evidence: \"Blackletter\" (traditional/serious), \"Intellilaw\" (modern/approachable), \"Clausebound\" (bold/assertive), \"Covenmark\" (trustworthy/serious)\n- Clear tonal range across names? YES. Evidence: Names span from traditional gravitas to modern accessibility\n- Does the content go BEYOND rubric guidance with independent domain expertise? YES. Evidence: Strategic understanding of how different tones serve different market positioning goals"
+    }
+  ],
+  "focus_areas": [
+    "name_memorability.pronounceability",
+    "name_memorability.brevity",
+    "name_domain_resonance.avoids_generic_ai",
+    "name_availability.domain_plausibility",
+    "name_availability.no_trademark_conflicts"
+  ]
+}

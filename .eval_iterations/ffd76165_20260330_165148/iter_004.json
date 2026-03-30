@@ -1,0 +1,231 @@
+{
+  "run_id": "ffd76165_20260330_165148",
+  "iteration": 4,
+  "content": "**Subject:** DataVault \u2014 your zero-trust timing is perfect (here's why)\n\n**Email:**\n\nHi Sarah,\n\nRead your interview in TechCrunch about DataVault's approach to zero-trust data governance \u2014 the way you're solving enterprise data sprawl reminds me of the identity management challenges we cracked at CyberTech before our acquisition by Microsoft.\n\nI'm looking to write a $500K check into your Series A and bring my enterprise security network along. Scaled CyberTech from 50 to 2,000+ enterprise customers before Microsoft acquired us. Also guided 3 portfolio companies through SOC2 Type II audits in under 90 days each.\n\nTwo specific ways I help my portfolio companies: direct intros to CISOs at 3 Fortune 100 companies who've bought similar solutions and product strategy for the regulatory challenges you mentioned in your TechCrunch piece \u2014 helped portfolio companies close $40M+ in enterprise deals in 2023.\n\nKnow you're swamped with Series A prep \u2014 free for a quick 15-minute call Wednesday 2-4pm or Thursday 1-3pm EST to discuss how I can help accelerate your Series A with Fortune 500 intros? Happy to share specific CISO contacts via email if that's easier given your Series A timeline.\n\nBest,  \nAlex Chen",
+  "total_score": 35.449999999999996,
+  "max_score": 53,
+  "percentage": 0.6688679245283018,
+  "criterion_scores": [
+    {
+      "criterion_id": "email_subject",
+      "points_earned": 4.38,
+      "max_points": 10,
+      "percentage": 0.4375,
+      "sub_scores": [
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.25,
+          "weighted_value": 0.0625,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "curiosity_hook",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: specificity: 50%x40% + brevity: 25%x25% + curiosity_hook: 50%x35%",
+      "improvement_hints": [
+        "brevity: 25% -> 80% (+1.4 pts)",
+        "specificity: 50% -> 80% (+1.2 pts)",
+        "curiosity_hook: 50% -> 80% (+1.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute specificity:\n  - References recipient's company name (DataVault)? YES. Evidence: \"DataVault \u2014 your zero-trust timing is perfect\"\n  - References specific context/domain (zero-trust, Series A)? YES. Evidence: \"DataVault \u2014 your zero-trust timing is perfect\"\n  - Avoids generic language? YES. Evidence: Uses specific company name and domain reference\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight beyond basic company/domain reference\n\nSub-attribute brevity:\n  - Under 60 characters? NO. Evidence: \"DataVault \u2014 your zero-trust timing is perfect (here's why)\" = 65 characters\n  - Under 80 characters? YES. Evidence: 65 characters total\n  - Scannable on mobile? YES. Evidence: reasonably short subject line\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight\n\nSub-attribute curiosity_hook:\n  - Creates reason to open without being clickbait? YES. Evidence: \"your zero-trust timing is perfect (here's why)\" creates curiosity\n  - Avoids generic language? YES. Evidence: specific to zero-trust and timing\n  - Honest and compelling? YES. Evidence: references specific domain knowledge\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight beyond standard curiosity creation"
+    },
+    {
+      "criterion_id": "email_opening",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Penalty: 8 - 0.0",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Violation \"generic_greeting\": ABSENT. Evidence: Opens with \"Read your interview in TechCrunch\"\n  - Violation \"self_intro_first\": ABSENT. Evidence: Opens with reference to recipient's interview, not self-introduction\n  - Violation \"no_specific_signal\": ABSENT. Evidence: \"Read your interview in TechCrunch about DataVault's approach to zero-trust data governance\"\n  - Violation \"too_long_opening\": ABSENT. Evidence: First sentence is concise and specific"
+    },
+    {
+      "criterion_id": "email_value_prop",
+      "points_earned": 7.0,
+      "max_points": 10,
+      "percentage": 0.7,
+      "sub_scores": [
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.75,
+          "weighted_value": 0.3375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "relevance",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "credibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.1,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: specificity: 75%x45% + relevance: 75%x35% + credibility: 50%x20%",
+      "improvement_hints": [
+        "credibility: 50% -> 80% (+0.6 pts)",
+        "specificity: 75% -> 80% (+0.2 pts)",
+        "relevance: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute specificity:\n  - Names concrete value offerings? YES. Evidence: \"$500K check\", \"enterprise security network\", \"direct intros to CISOs at 3 Fortune 100 companies\", \"product strategy for regulatory challenges\"\n  - Provides 2+ specific offerings? YES. Evidence: Multiple specific offerings listed\n  - Avoids vague language like \"I can help\"? YES. Evidence: specific, concrete offerings\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Shows deep understanding of enterprise security sales cycle, regulatory challenges, and specific CISO network value\n\nSub-attribute relevance:\n  - Value prop maps to recipient's domain (zero-trust data governance)? YES. Evidence: References enterprise security background, regulatory challenges, CISO intros\n  - Value prop maps to Series A stage needs? YES. Evidence: Mentions Series A prep, enterprise deals, Fortune 500 intros\n  - Avoids generic value propositions? YES. Evidence: Specific to security domain and enterprise sales\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Demonstrates understanding of zero-trust market dynamics and enterprise security buyer personas\n\nSub-attribute credibility:\n  - Claims are verifiable with named companies? YES. Evidence: \"CyberTech\", \"Microsoft acquired us\", \"3 Fortune 100 companies\"\n  - Includes specific outcomes/metrics? YES. Evidence: \"50 to 2,000+ enterprise customers\", \"$40M+ in enterprise deals in 2023\", \"SOC2 Type II audits in under 90 days\"\n  - Avoids unsubstantiated claims? YES. Evidence: All claims include specific numbers and company names\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight beyond standard credibility markers"
+    },
+    {
+      "criterion_id": "email_social_proof",
+      "points_earned": 2.38,
+      "max_points": 5,
+      "percentage": 0.475,
+      "sub_scores": [
+        {
+          "sub_id": "proof_quality",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "restraint",
+          "raw_value": 0.0,
+          "weighted_value": 0.0,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "natural_integration",
+          "raw_value": 0.5,
+          "weighted_value": 0.1,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: proof_quality: 75%x50% + restraint: 0%x30% + natural_integration: 50%x20%",
+      "improvement_hints": [
+        "restraint: 0% -> 80% (+1.2 pts)",
+        "natural_integration: 50% -> 80% (+0.3 pts)",
+        "proof_quality: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute proof_quality:\n  - Proof points are directly relevant to recipient's domain? YES. Evidence: CyberTech enterprise security background, SOC2 audit experience, CISO network\n  - Proof points are impressive? YES. Evidence: Microsoft acquisition, scaling to 2000+ customers, $40M+ deals\n  - Includes 1-2 relevant wins? YES. Evidence: Microsoft acquisition, portfolio company success\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Shows sophisticated understanding of enterprise security market with specific regulatory compliance expertise\n\nSub-attribute restraint:\n  - Uses 1-2 tight proof points? NO. Evidence: Multiple proof points throughout: CyberTech scaling, Microsoft acquisition, SOC2 audits, portfolio deals\n  - Avoids resume dump? NO. Evidence: Lists multiple achievements across several sentences\n  - Keeps social proof concise? NO. Evidence: Social proof spans multiple paragraphs\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight\n\nSub-attribute natural_integration:\n  - Proof woven into narrative organically? YES. Evidence: Social proof integrated into value proposition and context\n  - Avoids bullet-pointed credentials? YES. Evidence: No bullet points, flows naturally\n  - Feels conversational, not listed? YES. Evidence: Reads as natural conversation\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight beyond standard integration"
+    },
+    {
+      "criterion_id": "email_cta",
+      "points_earned": 4.0,
+      "max_points": 8,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "clarity",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "low_friction",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "specificity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: clarity: 50%x35% + low_friction: 50%x35% + specificity: 50%x30%",
+      "improvement_hints": [
+        "clarity: 50% -> 80% (+0.8 pts)",
+        "low_friction: 50% -> 80% (+0.8 pts)",
+        "specificity: 50% -> 80% (+0.7 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute clarity:\n  - Single unambiguous ask? YES. Evidence: \"free for a quick 15-minute call\"\n  - Avoids multiple competing asks? YES. Evidence: One primary ask with alternative option\n  - Clear what the next step is? YES. Evidence: 15-minute call or email contact sharing\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight\n\nSub-attribute low_friction:\n  - Minimal commitment required (15-min call)? YES. Evidence: \"quick 15-minute call\"\n  - Offers alternative low-friction option? YES. Evidence: \"Happy to share specific CISO contacts via email\"\n  - Acknowledges their busy schedule? YES. Evidence: \"Know you're swamped with Series A prep\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight\n\nSub-attribute specificity:\n  - Includes specific time slots? YES. Evidence: \"Wednesday 2-4pm or Thursday 1-3pm EST\"\n  - Provides concrete timeline? YES. Evidence: Specific days and time windows\n  - Avoids open-ended scheduling? YES. Evidence: Specific availability windows provided\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight"
+    },
+    {
+      "criterion_id": "email_tone",
+      "points_earned": 5.0,
+      "max_points": 6,
+      "percentage": 0.8333333333333334,
+      "sub_scores": [],
+      "penalties_applied": [
+        {
+          "violation": "humble_brag",
+          "penalty": -1.0
+        }
+      ],
+      "evidence": "",
+      "methodology": "Penalty: 6 - -1.0",
+      "improvement_hints": [
+        "Fix humble_brag (+1.0 pts)"
+      ],
+      "priority": 1,
+      "critique": "- Violation \"sycophantic_language\": ABSENT. Evidence: No overly praising language found\n  - Violation \"salesy_pressure\": ABSENT. Evidence: No high-pressure sales tactics\n  - Violation \"overly_formal\": ABSENT. Evidence: Conversational tone throughout\n  - Violation \"presumptuous_familiarity\": ABSENT. Evidence: Maintains appropriate professional distance\n  - Violation \"humble_brag\": PRESENT. Evidence: \"Scaled CyberTech from 50 to 2,000+ enterprise customers before Microsoft acquired us\" and multiple achievement mentions could be considered humble bragging"
+    },
+    {
+      "criterion_id": "email_length",
+      "points_earned": 4.69,
+      "max_points": 6,
+      "percentage": 0.78125,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "Word count: 192 (target: \u2264150) \u2717",
+      "methodology": "Deterministic: word count \u2264 max",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "Sub-attribute word_count:\n  - Under 150 words total? NO. Evidence: Email is approximately 180-200 words\n  - Under 200 words? YES. Evidence: Estimated around 180-200 words\n  - Under 250 words? YES. Evidence: Well under 250 words\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight\n\nSub-attribute scannability:\n  - Short paragraphs with visual breaks? YES. Evidence: 5 paragraphs with clear line breaks\n  - All paragraphs \u22643 sentences? NO. Evidence: Second paragraph has 4+ sentences\n  - Avoids wall of text? YES. Evidence: Good paragraph structure and breaks\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: no evidence of independent insight"
+    }
+  ],
+  "focus_areas": [
+    "email_social_proof.restraint",
+    "email_subject.specificity",
+    "email_subject.brevity",
+    "email_subject.curiosity_hook",
+    "email_value_prop.credibility"
+  ]
+}

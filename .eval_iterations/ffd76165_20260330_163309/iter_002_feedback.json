@@ -1,0 +1,31 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: The email has strong fundamentals (perfect opening, tone, and length) but loses points on tactical execution. Primary issues: subject line is 14 characters too long, CTA lacks explicit purpose and specific times, and social proof needs tighter relevance to DataFlow's specific real-time data orchestration challenge.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: Perfect score (8/8) - keep the research-based opening with Forbes interview reference\n  \u2713 email_tone: Perfect score (6/6) - maintain the professional yet conversational tone\n  \u2713 email_length: Strong score (5.3/6) - preserve the scannable paragraph structure\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Failed check: Single unambiguous ask with clear purpose\n    Expected: One clear ask with explicit purpose stated\n    Found: Call request with implied purpose only\n    \u2192 ACTION: Make the call purpose explicit. Change to: 'Free for a 20-min call this Thursday or Friday afternoon to discuss the investment and how I can help accelerate your enterprise sales?'\n\n  FIX 2: email_cta.low_friction (current: 50%, 2.8 pts at stake)\n    Failed check: Minimal commitment required\n    Expected: 15-min call or async option for full points\n    Found: 20-min call request\n    \u2192 ACTION: Reduce time commitment to 15 minutes: 'Free for a 15-min call this Thursday or Friday afternoon...'\n\n  FIX 3: email_subject.brevity (current: 25%, 2.5 pts at stake)\n    Failed check: Under 60 characters check\n    Expected: Subject line \u226460 characters for full points\n    Found: 74 characters long\n    \u2192 ACTION: Shorten the subject line to under 60 characters. Try: 'DataFlow Series A: $500K + ETL ops expertise (0\u2192$50M)' (59 chars)\n\n  FIX 4: email_social_proof.proof_quality (current: 50%, 2.5 pts at stake)\n    Failed check: Directly relevant proof points\n    Expected: Proof points directly relevant to recipient's needs\n    Found: General data infrastructure experience\n    \u2192 ACTION: Make the proof more specific to DataFlow's exact needs: 'StreamTech (CTO, built real-time ETL platform acquired by Snowflake for $180M)' to directly mirror DataFlow's real-time data orchestration focus\n\n  FIX 5: email_cta.specificity (current: 50%, 2.4 pts at stake)\n    Failed check: Specific availability provided\n    Expected: Specific time slots, not just days\n    Found: Only 'Thursday or Friday afternoon' mentioned\n    \u2192 ACTION: Add specific time options: 'Free for a 15-min call this Thursday 2-4pm or Friday 1-3pm EST to discuss...'\n\n  FIX 6: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Failed check: Verifiable claims requirement\n    Expected: All claims must be verifiable with concrete metrics\n    Found: StreamTech acquisition claim lacks verification context\n    \u2192 ACTION: Add verification context to the StreamTech claim: 'StreamTech (where I was CTO before its 2023 acquisition by Snowflake for $180M)' to make the timeline and role more verifiable\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.7185,
+  "prior_criterion_scores": {
+    "email_subject": 0.525,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.5,
+    "email_cta": 0.5,
+    "email_tone": 1.0,
+    "email_length": 0.8876
+  }
+}

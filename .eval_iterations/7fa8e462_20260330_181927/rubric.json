@@ -1,0 +1,147 @@
+{
+  "task": "Explain transformer attention mechanisms to a smart 16-year-old",
+  "domain": "explanation",
+  "total_points": 30,
+  "pass_threshold": 0.8,
+  "criteria": [
+    {
+      "id": "expl_accuracy",
+      "category": "correctness",
+      "description": "Technical content is correct \u2014 no simplification-induced errors",
+      "pass_condition": "Query/Key/Value framework explained correctly with specific mention that queries come from decoder, keys/values from encoder (or all from same sequence in self-attention). Dot product similarity calculation is mathematically accurate including why higher dot products mean more similarity. Softmax normalization described correctly including that outputs sum to 1. Multi-head attention explained as learning different representation subspaces simultaneously, not just 'multiple perspectives'.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "qkv_correctness",
+            "description": "Q/K/V roles explained accurately",
+            "weight": 0.35,
+            "measurement": "1.0 if correct mechanism, 0.5 if metaphor-only, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "attention_math",
+            "description": "Dot product + softmax pipeline correct",
+            "weight": 0.35,
+            "measurement": "1.0 if mechanism right, 0.5 if hand-wavy but directionally correct, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "multihead_purpose",
+            "description": "Why multiple heads matter",
+            "weight": 0.3,
+            "measurement": "1.0 if explains different relationship types, 0.5 if mentions it, 0.0 if absent",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Each word asks a question (query), advertises what it knows (key), and shares details (value)'"
+      ],
+      "fail_examples": [
+        "'Attention is when the model focuses on important words' \u2014 no mechanism"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "expl_accessibility",
+      "category": "audience_fit",
+      "description": "Covers essential concepts (why attention exists, how Q/K/V works, why it matters) while maintaining appropriate accessibility for smart 16-year-olds through clear explanations and relatable examples",
+      "pass_condition": "Covers all three: (1) why attention exists with specific mention of the context/long-range dependency problem in sequences, (2) how Q/K/V mechanism works with step-by-step process, (3) why it matters with at least two benefits (parallel processing AND long-range dependencies). Every technical term (attention, query, key, value, softmax, dot product) is either defined in plain language or illustrated with analogy. Uses at least one analogy from domains familiar to teenagers (social media, gaming, school, sports, etc.). Introduces concepts in logical order without forward-referencing undefined terms. Any math beyond basic arithmetic is either avoided or explained conceptually.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "jargon_handling",
+            "description": "All technical terms explained or avoided",
+            "weight": 0.3,
+            "measurement": "1.0 if all explained, 0.5 if most, 0.0 if jargon-heavy",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "analogy_quality",
+            "description": "Uses relatable analogies (social media, school, etc.)",
+            "weight": 0.35,
+            "measurement": "1.0 if memorable analogy that maps correctly, 0.5 if generic, 0.0 if none",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "progressive_complexity",
+            "description": "Builds from simple to complex",
+            "weight": 0.35,
+            "measurement": "1.0 if clear scaffold, 0.5 if some structure, 0.0 if jumps to hard parts",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Starts with 'imagine searching for a video on YouTube' \u2192 builds to Q/K/V"
+      ],
+      "fail_examples": [
+        "'Attention computes softmax(QK^T/\u221ad_k)V' with no unpacking"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "expl_engagement",
+      "category": "communication",
+      "description": "Explanation maintains reader engagement through accessible writing style and compelling presentation",
+      "pass_condition": "Opens with a specific hook: either a direct question to the reader, a surprising/counterintuitive fact about attention, or a concrete scenario the reader can imagine themselves in. Uses second person ('you') or inclusive first person ('we', 'us') at least 3 times throughout. Sentence length averages under 20 words with no sentences over 35 words. Total word count between 400-600 words. Contains one detailed example that walks through attention mechanism using concrete, non-abstract items (specific people, objects, or scenarios rather than generic 'words' or 'tokens').",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "hook",
+            "description": "First sentence creates curiosity",
+            "weight": 0.3,
+            "measurement": "1.0 if compelling hook, 0.5 if adequate, 0.0 if textbook opening",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "tone",
+            "description": "Conversational, not textbook or condescending",
+            "weight": 0.35,
+            "measurement": "1.0 if natural, 0.5 if slightly formal, 0.0 if textbook/patronizing",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "concision",
+            "description": "Under 600 words, no padding",
+            "weight": 0.35,
+            "measurement": "1.0 if \u2264600, 0.7 if \u2264800, 0.0 if >1000",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'You know how autocomplete seems to read your mind? Here's the trick...'"
+      ],
+      "fail_examples": [
+        "'Attention mechanisms are a fundamental component of transformer architectures...'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

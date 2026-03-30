@@ -1,0 +1,42 @@
+{
+  "run_id": "b888f9bf_20260330_175948",
+  "iteration": 3,
+  "total_score": 25.22,
+  "max_score": 34,
+  "percentage": 0.7417647058823529,
+  "delta_from_prior": 0.0938,
+  "focus_areas": [
+    "arg_steelman.steelman_quality",
+    "arg_steelman.specific_evidence",
+    "arg_steelman.good_faith",
+    "arg_counter_quality.argument_count",
+    "arg_counter_quality.definitional_challenge"
+  ],
+  "content_path": ".eval_iterations/b888f9bf_20260330_175948/iter_003_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "arg_steelman",
+      "points_earned": 5.75,
+      "max_points": 10,
+      "percentage": 0.575
+    },
+    {
+      "criterion_id": "arg_counter_quality",
+      "points_earned": 8.4,
+      "max_points": 12,
+      "percentage": 0.7
+    },
+    {
+      "criterion_id": "arg_nuance",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    },
+    {
+      "criterion_id": "arg_readability",
+      "points_earned": 3.07,
+      "max_points": 4,
+      "percentage": 0.7667031763417306
+    }
+  ]
+}

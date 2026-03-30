@@ -1,0 +1,157 @@
+{
+  "run_id": "c16ed719_20260330_180643",
+  "iteration": 1,
+  "content": "```json\n{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://api.example.com/schemas/billing-system/v1.0.0\",\n  \"title\": \"Multi-Tenant SaaS Billing System Schema\",\n  \"version\": \"1.0.0\",\n  \"definitions\": {\n    \"money\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"amount\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        },\n        \"currency\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[A-Z]{3}$\",\n          \"description\": \"ISO 4217 currency code\"\n        }\n      },\n      \"required\": [\"amount\", \"currency\"],\n      \"additionalProperties\": false\n    },\n    \"uuid\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\"\n    },\n    \"timestamp\": {\n      \"type\": \"string\",\n      \"format\": \"date-time\"\n    },\n    \"billing_interval\": {\n      \"type\": \"string\",\n      \"enum\": [\"monthly\", \"quarterly\", \"annually\"]\n    },\n    \"metered_dimension\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z][a-z0-9_]*$\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"unit\": {\n          \"type\": \"string\"\n        },\n        \"aggregation_type\": {\n          \"type\": \"string\",\n          \"enum\": [\"sum\", \"max\", \"unique_count\"]\n        },\n        \"tiers\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"$ref\": \"#/definitions/pricing_tier\"\n          },\n          \"minItems\": 1\n        }\n      },\n      \"required\": [\"id\", \"name\", \"unit\", \"aggregation_type\", \"tiers\"],\n      \"additionalProperties\": false\n    },\n    \"pricing_tier\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"start_at\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        },\n        \"end_at\": {\n          \"type\": [\"number\", \"null\"],\n          \"minimum\": 0\n        },\n        \"unit_price\": {\n          \"$ref\": \"#/definitions/money\"\n        },\n        \"flat_fee\": {\n          \"$ref\": \"#/definitions/money\"\n        }\n      },\n      \"required\": [\"start_at\", \"unit_price\"],\n      \"additionalProperties\": false\n    },\n    \"line_item\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"id\": {\n          \"$ref\": \"#/definitions/uuid\"\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"enum\": [\"seat\", \"usage\", \"one_time\", \"proration\", \"discount\"]\n        },\n        \"quantity\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        },\n        \"unit_amount\": {\n          \"$ref\": \"#/definitions/money\"\n        },\n        \"total_amount\": {\n          \"$ref\": \"#/definitions/money\"\n        },\n        \"period_start\": {\n          \"$ref\": \"#/definitions/timestamp\"\n        },\n        \"period_end\": {\n          \"$ref\": \"#/definitions/timestamp\"\n        },\n        \"metered_dimension_id\": {\n          \"type\": [\"string\", \"null\"]\n        },\n        \"metadata\": {\n          \"type\": \"object\",\n          \"additionalProperties\": true\n        }\n      },\n      \"required\": [\"id\", \"description\", \"type\", \"quantity\", \"unit_amount\", \"total_amount\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"type\": \"object\",\n  \"properties\": {\n    \"tenants\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"name\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"status\": {\n            \"type\": \"string\",\n            \"enum\": [\"active\", \"suspended\", \"cancelled\"]\n          },\n          \"created_at\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"name\", \"status\", \"created_at\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"plans\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"name\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"description\": {\n            \"type\": \"string\"\n          },\n          \"status\": {\n            \"type\": \"string\",\n            \"enum\": [\"active\", \"deprecated\", \"archived\"]\n          },\n          \"pricing_model\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"type\": {\n                \"type\": \"string\",\n                \"enum\": [\"seat_based\", \"usage_based\", \"hybrid\"]\n              },\n              \"seat_price\": {\n                \"$ref\": \"#/definitions/money\"\n              },\n              \"billing_interval\": {\n                \"$ref\": \"#/definitions/billing_interval\"\n              },\n              \"trial_days\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"metered_dimensions\": {\n                \"type\": \"array\",\n                \"items\": {\n                  \"$ref\": \"#/definitions/metered_dimension\"\n                }\n              },\n              \"included_seats\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"additional_seat_price\": {\n                \"$ref\": \"#/definitions/money\"\n              }\n            },\n            \"required\": [\"type\", \"billing_interval\"],\n            \"additionalProperties\": false,\n            \"if\": {\n              \"properties\": {\n                \"type\": {\n                  \"const\": \"seat_based\"\n                }\n              }\n            },\n            \"then\": {\n              \"required\": [\"seat_price\"]\n            },\n            \"else\": {\n              \"if\": {\n                \"properties\": {\n                  \"type\": {\n                    \"const\": \"usage_based\"\n                  }\n                }\n              },\n              \"then\": {\n                \"required\": [\"metered_dimensions\"]\n              },\n              \"else\": {\n                \"required\": [\"seat_price\", \"metered_dimensions\"]\n              }\n            }\n          },\n          \"created_at\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"name\", \"status\", \"pricing_model\", \"created_at\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"subscriptions\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"tenant_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"plan_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"status\": {\n            \"type\": \"string\",\n            \"enum\": [\"trialing\", \"active\", \"past_due\", \"cancelled\", \"unpaid\", \"paused\"]\n          },\n          \"current_period_start\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"current_period_end\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"trial_start\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"trial_end\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"seats\": {\n            \"type\": \"integer\",\n            \"minimum\": 1\n          },\n          \"proration_behavior\": {\n            \"type\": \"string\",\n            \"enum\": [\"none\", \"create_prorations\", \"always_invoice\"]\n          },\n          \"created_at\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"cancelled_at\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"ended_at\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"tenant_id\", \"plan_id\", \"status\", \"current_period_start\", \"current_period_end\", \"seats\", \"proration_behavior\", \"created_at\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"usage_records\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"subscription_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"metered_dimension_id\": {\n            \"type\": \"string\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"timestamp\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"action\": {\n            \"type\": \"string\",\n            \"enum\": [\"increment\", \"set\"]\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"subscription_id\", \"metered_dimension_id\", \"quantity\", \"timestamp\", \"action\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"invoices\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"tenant_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"subscription_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"number\": {\n            \"type\": \"string\",\n            \"pattern\": \"^INV-[0-9]+$\"\n          },\n          \"status\": {\n            \"type\": \"string\",\n            \"enum\": [\"draft\", \"open\", \"paid\", \"void\", \"uncollectible\"]\n          },\n          \"currency\": {\n            \"type\": \"string\",\n            \"pattern\": \"^[A-Z]{3}$\"\n          },\n          \"subtotal\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"tax\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"total\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"amount_paid\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"amount_due\": {\n            \"type\": \"number\",\n            \"minimum\": 0\n          },\n          \"line_items\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"$ref\": \"#/definitions/line_item\"\n            },\n            \"minItems\": 1\n          },\n          \"period_start\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"period_end\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"due_date\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"created_at\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"paid_at\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"voided_at\": {\n            \"type\": [\"string\", \"null\"],\n            \"format\": \"date-time\"\n          },\n          \"payment_method\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"type\": {\n                \"type\": \"string\",\n                \"enum\": [\"card\", \"bank_account\", \"ach\", \"wire_transfer\"]\n              },\n              \"last_four\": {\n                \"type\": \"string\",\n                \"pattern\": \"^[0-9]{4}$\"\n              }\n            },\n            \"required\": [\"type\"],\n            \"additionalProperties\": false\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"tenant_id\", \"subscription_id\", \"number\", \"status\", \"currency\", \"subtotal\", \"tax\", \"total\", \"amount_paid\", \"amount_due\", \"line_items\", \"period_start\", \"period_end\", \"due_date\", \"created_at\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"subscription_changes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"subscription_id\": {\n            \"$ref\": \"#/definitions/uuid\"\n          },\n          \"change_type\": {\n            \"type\": \"string\",\n            \"enum\": [\"upgrade\", \"downgrade\", \"seat_change\", \"plan_change\", \"cancellation\", \"reactivation\"]\n          },\n          \"effective_date\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"old_plan_id\": {\n            \"type\": [\"string\", \"null\"]\n          },\n          \"new_plan_id\": {\n            \"type\": [\"string\", \"null\"]\n          },\n          \"old_seats\": {\n            \"type\": [\"integer\", \"null\"],\n            \"minimum\": 0\n          },\n          \"new_seats\": {\n            \"type\": [\"integer\", \"null\"],\n            \"minimum\": 0\n          },\n          \"proration_invoice_id\": {\n            \"type\": [\"string\", \"null\"]\n          },\n          \"created_at\": {\n            \"$ref\": \"#/definitions/timestamp\"\n          },\n          \"metadata\": {\n            \"type\": \"object\",\n            \"additionalProperties\": true\n          }\n        },\n        \"required\": [\"id\", \"subscription_id\", \"change_type\", \"effective_date\", \"created_at\"],\n        \"additionalProperties\": false\n      }\n    }\n  },\n  \"required\": [\"tenants\", \"plans\", \"subscriptions\", \"usage_records\", \"invoices\", \"subscription_changes\"],\n  \"additionalProperties\": false\n}\n```",
+  "total_score": 26.02,
+  "max_score": 38,
+  "percentage": 0.6847368421052632,
+  "criterion_scores": [
+    {
+      "criterion_id": "schema_completeness",
+      "points_earned": 8.1,
+      "max_points": 12,
+      "percentage": 0.6749999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "entity_coverage",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "pricing_model_support",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "billing_lifecycle",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: entity_coverage: 50%x30% + pricing_model_support: 75%x35% + billing_lifecycle: 75%x35%",
+      "improvement_hints": [
+        "entity_coverage: 50% -> 80% (+1.1 pts)",
+        "pricing_model_support: 75% -> 80% (+0.2 pts)",
+        "billing_lifecycle: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute entity_coverage:\n  - Tenant entity present? YES. Evidence: \"tenants\" array with properties id, name, status, created_at\n  - Plan entity present? YES. Evidence: \"plans\" array with properties id, name, pricing_model, etc.\n  - Subscription entity present? YES. Evidence: \"subscriptions\" array with properties id, tenant_id, plan_id, status, etc.\n  - Usage record entity present? YES. Evidence: \"usage_records\" array with properties id, subscription_id, metered_dimension_id, quantity, etc.\n  - Invoice entity present? YES. Evidence: \"invoices\" array with properties id, tenant_id, subscription_id, number, status, etc.\n  - Line item entity present? YES. Evidence: \"line_item\" definition with properties id, description, type, quantity, unit_amount, total_amount\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard entity modeling following typical SaaS billing patterns\n\nSub-attribute pricing_model_support:\n  - Seat-based pricing model present? YES. Evidence: pricing_model.type enum includes \"seat_based\" with seat_price field\n  - Usage-based pricing model present? YES. Evidence: pricing_model.type enum includes \"usage_based\" with metered_dimensions array\n  - Hybrid pricing model present? YES. Evidence: pricing_model.type enum includes \"hybrid\" with conditional logic requiring both seat_price and metered_dimensions\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Complex conditional schema logic using if/then/else to enforce different required fields based on pricing model type, plus tiered pricing structure with pricing_tier definition\n\nSub-attribute billing_lifecycle:\n  - Billing cycles modeled? YES. Evidence: billing_interval enum with \"monthly\", \"quarterly\", \"annually\"\n  - Trial periods modeled? YES. Evidence: trial_days field in pricing_model, trial_start/trial_end in subscriptions\n  - Proration modeled? YES. Evidence: proration_behavior enum with \"none\", \"create_prorations\", \"always_invoice\"\n  - Upgrades/downgrades modeled? YES. Evidence: subscription_changes array with change_type enum including \"upgrade\", \"downgrade\", \"seat_change\", \"plan_change\"\n  - Cancellation modeled? YES. Evidence: subscription status includes \"cancelled\", subscription_changes includes \"cancellation\", cancelled_at timestamp\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Comprehensive subscription change tracking with proration_invoice_id linking, detailed status lifecycle including \"trialing\", \"past_due\", \"unpaid\", \"paused\""
+    },
+    {
+      "criterion_id": "schema_correctness",
+      "points_earned": 6.12,
+      "max_points": 10,
+      "percentage": 0.6125,
+      "sub_scores": [
+        {
+          "sub_id": "schema_validity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "ref_usage",
+          "raw_value": 0.5,
+          "weighted_value": 0.125,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "constraint_quality",
+          "raw_value": 0.75,
+          "weighted_value": 0.3375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: schema_validity: 50%x30% + ref_usage: 50%x25% + constraint_quality: 75%x45%",
+      "improvement_hints": [
+        "schema_validity: 50% -> 80% (+0.9 pts)",
+        "ref_usage: 50% -> 80% (+0.8 pts)",
+        "constraint_quality: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute schema_validity:\n  - Valid JSON Schema draft-07 syntax? YES. Evidence: \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n  - Proper type definitions? YES. Evidence: All properties have explicit \"type\" declarations\n  - Valid structure with definitions section? YES. Evidence: \"definitions\" section with reusable types like money, uuid, timestamp\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard JSON Schema structure\n\nSub-attribute ref_usage:\n  - Uses $ref for reusable definitions? YES. Evidence: Multiple $ref usages like \"$ref\": \"#/definitions/uuid\", \"$ref\": \"#/definitions/money\"\n  - Avoids duplication through references? YES. Evidence: Common types like uuid, timestamp, money defined once and referenced throughout\n  - DRY principle applied? YES. Evidence: Complex types like metered_dimension, pricing_tier, line_item defined once and reused\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard $ref usage patterns\n\nSub-attribute constraint_quality:\n  - Proper enum constraints? YES. Evidence: Multiple enums like billing_interval, subscription status, invoice status, change_type\n  - Required field declarations? YES. Evidence: \"required\" arrays on all object definitions\n  - Format validation? YES. Evidence: \"format\": \"date-time\" for timestamps, regex patterns for UUIDs and currency codes\n  - Pattern validation? YES. Evidence: UUID pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\", currency pattern \"^[A-Z]{3}$\"\n  - Numerical constraints? YES. Evidence: \"minimum\": 0 on amounts, \"minLength\": 1 on strings, \"minItems\": 1 on arrays\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Complex conditional validation using if/then/else for pricing model requirements, sophisticated pattern matching for invoice numbers \"^INV-[0-9]+$\""
+    },
+    {
+      "criterion_id": "schema_extensibility",
+      "points_earned": 4.8,
+      "max_points": 8,
+      "percentage": 0.6000000000000001,
+      "sub_scores": [
+        {
+          "sub_id": "metered_extensibility",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "metadata_support",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "versioning",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: metered_extensibility: 75%x40% + metadata_support: 50%x30% + versioning: 50%x30%",
+      "improvement_hints": [
+        "metadata_support: 50% -> 80% (+0.7 pts)",
+        "versioning: 50% -> 80% (+0.7 pts)",
+        "metered_extensibility: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute metered_extensibility:\n  - Usage dimensions are dynamic array? YES. Evidence: \"metered_dimensions\" is array of objects with configurable id, name, unit, aggregation_type\n  - Not hardcoded dimension fields? YES. Evidence: No hardcoded fields like \"api_calls\" or \"storage_gb\", uses generic dimension structure\n  - Supports adding new dimensions without schema change? YES. Evidence: Array structure allows adding new dimension objects\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Sophisticated tiered pricing structure within dimensions, multiple aggregation types (sum, max, unique_count), flexible tier definitions with start_at/end_at ranges\n\nSub-attribute metadata_support:\n  - Custom metadata fields on key entities? YES. Evidence: \"metadata\" object with \"additionalProperties\": true on tenants, plans, subscriptions, usage_records, invoices, subscription_changes\n  - Extension points provided? YES. Evidence: Metadata objects allow arbitrary additional data\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard metadata pattern\n\nSub-attribute versioning:\n  - Schema version field present? YES. Evidence: \"version\": \"1.0.0\" and \"$id\" with version in URL\n  - Versioning strategy indicated? YES. Evidence: Version in schema ID URL \"https://api.example.com/schemas/billing-system/v1.0.0\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard versioning approach"
+    },
+    {
+      "criterion_id": "schema_realworld",
+      "points_earned": 7.0,
+      "max_points": 8,
+      "percentage": 0.875,
+      "sub_scores": [],
+      "penalties_applied": [
+        {
+          "violation": "no_idempotency",
+          "penalty": -1.0
+        }
+      ],
+      "evidence": "",
+      "methodology": "Penalty: 8 - -1.0",
+      "improvement_hints": [
+        "Fix no_idempotency (+1.0 pts)"
+      ],
+      "priority": 1,
+      "critique": "- Violation \"no_currency_handling\": ABSENT. Evidence: Currency fields present with ISO 4217 pattern \"^[A-Z]{3}$\" in money definition and invoice currency field\n  - Violation \"calculated_total_without_line_items\": ABSENT. Evidence: Invoices have both \"line_items\" array (minItems: 1) and separate total fields (subtotal, tax, total)\n  - Violation \"no_idempotency\": PRESENT. Evidence: No idempotency key fields found in mutation-related entities\n  - Violation \"no_invoice_status_lifecycle\": ABSENT. Evidence: Invoice status enum includes \"draft\", \"open\", \"paid\", \"void\", \"uncollectible\"\n  - Violation \"naive_date_handling\": ABSENT. Evidence: Proper timestamp handling with \"format\": \"date-time\" and separate nullable date fields\n  - Violation \"single_currency_assumption\": ABSENT. Evidence: Currency field on invoices and money definition supports multiple currencies"
+    }
+  ],
+  "focus_areas": []
+}

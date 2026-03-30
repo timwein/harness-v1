@@ -1,0 +1,24 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The summary achieves perfect standalone comprehension but loses points on compression (compound sentences, length >100 words) and fidelity (unverified quantitative claims). The content structure and actionability are strong, requiring only technical refinements to meet full scoring criteria.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 sum_standalone: Perfect score (4.0/4) - all bullets are comprehensible without source reference and use clear, active language\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sum_fidelity.no_hallucination (current: 50%, 3.6 pts at stake)\n    Failed check: Cannot verify all claims are traceable to source material\n    Expected: All claims must be traceable to source with no invented statistics\n    Found: Specific numbers like '92%', '$0.0003', '8 months' cannot be verified without source\n    \u2192 ACTION: Verify every quantitative claim (92% reduction, $0.0003 cost, 8-month halving cycle, 10 million token threshold) against the source material and remove or modify any figures that cannot be directly traced to the original content\n\n  FIX 2: sum_compression.bullet_density (current: 50%, 3.5 pts at stake)\n    Failed check: First bullet contains compound sentence structure\n    Expected: Each bullet must be 1-2 sentences with no compound sentences\n    Found: First bullet has compound sentence with comma separation combining cost reduction and hardware comparison\n    \u2192 ACTION: Split the first bullet into two separate sentences: 'New AI chip architectures have reduced language model inference costs by 92% since January 2023. Specialized processing clusters now achieve $0.0003 per 1K tokens compared to $0.004 on previous hardware.'\n\n  FIX 3: sum_compression.total_length (current: 70%, 3.5 pts at stake)\n    Failed check: Total word count exceeds 100 words\n    Expected: Summary must be \u2264100 words for full points\n    Found: Content is approximately 120+ words\n    \u2192 ACTION: Reduce total word count to under 100 words by removing redundant phrases like 'Organizations should immediately' (change to 'Organizations should'), 'begin developing' (change to 'develop'), and condensing the timeline reference in bullet 2\n",
+  "focus_areas": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "protected_criteria": [
+    "sum_standalone"
+  ],
+  "improvement_targets": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "prior_score": 0.5917,
+  "prior_criterion_scores": {
+    "sum_compression": 0.6303,
+    "sum_fidelity": 0.5,
+    "sum_exec_value": 0.5,
+    "sum_standalone": 1.0
+  }
+}

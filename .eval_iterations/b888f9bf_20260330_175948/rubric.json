@@ -1,0 +1,184 @@
+{
+  "task": "Write a counterargument to the claim 'AGI will arrive before 2030'",
+  "domain": "argumentation",
+  "total_points": 34,
+  "pass_threshold": 0.8,
+  "criteria": [
+    {
+      "id": "arg_steelman",
+      "category": "intellectual_honesty",
+      "description": "Steelmans the original claim before countering it",
+      "pass_condition": "First paragraph presents the strongest version of the AGI-by-2030 case with specific quantitative evidence: cites at least 2 concrete scaling metrics (e.g., parameter counts, FLOPS, benchmark scores with numbers), names at least 2 specific expert proponents with their predictions, and references at least 1 recent breakthrough with measurable performance gains. Shows understanding without strawmanning.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "steelman_quality",
+            "description": "Presents strongest version of the claim",
+            "weight": 0.5,
+            "measurement": "1.0 if cites specific results/proponents, 0.5 if generic, 0.0 if strawman",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "specific_evidence",
+            "description": "References real benchmarks, papers, or expert positions",
+            "weight": 0.3,
+            "measurement": "1.0 if 2+ specific references, 0.5 if 1, 0.0 if none",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "good_faith",
+            "description": "Reader feels the argument was fairly represented",
+            "weight": 0.2,
+            "measurement": "1.0 if fair, 0.0 if dismissive/strawman",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'The case for AGI by 2030 is stronger than critics admit: GPT-4 to o3 showed...'"
+      ],
+      "fail_examples": [
+        "'Some people naively believe AGI is coming soon, but...'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "arg_counter_quality",
+      "category": "argumentation",
+      "description": "Counterarguments are specific, non-obvious, and empirically grounded",
+      "pass_condition": "3+ distinct counter-threads. At least one addresses definitional issues (what counts as AGI, measurement problems, or goal-post moving). At least one is empirical (benchmarking issues, capability gaps, scaling limitations). At least one is structural (alignment, deployment, regulation, economic factors).",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "argument_count",
+            "description": "3+ distinct counter-threads",
+            "weight": 0.2,
+            "measurement": "1.0 if 3+, 0.5 if 2, 0.0 if 1",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "definitional_challenge",
+            "description": "Challenges what 'AGI' means and why it matters",
+            "weight": 0.25,
+            "measurement": "1.0 if substantive definitional argument, 0.0 if skips it",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "empirical_grounding",
+            "description": "Cites specific capability gaps, benchmark limitations",
+            "weight": 0.3,
+            "measurement": "1.0 if specific gaps with evidence, 0.5 if general, 0.0 if hand-wavy",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "structural_barriers",
+            "description": "Addresses alignment, regulation, deployment realities",
+            "weight": 0.25,
+            "measurement": "1.0 if specific structural argument, 0.5 if mentioned, 0.0 if absent",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Definitional ambiguity + benchmark saturation without real-world transfer + regulatory friction"
+      ],
+      "fail_examples": [
+        "'AI is overhyped' repeated three different ways"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "arg_nuance",
+      "category": "sophistication",
+      "description": "Avoids absolutism \u2014 acknowledges uncertainty and conditions",
+      "pass_condition": "Uses uncertainty language in at least 4 distinct places. Identifies at least 3 specific accelerating conditions AND 3 specific delaying conditions with concrete details (not generic factors). Explicitly discusses at least 2 different AGI definitions with their implications for timeline predictions. Avoids absolute claims.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 8,
+        "sub_attributes": [],
+        "penalties": {
+          "absolutist_claim": -2.5,
+          "dismisses_without_evidence": -2.0,
+          "ignores_counterexamples": -1.5,
+          "no_uncertainty_acknowledgment": -2.0,
+          "appeal_to_authority_only": -1.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'AGI by 2030 is possible but improbable \u2014 here's why the base rate for such predictions is poor'"
+      ],
+      "fail_examples": [
+        "'AGI will definitely not happen by 2030'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "arg_readability",
+      "category": "communication",
+      "description": "Well-structured, scannable, persuasive prose",
+      "pass_condition": "Clear thesis with specific timeline prediction in first paragraph. Each of the 3+ counter-threads in separate sections with descriptive headers. Conclusion that synthesizes threads into coherent position. Under 700 words with logical flow between sections.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 4,
+        "sub_attributes": [
+          {
+            "sub_id": "structure",
+            "description": "Thesis \u2192 steelman \u2192 counters \u2192 synthesis",
+            "weight": 0.4,
+            "measurement": "1.0 if clear structure, 0.5 if partially organized, 0.0 if stream of consciousness",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "concision",
+            "description": "Under 800 words, no padding",
+            "weight": 0.3,
+            "measurement": "1.0 if \u2264800, 0.7 if \u22641000, 0.0 if >1200",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "persuasive_flow",
+            "description": "Builds momentum, ends strong",
+            "weight": 0.3,
+            "measurement": "1.0 if compelling arc, 0.5 if flat, 0.0 if scattered",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "700 words, clear sections, ends with a memorable reframe"
+      ],
+      "fail_examples": [
+        "1500-word stream of consciousness with no structure"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

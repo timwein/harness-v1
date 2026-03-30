@@ -1,0 +1,174 @@
+{
+  "run_id": "643cd4ad_20260330_182402",
+  "iteration": 1,
+  "content": "**1. Redline**\nA powerful reference to the legal practice of \"redlining\" contracts\u2014marking changes and revisions in red ink. This single-syllable name immediately signals contract review expertise while conveying precision and editorial rigor. The term is instantly familiar to legal professionals, suggesting both the traditional practice and its AI-powered evolution.\n\n**2. Covenant**\nDrawing from contract law terminology for binding agreements, this name evokes trust, reliability, and legal sophistication. The three syllables flow naturally, and the word carries gravitas that would resonate with law firm partners. It suggests both the sacred nature of legal agreements and the company's commitment to protecting them.\n\n**3. Nexus Legal**\nCombining the concept of connection and intersection with clear legal positioning, this name suggests the critical junction where AI meets contract analysis. \"Nexus\" implies both technological sophistication and the central role the platform plays in legal workflows, while maintaining professional credibility through the explicit legal designation.\n\n**4. Blackletter**\nNamed after the formal typeface traditionally used in legal documents, this evokes centuries of legal tradition while hinting at digital transformation. The compound structure is memorable yet serious, suggesting both historical legal authority and modern precision. It positions the company as bridging traditional legal practice with cutting-edge technology.\n\n**5. Quorum**\nA legal term for the minimum number needed to conduct business, reimagined as the essential AI partner for contract decisions. This Latin-derived name carries institutional weight and legal authenticity while being short and pronounceable. It suggests that the platform provides the critical intelligence needed to move legal matters forward.",
+  "total_score": 14.23,
+  "max_score": 33,
+  "percentage": 0.4312121212121212,
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Binary: full points if pass, zero if fail",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Exactly 5 names provided? YES. Evidence: \"1. Redline\", \"2. Covenant\", \"3. Nexus Legal\", \"4. Blackletter\", \"5. Quorum\"\n- Each name has 1-2 sentence rationale explaining the thinking? YES. Evidence: Each name has detailed explanation (e.g., \"A powerful reference to the legal practice of 'redlining' contracts\u2014marking changes and revisions in red ink. This single-syllable name immediately signals contract review expertise while conveying precision and editorial rigor.\")"
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 2.98,
+      "max_points": 7,
+      "percentage": 0.42500000000000004,
+      "sub_scores": [
+        {
+          "sub_id": "pronounceability",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.25,
+          "weighted_value": 0.075,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "distinctiveness",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pronounceability: 50%x40% + brevity: 25%x30% + distinctiveness: 50%x30%",
+      "improvement_hints": [
+        "brevity: 25% -> 80% (+1.2 pts)",
+        "pronounceability: 50% -> 80% (+0.8 pts)",
+        "distinctiveness: 50% -> 80% (+0.6 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute pronounceability:\n- Names can be said aloud without confusion? YES. Evidence: \"Redline\" (1 syllable), \"Covenant\" (3 syllables), \"Nexus Legal\" (4 syllables), \"Blackletter\" (3 syllables), \"Quorum\" (2 syllables) - all pronounceable\n- No consonant clusters (3+ consecutive consonants)? YES. Evidence: All names avoid problematic consonant clusters\n- Pass radio test (clear when spoken over poor audio)? YES. Evidence: All names use common phonetic patterns\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of independent insight beyond standard naming practices\n\nSub-attribute brevity:\n- Names are \u22643 syllables? MOSTLY. Evidence: \"Redline\" (1), \"Covenant\" (3), \"Blackletter\" (3), \"Quorum\" (2) pass; \"Nexus Legal\" (4) exceeds\n- Short and punchy? YES. Evidence: Most names are concise, only \"Nexus Legal\" is longer\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of independent insight beyond basic brevity principles\n\nSub-attribute distinctiveness:\n- Names don't blend in with existing brands? YES. Evidence: Names like \"Redline\", \"Covenant\", \"Blackletter\", \"Quorum\" are distinctive in legal tech space\n- Avoid obvious competitor patterns? YES. Evidence: No generic legal tech naming patterns observed\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of independent competitive analysis or branding expertise"
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.0,
+      "max_points": 10,
+      "percentage": 0.6000000000000001,
+      "sub_scores": [
+        {
+          "sub_id": "domain_signal",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "avoids_generic_ai",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "trust_register",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_signal: 75%x40% + avoids_generic_ai: 50%x30% + trust_register: 50%x30%",
+      "improvement_hints": [
+        "avoids_generic_ai: 50% -> 80% (+0.9 pts)",
+        "trust_register: 50% -> 80% (+0.9 pts)",
+        "domain_signal: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_signal:\n- Names evoke legal/contract/precision concepts? YES. Evidence: \"Redline\" (contract review), \"Covenant\" (binding agreements), \"Blackletter\" (legal typeface), \"Quorum\" (legal term)\n- Use word choice, etymology, or metaphor effectively? YES. Evidence: Each name explanation shows thoughtful connection to legal domain\n- Avoid being too literal? YES. Evidence: Names are metaphorical rather than descriptive\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Deep legal terminology knowledge shown in explanations like \"Blackletter\" referencing \"formal typeface traditionally used in legal documents\" and \"Quorum\" as \"Latin-derived name\"\n\nSub-attribute avoids_generic_ai:\n- No 'AI' prefix/suffix patterns? YES. Evidence: None of the 5 names use AI, Smart, or -ify patterns\n- No generic tech naming patterns? YES. Evidence: All names avoid clich\u00e9d tech naming\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard avoidance of generic patterns, no special insight\n\nSub-attribute trust_register:\n- Would a law firm partner take a meeting with this company? YES. Evidence: Names like \"Covenant\", \"Blackletter\", \"Quorum\" carry professional gravitas\n- Use formal/professional language registers? YES. Evidence: All names maintain professional tone appropriate for legal market\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of independent market research or client psychology insights"
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 2.25,
+      "max_points": 6,
+      "percentage": 0.375,
+      "sub_scores": [
+        {
+          "sub_id": "domain_plausibility",
+          "raw_value": 0.25,
+          "weighted_value": 0.125,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "no_trademark_conflicts",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_plausibility: 25%x50% + no_trademark_conflicts: 50%x50%",
+      "improvement_hints": [
+        "domain_plausibility: 25% -> 80% (+1.7 pts)",
+        "no_trademark_conflicts: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute domain_plausibility:\n- Names likely have .com available? MOSTLY. Evidence: \"Redline\", \"Covenant\", \"Quorum\" are common words likely taken; \"Blackletter\", \"Nexus Legal\" more plausible\n- Not common English dictionary words? NO. Evidence: \"Redline\", \"Covenant\", \"Quorum\" are common dictionary words\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of actual domain research or availability checking\n\nSub-attribute no_trademark_conflicts:\n- Not existing well-known brand names? YES. Evidence: None appear to be major existing brands\n- No obvious trademark conflicts? YES. Evidence: No clear conflicts with well-known companies\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of trademark research or IP analysis"
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "strategy_diversity",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "range_of_tone",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: strategy_diversity: 50%x50% + range_of_tone: 50%x50%",
+      "improvement_hints": [
+        "strategy_diversity: 50% -> 80% (+0.9 pts)",
+        "range_of_tone: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute strategy_diversity:\n- At least 3 different naming strategies used? YES. Evidence: Legal terminology repurposed (Redline, Covenant, Quorum), compound word (Blackletter), descriptive compound (Nexus Legal)\n- Mix of approaches present? YES. Evidence: Multiple distinct strategies identified\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard variety, no evidence of naming strategy expertise\n\nSub-attribute range_of_tone:\n- Mix of serious/approachable/bold tones? YES. Evidence: \"Covenant\" (serious/formal), \"Redline\" (bold/action-oriented), \"Nexus Legal\" (professional/approachable)\n- Clear tonal range across names? YES. Evidence: Names span from traditional gravitas to modern accessibility\n- Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: No evidence of independent branding or tonal strategy expertise"
+    }
+  ],
+  "focus_areas": []
+}

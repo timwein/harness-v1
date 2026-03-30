@@ -1,0 +1,48 @@
+{
+  "run_id": "d0fcc8ba_20260330_173454",
+  "iteration": 3,
+  "total_score": 35.5,
+  "max_score": 44,
+  "percentage": 0.8068181818181818,
+  "delta_from_prior": 0.0909,
+  "focus_areas": [
+    "code_correctness.delimiter_detection",
+    "code_correctness.edge_case_resilience",
+    "code_robustness.error_handling",
+    "code_robustness.data_integrity",
+    "code_robustness.return_metadata"
+  ],
+  "content_path": ".eval_iterations/d0fcc8ba_20260330_173454/iter_003_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "code_correctness",
+      "points_earned": 9.0,
+      "max_points": 12,
+      "percentage": 0.7499999999999999
+    },
+    {
+      "criterion_id": "code_robustness",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "code_api_design",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    },
+    {
+      "criterion_id": "code_idiomaticness",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    },
+    {
+      "criterion_id": "code_testability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "run_id": "b45bcc82_20260330_175328",
+  "iteration": 3,
+  "content": "```sql\n-- Business Objective: Identify top 10 customers by net lifetime value for retention campaigns\n-- Assumptions: Refunds are tracked as separate records linked to original charges\n-- Expected Output: Customer details with charges, refunds, and net lifetime value ordered by LTV\n-- Data Model: 3NF normalized design eliminates redundancy and supports efficient customer analytics queries\n\n-- Schema Definition\n-- Normalized database design for customer lifetime value analysis\n\n-- 3NF Compliance Verification:\n-- 1st Normal Form: All columns contain atomic values\n-- 2nd Normal Form: All non-key columns depend on entire primary key\n-- 3rd Normal Form: No transitive dependencies - customer data separate from order data separate from payment data\n\n-- Customers table - core customer information\nCREATE TABLE customers (\n    customer_id         INT PRIMARY KEY AUTO_INCREMENT,\n    first_name         VARCHAR(50) NOT NULL,\n    last_name          VARCHAR(50) NOT NULL,\n    email              VARCHAR(100) NOT NULL,\n    registration_date  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    status             ENUM('active', 'inactive') DEFAULT 'active',\n    UNIQUE KEY uk_customers_email (email),\n    CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')\n);\n\n-- Orders table - order header information\nCREATE TABLE orders (\n    order_id       INT PRIMARY KEY AUTO_INCREMENT,\n    customer_id    INT NOT NULL,\n    order_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    order_status   ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',\n    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),\n    INDEX idx_orders_customer_date (customer_id, order_date)\n);\n\n-- Order items table - individual items within orders\nCREATE TABLE order_items (\n    order_item_id  INT PRIMARY KEY AUTO_INCREMENT,\n    order_id       INT NOT NULL,\n    product_name   VARCHAR(200) NOT NULL,\n    quantity       INT NOT NULL CHECK (quantity > 0),\n    unit_price     DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),\n    total_amount   DECIMAL(10,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,\n    FOREIGN KEY (order_id) REFERENCES orders(order_id),\n    INDEX idx_order_items_order (order_id)\n);\n\n-- Payments table - charges and refunds as separate records\nCREATE TABLE payments (\n    payment_id             INT PRIMARY KEY AUTO_INCREMENT,\n    customer_id            INT NOT NULL,\n    order_id               INT,\n    payment_type           ENUM('charge', 'refund') NOT NULL,\n    amount                 DECIMAL(10,2) NOT NULL CHECK (amount > 0),\n    payment_date           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    payment_method         VARCHAR(50),\n    reference_payment_id   INT, -- For refunds, references the original charge\n    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),\n    FOREIGN KEY (order_id) REFERENCES orders(order_id),\n    FOREIGN KEY (reference_payment_id) REFERENCES payments(payment_id),\n    -- Performance-optimized index for LTV calculations\n    INDEX idx_payments_customer_type_amount (customer_id, payment_type, amount),\n    INDEX idx_payments_date (payment_date),\n    CONSTRAINT chk_refund_reference CHECK (\n        (payment_type = 'refund' AND reference_payment_id IS NOT NULL) OR \n        (payment_type = 'charge' AND reference_payment_id IS NULL)\n    )\n);\n\n-- Query to find top 10 customers by lifetime value excluding refunds\n-- LTV Calculation Method: Total charges minus total refunds per customer\n-- Example: Customer with $500 charges, $50 refunds = $450 LTV\n\n-- NULL Handling Strategy:\n-- 1) COALESCE converts NULL sums to 0 for customers with no charges/refunds\n-- 2) LEFT JOINs ensure all customers appear even with no payment records\n-- 3) Result: customers with no activity show $0 LTV instead of being excluded\n\nWITH customer_total_purchases AS (\n    -- Calculate total charges per customer\n    -- Handles customers with no purchases: COALESCE ensures 0 instead of NULL\n    SELECT \n        c.customer_id,\n        c.first_name,\n        c.last_name,\n        c.email,\n        COALESCE(SUM(p.amount), 0) AS total_charges\n    FROM customers c\n    LEFT JOIN payments p ON c.customer_id = p.customer_id \n        AND p.payment_type = 'charge'\n    -- GROUP BY all non-aggregated SELECT columns to satisfy SQL standard and ensure unique customer records\n    GROUP BY c.customer_id, c.first_name, c.last_name, c.email\n),\n\ncustomer_total_returns AS (\n    -- Calculate total refunds per customer\n    -- NULL handling: LEFT JOIN + COALESCE handles customers with zero refunds\n    SELECT \n        c.customer_id,\n        COALESCE(SUM(p.amount), 0) AS total_refunds\n    FROM customers c\n    LEFT JOIN payments p ON c.customer_id = p.customer_id \n        AND p.payment_type = 'refund'\n    GROUP BY c.customer_id\n),\n\ncustomer_ltv AS (\n    -- Calculate net lifetime value (charges minus refunds)\n    -- Business rule: LTV = Total revenue generated minus money returned\n    SELECT \n        cc.customer_id,\n        cc.first_name,\n        cc.last_name,\n        cc.email,\n        cc.total_charges,\n        cr.total_refunds,\n        (cc.total_charges - cr.total_refunds) AS lifetime_value\n    FROM customer_total_purchases cc\n    JOIN customer_total_returns cr ON cc.customer_id = cr.customer_id\n)\n\n-- Final selection of top 10 customers by lifetime value\n-- Tie-breaking: Secondary sort by customer_id for consistent results\nSELECT \n    customer_id,\n    CONCAT(first_name, ' ', last_name) AS customer_name,\n    email,\n    total_charges,\n    total_refunds,\n    lifetime_value\nFROM customer_ltv\nWHERE lifetime_value > 0  -- Exclude customers with negative LTV\n\nORDER BY lifetime_value DESC, customer_id ASC\nLIMIT 10;\n```",
+  "total_score": 26.0,
+  "max_score": 36,
+  "percentage": 0.7222222222222222,
+  "criterion_scores": [
+    {
+      "criterion_id": "sql_schema",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.7499999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "normalization",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "refund_modeling",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "realistic_columns",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: normalization: 75%x30% + refund_modeling: 75%x35% + realistic_columns: 75%x35%",
+      "improvement_hints": [
+        "normalization: 75% -> 80% (+0.2 pts)",
+        "refund_modeling: 75% -> 80% (+0.2 pts)",
+        "realistic_columns: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute normalization:\n  - Does the schema include proper 3NF normalization with customers, orders, order_items, and separate transactions table? YES. Evidence: \"customers table\", \"orders table\", \"order_items table\", \"payments table\" with proper separation of concerns\n  - Are primary keys and foreign keys explicitly defined? YES. Evidence: \"customer_id INT PRIMARY KEY AUTO_INCREMENT\", \"FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\"\n  - Is the schema properly normalized to 3NF? YES. Evidence: \"3NF Compliance Verification: 1st Normal Form: All columns contain atomic values, 2nd Normal Form: All non-key columns depend on entire primary key, 3rd Normal Form: No transitive dependencies\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Detailed 3NF compliance verification with explanations, generated columns for calculated fields, and comprehensive constraint design\n\nSub-attribute refund_modeling:\n  - Are refunds modeled as distinct records rather than negative amounts? YES. Evidence: \"payment_type ENUM('charge', 'refund') NOT NULL\" and \"reference_payment_id INT, -- For refunds, references the original charge\"\n  - Is there a clear relationship between refunds and original transactions? YES. Evidence: \"FOREIGN KEY (reference_payment_id) REFERENCES payments(payment_id)\" and constraint \"CONSTRAINT chk_refund_reference CHECK\"\n  - Are refunds properly constrained and validated? YES. Evidence: \"CONSTRAINT chk_refund_reference CHECK ((payment_type = 'refund' AND reference_payment_id IS NOT NULL) OR (payment_type = 'charge' AND reference_payment_id IS NULL))\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Advanced constraint logic ensuring referential integrity between charges and refunds, plus detailed business rule documentation\n\nSub-attribute realistic_columns:\n  - Are realistic data types used (DECIMAL for amounts, TIMESTAMP for dates)? YES. Evidence: \"amount DECIMAL(10,2)\", \"payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP\"\n  - Are proper constraints implemented (NOT NULL, CHECK constraints for positive amounts)? YES. Evidence: \"CHECK (amount > 0)\", \"CHECK (quantity > 0)\", \"CHECK (unit_price >= 0)\"\n  - Are there at least 5 realistic columns per table with business-appropriate naming? YES. Evidence: customers (6 columns), orders (4 columns), order_items (6 columns), payments (8 columns)\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Email validation regex, generated columns for calculated totals, comprehensive indexing strategy, and ENUM constraints for status fields"
+    },
+    {
+      "criterion_id": "sql_correctness",
+      "points_earned": 7.8,
+      "max_points": 12,
+      "percentage": 0.6499999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "aggregation_logic",
+          "raw_value": 0.5,
+          "weighted_value": 0.2,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "grouping",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "null_handling",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: aggregation_logic: 50%x40% + grouping: 75%x30% + null_handling: 75%x30%",
+      "improvement_hints": [
+        "aggregation_logic: 50% -> 80% (+1.4 pts)",
+        "grouping: 75% -> 80% (+0.2 pts)",
+        "null_handling: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute aggregation_logic:\n  - Does the query correctly calculate LTV as SUM(charges) - SUM(refunds) or equivalent? YES. Evidence: \"(cc.total_charges - cr.total_refunds) AS lifetime_value\"\n  - Are charges and refunds properly separated in the calculation? YES. Evidence: \"p.payment_type = 'charge'\" and \"p.payment_type = 'refund'\" in separate CTEs\n  - Is the aggregation logic mathematically correct? YES. Evidence: \"COALESCE(SUM(p.amount), 0) AS total_charges\" and \"COALESCE(SUM(p.amount), 0) AS total_refunds\"\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard aggregation approach following rubric guidance\n\nSub-attribute grouping:\n  - Does the query use proper GROUP BY for customer aggregation? YES. Evidence: \"GROUP BY c.customer_id, c.first_name, c.last_name, c.email\"\n  - Does it include ORDER BY DESC and LIMIT 10 for top customers? YES. Evidence: \"ORDER BY lifetime_value DESC, customer_id ASC LIMIT 10\"\n  - Are all non-aggregated columns included in GROUP BY? YES. Evidence: All SELECT columns are included in GROUP BY clauses\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Secondary sort by customer_id for tie-breaking and consistent results, plus detailed explanation of tie-breaking strategy\n\nSub-attribute null_handling:\n  - Does the query handle NULL values with COALESCE or equivalent? YES. Evidence: \"COALESCE(SUM(p.amount), 0)\" in both CTEs\n  - Are LEFT JOINs used to preserve customers with no transactions? YES. Evidence: \"LEFT JOIN payments p ON c.customer_id = p.customer_id\"\n  - Would the query work correctly for customers with no charges or refunds? YES. Evidence: \"NULL Handling Strategy\" section explains comprehensive approach\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Detailed NULL handling strategy documentation with specific examples and comprehensive edge case coverage"
+    },
+    {
+      "criterion_id": "sql_readability",
+      "points_earned": 4.7,
+      "max_points": 8,
+      "percentage": 0.5874999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "cte_usage",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "formatting",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "documentation",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: cte_usage: 50%x35% + formatting: 50%x30% + documentation: 75%x35%",
+      "improvement_hints": [
+        "cte_usage: 50% -> 80% (+0.8 pts)",
+        "formatting: 50% -> 80% (+0.7 pts)",
+        "documentation: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": "Sub-attribute cte_usage:\n  - Does the query use CTEs for complex logic instead of nested subqueries? YES. Evidence: \"WITH customer_total_purchases AS\", \"customer_total_returns AS\", \"customer_ltv AS\"\n  - Are CTEs used for distinct logical steps? YES. Evidence: Separate CTEs for purchases, returns, and final LTV calculation\n  - Is the CTE structure logical and easy to follow? YES. Evidence: Clear progression from individual calculations to final result\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard CTE usage following best practices\n\nSub-attribute formatting:\n  - Is there consistent capitalization throughout? YES. Evidence: Consistent use of uppercase for SQL keywords, lowercase for identifiers\n  - Are indentation and line breaks used appropriately? YES. Evidence: Proper indentation and line breaks throughout the query\n  - Is the overall formatting clean and professional? YES. Evidence: Well-structured layout with clear visual hierarchy\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? NO. Evidence: Standard formatting practices\n\nSub-attribute documentation:\n  - Are there comments explaining key logic? YES. Evidence: \"-- Business Objective:\", \"-- LTV Calculation Method:\", \"-- NULL Handling Strategy:\"\n  - Are meaningful aliases used throughout? YES. Evidence: \"cc\" for customer_charges, \"cr\" for customer_returns, descriptive column names\n  - Is non-obvious logic documented? YES. Evidence: Detailed comments on business rules, calculation methods, and edge case handling\n  - Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute? YES. Evidence: Comprehensive documentation including business objectives, assumptions, expected output, and detailed explanations of complex logic"
+    },
+    {
+      "criterion_id": "sql_performance",
+      "points_earned": 6.0,
+      "max_points": 6,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Penalty: 6 - 0.0",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": "- Violation \"select_star\": ABSENT. Evidence: All SELECT statements specify explicit columns\n  - Violation \"correlated_subquery\": ABSENT. Evidence: Uses CTEs and JOINs instead of correlated subqueries\n  - Violation \"missing_index_suggestion\": ABSENT. Evidence: \"INDEX idx_payments_customer_type_amount (customer_id, payment_type, amount)\", \"INDEX idx_orders_customer_date (customer_id, order_date)\"\n  - Violation \"cartesian_join_risk\": ABSENT. Evidence: All JOINs have proper ON conditions with foreign key relationships\n  - Violation \"function_on_indexed_column\": ABSENT. Evidence: No functions applied to indexed columns in WHERE clauses"
+    }
+  ],
+  "focus_areas": [
+    "sql_readability.formatting",
+    "sql_schema.normalization",
+    "sql_schema.refund_modeling",
+    "sql_schema.realistic_columns",
+    "sql_correctness.aggregation_logic"
+  ]
+}

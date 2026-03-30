@@ -1,0 +1,25 @@
+{
+  "iteration": 6,
+  "feedback_text": "DIAGNOSIS: The content demonstrates strong professional naming expertise across most criteria but has a critical scoring discrepancy on name_count (0 points despite evidence of 5 names) and needs deeper anti-generic expertise in the domain resonance section. The memorability, availability, and variety sections are performing well and should be preserved.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 name_memorability: All sub-attributes scoring 75% with strong phonetic analysis and competitive differentiation\n  \u2713 name_availability: Strong domain strategy and trademark analysis with USPTO class references\n  \u2713 name_variety: Excellent strategy diversity (5 distinct approaches) and clear tonal range with brand archetypes\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: name_count.binary_check (current: 0%, 4.0 pts at stake)\n    Failed check: Exactly 5 names provided check\n    Expected: Exactly 5 names provided, each with rationale\n    Found: Content shows 5 names with rationales, but scorer marked as FAIL despite evidence showing YES\n    \u2192 ACTION: Verify the content contains exactly 5 names in a clear numbered list format. If fewer than 5 names are present, add additional names to reach exactly 5. If more than 5 are present, remove excess names to maintain exactly 5.\n\n  FIX 2: name_domain_resonance.avoids_generic_ai (current: 680%, 3.0 pts at stake)\n    Failed check: Going beyond rubric guidance with independent domain expertise\n    Expected: Demonstrate expertise beyond avoiding obvious AI/tech patterns\n    Found: Meets requirement but doesn't demonstrate expertise beyond avoiding obvious patterns\n    \u2192 ACTION: Add a paragraph explaining advanced anti-pattern strategies in tech naming, such as avoiding venture capital naming trends, Silicon Valley linguistic markers, or specific examples of how these names resist commoditization in the legal tech space.\n",
+  "focus_areas": [
+    "name_count",
+    "name_domain_resonance"
+  ],
+  "protected_criteria": [
+    "name_memorability",
+    "name_availability",
+    "name_variety"
+  ],
+  "improvement_targets": [
+    "name_count",
+    "name_domain_resonance"
+  ],
+  "prior_score": 0.6364,
+  "prior_criterion_scores": {
+    "name_count": 0.0,
+    "name_memorability": 0.75,
+    "name_domain_resonance": 0.675,
+    "name_availability": 0.75,
+    "name_variety": 0.75
+  }
+}

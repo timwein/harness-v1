@@ -1,0 +1,54 @@
+{
+  "run_id": "ffd76165_20260330_165148",
+  "iteration": 1,
+  "total_score": 34.57,
+  "max_score": 53,
+  "percentage": 0.6522641509433962,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/ffd76165_20260330_165148/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "email_subject",
+      "points_earned": 3.75,
+      "max_points": 10,
+      "percentage": 0.375
+    },
+    {
+      "criterion_id": "email_opening",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    },
+    {
+      "criterion_id": "email_value_prop",
+      "points_earned": 7.0,
+      "max_points": 10,
+      "percentage": 0.7
+    },
+    {
+      "criterion_id": "email_social_proof",
+      "points_earned": 2.38,
+      "max_points": 5,
+      "percentage": 0.475
+    },
+    {
+      "criterion_id": "email_cta",
+      "points_earned": 3.3,
+      "max_points": 8,
+      "percentage": 0.4125
+    },
+    {
+      "criterion_id": "email_tone",
+      "points_earned": 5.0,
+      "max_points": 6,
+      "percentage": 0.8333333333333334
+    },
+    {
+      "criterion_id": "email_length",
+      "points_earned": 5.14,
+      "max_points": 6,
+      "percentage": 0.8571428571428571
+    }
+  ]
+}

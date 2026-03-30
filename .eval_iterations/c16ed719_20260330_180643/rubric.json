@@ -1,0 +1,178 @@
+{
+  "task": "Design a JSON schema for a multi-tenant SaaS billing system supporting usage-based and seat-based pricing",
+  "domain": "schema_design",
+  "total_points": 38,
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "schema_completeness",
+      "category": "design",
+      "description": "Schema covers all required entities and pricing models",
+      "pass_condition": "Entities: tenant, plan, subscription, usage_record, invoice, line_item. Pricing models: per-seat, usage-based (metered), tiered, hybrid. Billing cycles, proration, trial periods.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "entity_coverage",
+            "description": "All required entities present",
+            "weight": 0.3,
+            "measurement": "% of required entities modeled (tenant, plan, subscription, usage, invoice, line_item)",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "pricing_model_support",
+            "description": "Both seat-based and usage-based modeled",
+            "weight": 0.35,
+            "measurement": "1.0 if both + hybrid, 0.75 if both, 0.5 if one, 0.0 if neither",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "billing_lifecycle",
+            "description": "Cycles, proration, trials, upgrades/downgrades",
+            "weight": 0.35,
+            "measurement": "% of lifecycle events modeled (create, upgrade, downgrade, cancel, prorate, trial)",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Plan with pricing_model: {type: 'hybrid', seat_price: ..., metered_dimensions: [...]}"
+      ],
+      "fail_examples": [
+        "Just 'plan' and 'subscription' with flat price field"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "schema_correctness",
+      "category": "quality",
+      "description": "Valid JSON Schema with proper types, constraints, references",
+      "pass_condition": "Valid JSON Schema (draft-07+) with $ref usage, required fields, enums, proper formats AND includes regex patterns for IDs, numerical constraints (min/max) on monetary fields, format validation on email/URL fields, and allOf/oneOf for complex validation rules.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "schema_validity",
+            "description": "Valid JSON Schema syntax",
+            "weight": 0.3,
+            "measurement": "1.0 if valid draft-07+, 0.5 if mostly valid, 0.0 if invalid",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "ref_usage",
+            "description": "Uses $ref for reusable definitions",
+            "weight": 0.25,
+            "measurement": "1.0 if DRY with $ref, 0.5 if some reuse, 0.0 if duplicated",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "constraint_quality",
+            "description": "Proper enums, required, formats, patterns",
+            "weight": 0.45,
+            "measurement": "% of fields with appropriate constraints",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "$ref to shared 'money' type with currency+amount, enum for billing_interval"
+      ],
+      "fail_examples": [
+        "Freeform JSON with no type constraints"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "schema_extensibility",
+      "category": "architecture",
+      "description": "Schema is extensible without breaking changes",
+      "pass_condition": "Uses additionalProperties judiciously. Versioned. Metered dimensions are a list (not hardcoded). Custom metadata fields supported.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "metered_extensibility",
+            "description": "Usage dimensions are dynamic, not hardcoded",
+            "weight": 0.4,
+            "measurement": "1.0 if array of dimension objects, 0.5 if a few named fields, 0.0 if hardcoded",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "metadata_support",
+            "description": "Custom metadata/extension points",
+            "weight": 0.3,
+            "measurement": "1.0 if metadata object on key entities, 0.0 if closed",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "versioning",
+            "description": "Schema version field or versioning strategy",
+            "weight": 0.3,
+            "measurement": "1.0 if versioned, 0.0 if not",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "metered_dimensions: [{id, unit, tiers: [...]}] \u2014 add new dimensions without schema change"
+      ],
+      "fail_examples": [
+        "Hardcoded 'api_calls' and 'storage_gb' fields"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "schema_realworld",
+      "category": "practicality",
+      "description": "Schema includes production-ready billing system features and patterns",
+      "pass_condition": "Includes: idempotency keys on mutations, invoice status enum (draft/open/paid/void/uncollectible), currency fields with ISO codes, webhook event types, separate line items from calculated totals, audit timestamps (created_at, updated_at).",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 8,
+        "sub_attributes": [],
+        "penalties": {
+          "no_currency_handling": -2.0,
+          "calculated_total_without_line_items": -2.0,
+          "no_idempotency": -1.0,
+          "no_invoice_status_lifecycle": -1.5,
+          "naive_date_handling": -1.5,
+          "single_currency_assumption": -1.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Invoice with status enum (draft\u2192open\u2192paid\u2192void), line_items array, currency code per amount"
+      ],
+      "fail_examples": [
+        "Invoice with just 'total: 99.99' and no line items"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

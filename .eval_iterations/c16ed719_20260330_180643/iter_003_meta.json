@@ -1,0 +1,42 @@
+{
+  "run_id": "c16ed719_20260330_180643",
+  "iteration": 3,
+  "total_score": 29.75,
+  "max_score": 38,
+  "percentage": 0.7828947368421053,
+  "delta_from_prior": 0.0442,
+  "focus_areas": [
+    "schema_completeness.pricing_model_support",
+    "schema_correctness.schema_validity",
+    "schema_correctness.ref_usage",
+    "schema_completeness.entity_coverage",
+    "schema_completeness.billing_lifecycle"
+  ],
+  "content_path": ".eval_iterations/c16ed719_20260330_180643/iter_003_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "schema_completeness",
+      "points_earned": 9.0,
+      "max_points": 12,
+      "percentage": 0.7499999999999999
+    },
+    {
+      "criterion_id": "schema_correctness",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.675
+    },
+    {
+      "criterion_id": "schema_extensibility",
+      "points_earned": 6.0,
+      "max_points": 8,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "schema_realworld",
+      "points_earned": 8.0,
+      "max_points": 8,
+      "percentage": 1.0
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: The summary achieves perfect standalone readability but loses points on compression (compound sentences, length) and needs source verification for fidelity. The biggest opportunity is breaking compound sentences into simple ones and tightening the action implications.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 sum_standalone: Perfect score (4.0/4) - keep all current phrasing that avoids source references, undefined jargon, and context assumptions\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sum_exec_value.actionability (current: 50%, 4.0 pts at stake)\n    Failed check: Action implications need to be more specific and decision-relevant\n    Expected: Clear action/decision implications that tell readers exactly what to do\n    Found: General guidance about reassessing contracts and developing capabilities\n    \u2192 ACTION: Replace 'Organizations should reassess their AI vendor contracts' with a specific action like 'Organizations should audit current AI API costs against new $0.0003/1K token benchmarks and renegotiate contracts expiring after Q2 2024' to provide concrete next steps.\n\n  FIX 2: sum_fidelity.no_hallucination (current: 50%, 3.6 pts at stake)\n    Failed check: Cannot verify all claims are traceable to source material\n    Expected: All claims must be traceable to source material with no invented statistics\n    Found: Unable to verify claims against original source\n    \u2192 ACTION: Verify every statistic against the original source: the 92% reduction figure, the $0.0003 vs $0.004 cost comparison, the 8-month halving timeline, the 50-100x premium for locked contracts, and the 10 million token threshold. Remove or correct any figures that cannot be directly traced to the source material.\n\n  FIX 3: sum_compression.bullet_density (current: 0%, 3.5 pts at stake)\n    Failed check: Each bullet contains compound sentences instead of 1-2 simple sentences\n    Expected: Each bullet should be 1-2 sentences with no semicolons, em-dashes, or compound sentences\n    Found: All three bullets contain compound sentences with multiple clauses\n    \u2192 ACTION: Break each bullet into separate simple sentences. Change 'Specialized processing clusters now achieve $0.0003 per 1K tokens compared to $0.004 on previous hardware, representing a 92% cost reduction' to two sentences: 'New AI chip architectures reduced inference costs by 92% since January 2023. Specialized clusters now process 1K tokens for $0.0003 versus $0.004 on previous hardware.'\n\n  FIX 4: sum_compression.total_length (current: 70%, 3.5 pts at stake)\n    Failed check: Content exceeds 100-word limit\n    Expected: Total word count under 100 words for maximum score\n    Found: Approximately 120+ words\n    \u2192 ACTION: Cut 20+ words to reach exactly 100 words or fewer. Remove redundant phrases like 'driven by competition between chip manufacturers' and compress 'Companies locked into long-term API agreements risk paying' to 'Long-term API contracts risk'.\n",
+  "focus_areas": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "protected_criteria": [
+    "sum_standalone"
+  ],
+  "improvement_targets": [
+    "sum_compression",
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "prior_score": 0.615,
+  "prior_criterion_scores": {
+    "sum_compression": 0.7143,
+    "sum_fidelity": 0.5,
+    "sum_exec_value": 0.5,
+    "sum_standalone": 1.0
+  }
+}

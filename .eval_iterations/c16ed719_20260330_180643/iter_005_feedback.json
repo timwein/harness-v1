@@ -1,0 +1,23 @@
+{
+  "iteration": 5,
+  "feedback_text": "DIAGNOSIS: The schema has strong production-ready features but loses points on entity relationships, JSON Schema syntax validation, and full extensibility implementation. The biggest gains come from fixing entity foreign key references (3.6 points) and schema syntax issues (3.0 points).\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 schema_realworld: All production-ready features implemented correctly - keep currency handling, idempotency keys, invoice lifecycle, and date handling unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: schema_completeness.entity_coverage (current: 50%, 3.6 pts at stake)\n    Failed check: Only 50% entity coverage despite all required entities being present\n    Expected: 100% of required entities (tenant, plan, subscription, usage, invoice, line_item) modeled\n    Found: All entities present but scorer detected missing completeness\n    \u2192 ACTION: Add missing entity relationships and foreign key references - specifically add 'tenant_id' to subscriptions, 'plan_id' to subscriptions, 'subscription_id' to usage_records and invoices, and 'invoice_id' to line_items to show proper entity relationships\n\n  FIX 2: schema_extensibility.metered_extensibility (current: 75%, 3.2 pts at stake)\n    Failed check: 75% extensibility despite dynamic array structure\n    Expected: Full extensibility with array of dimension objects\n    Found: Dynamic array present but extensibility limited\n    \u2192 ACTION: Enhance metered dimension extensibility by adding 'additionalProperties: true' to the metered_dimension definition and include a 'custom_properties' object field within each dimension to allow arbitrary extension fields beyond the standard id, name, unit, aggregation_type structure\n\n  FIX 3: schema_correctness.schema_validity (current: 50%, 3.0 pts at stake)\n    Failed check: Schema validity at 50% despite proper JSON Schema structure\n    Expected: Valid JSON Schema draft-07+ structure\n    Found: Proper structure but validity issues detected\n    \u2192 ACTION: Fix JSON Schema syntax errors - ensure all $ref paths are valid (check for typos in '#/definitions/' references), verify all 'if/then/else' conditional schemas have proper structure, and validate that all enum values are consistently quoted strings\n\n  FIX 4: schema_correctness.ref_usage (current: 50%, 2.5 pts at stake)\n    Failed check: Only 50% DRY principle application despite using $ref\n    Expected: Full DRY implementation with $ref for all reusable components\n    Found: Some $ref usage but duplication still present\n    \u2192 ACTION: Extract all repeated property definitions into the definitions section - create reusable definitions for 'address' (used in tenant and billing), 'contact_info' (repeated across entities), and 'audit_fields' (created_at, updated_at, created_by pattern) and replace inline definitions with $ref\n\n  FIX 5: schema_extensibility.metadata_support (current: 75%, 2.4 pts at stake)\n    Failed check: 75% metadata support despite advanced metadata structure\n    Expected: Full metadata extensibility on key entities\n    Found: Advanced metadata present but not fully extensible\n    \u2192 ACTION: Add metadata support to the 'plan' entity (currently missing) by including '\"metadata\": {\"$ref\": \"#/definitions/advanced_metadata\"}' in the plan properties, and ensure the advanced_metadata definition allows unlimited nesting by setting 'additionalProperties: true' on all nested objects\n\n  FIX 6: schema_extensibility.versioning (current: 75%, 2.4 pts at stake)\n    Failed check: 75% versioning support despite comprehensive version structure\n    Expected: Complete versioning implementation\n    Found: Version fields and compatibility section present but incomplete\n    \u2192 ACTION: Add entity-level versioning by including 'entity_version' field to each main entity (tenant, plan, subscription, invoice) with pattern '^[0-9]+$' and add a 'schema_evolution' section in definitions that documents breaking vs non-breaking change policies\n",
+  "focus_areas": [
+    "schema_completeness",
+    "schema_correctness"
+  ],
+  "protected_criteria": [
+    "schema_extensibility",
+    "schema_realworld"
+  ],
+  "improvement_targets": [
+    "schema_completeness",
+    "schema_correctness"
+  ],
+  "prior_score": 0.7426,
+  "prior_criterion_scores": {
+    "schema_completeness": 0.675,
+    "schema_correctness": 0.6125,
+    "schema_extensibility": 0.75,
+    "schema_realworld": 1.0
+  }
+}

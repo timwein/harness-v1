@@ -1,0 +1,30 @@
+{
+  "run_id": "7fa8e462_20260330_181927",
+  "iteration": 1,
+  "total_score": 10.299999999999999,
+  "max_score": 30,
+  "percentage": 0.3433333333333333,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/7fa8e462_20260330_181927/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "expl_accuracy",
+      "points_earned": 4.95,
+      "max_points": 12,
+      "percentage": 0.4125
+    },
+    {
+      "criterion_id": "expl_accessibility",
+      "points_earned": 5.0,
+      "max_points": 10,
+      "percentage": 0.49999999999999994
+    },
+    {
+      "criterion_id": "expl_engagement",
+      "points_earned": 0.35,
+      "max_points": 8,
+      "percentage": 0.0437636761487965
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The content demonstrates strong legal domain expertise and strategic variety but loses points on technical compliance issues. The main problems are formatting/counting verification, too many dictionary words hurting domain availability, one name exceeding syllable limits, and some generic tech naming patterns.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 name_domain_resonance: Shows sophisticated legal domain knowledge and professional market understanding (6.8/10)\n  \u2713 name_variety: Demonstrates good strategic diversity and tonal range (4.5/6)\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: name_count.exact_count (current: 0%, 4.0 pts at stake)\n    Failed check: Exactly 5 names provided? YES, but scorer marked as FAIL\n    Expected: Exactly 5 names provided, each with rationale\n    Found: 5 names provided with rationales, but criterion failed\n    \u2192 ACTION: Review the name list format - ensure names are clearly numbered 1-5 and each rationale is exactly 1-2 sentences (not longer explanations that might confuse the count verification)\n\n  FIX 2: name_availability.domain_plausibility (current: 300%, 3.0 pts at stake)\n    Failed check: 60% or more names are coined/compound words requirement\n    Expected: Names likely have .com available - not common English dictionary words\n    Found: Only 3 out of 5 names are coined ('Nexus' and 'Blackletter' are dictionary words)\n    \u2192 ACTION: Replace either 'Nexus' or 'Blackletter' with a coined/compound name to achieve 4 out of 5 coined names (80%), ensuring better domain availability prospects\n\n  FIX 3: name_domain_resonance.avoids_generic_ai (current: 680%, 3.0 pts at stake)\n    Failed check: 50% score on avoiding generic tech naming patterns\n    Expected: Names avoiding generic tech naming patterns\n    Found: Some names may still follow predictable tech patterns\n    \u2192 ACTION: Ensure all names avoid not just 'AI' suffixes but also tech-sounding patterns like '-tech' endings - consider replacing 'Coventech' with a less obviously tech-patterned alternative\n\n  FIX 4: name_memorability.brevity (current: 400%, 2.1 pts at stake)\n    Failed check: 80% or more names at \u22643 syllables requirement\n    Expected: Short, punchy names ideally \u22643 syllables\n    Found: 4 out of 5 names are \u22643 syllables, but 'Contractelligence' has 4 syllables\n    \u2192 ACTION: Replace 'Contractelligence' with a 3-syllable or shorter alternative that maintains the contract intelligence concept (e.g., 'Contractech' or 'Intellilaw')\n",
+  "focus_areas": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "protected_criteria": [
+    "name_variety"
+  ],
+  "improvement_targets": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "prior_score": 0.5536,
+  "prior_criterion_scores": {
+    "name_count": 0.0,
+    "name_memorability": 0.575,
+    "name_domain_resonance": 0.675,
+    "name_availability": 0.5,
+    "name_variety": 0.75
+  }
+}

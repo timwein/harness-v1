@@ -1,0 +1,23 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The schema is production-ready with excellent real-world patterns but has technical implementation gaps. Primary issues are JSON Schema syntax errors affecting validity, incomplete hybrid pricing model validation, and opportunities to reduce duplication through better $ref usage.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 schema_realworld: All production-ready patterns implemented correctly (8/8 points)\n  \u2713 schema_completeness.entity_coverage: Strong entity modeling with bonus production entities\n  \u2713 schema_completeness.billing_lifecycle: Comprehensive lifecycle with sophisticated proration handling\n  \u2713 schema_extensibility.metadata_support: Advanced metadata structure with integration patterns\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: schema_completeness.pricing_model_support (current: 50%, 4.2 pts at stake)\n    Failed check: Pricing model support scored 50% instead of 100%\n    Expected: Both seat-based and usage-based models plus hybrid support for full score\n    Found: All three pricing models present in enum\n    \u2192 ACTION: Ensure the hybrid pricing model implementation is complete by adding explicit validation that when pricing_model.type is 'hybrid', both seat_price AND metered_dimensions are required fields. Add conditional schema validation using if/then to enforce this constraint.\n\n  FIX 2: schema_correctness.schema_validity (current: 50%, 3.0 pts at stake)\n    Failed check: Schema validity check returned 50%\n    Expected: Valid JSON Schema draft-07+ syntax with proper structure\n    Found: Valid draft-07 declaration and structure present\n    \u2192 ACTION: Review and fix any JSON Schema syntax errors that may be causing the validity score to drop to 50%. Check for missing commas, incorrect property nesting, invalid type declarations, or malformed conditional logic in the if/then/else sections.\n\n  FIX 3: schema_correctness.ref_usage (current: 50%, 2.5 pts at stake)\n    Failed check: Reference usage scored 50% instead of 100%\n    Expected: DRY principle with extensive $ref usage to avoid duplication\n    Found: Some $ref usage present but may have remaining duplication\n    \u2192 ACTION: Identify and eliminate schema duplication by creating additional reusable definitions. Look for repeated patterns like status enums, timestamp fields, or common object structures and extract them into the definitions section with $ref references.\n\n  FIX 4: schema_extensibility.metered_extensibility (current: 75%, 0.8 pts at stake)\n    Failed check: Metered extensibility scored 75% instead of 100%\n    Expected: Fully dynamic array of dimension objects\n    Found: Dynamic metered_dimensions array with sophisticated pricing tiers\n    \u2192 ACTION: Ensure the metered_dimensions array has no hardcoded constraints that would prevent adding arbitrary new dimension types. Remove any enum restrictions on dimension properties that might limit extensibility.\n\n  FIX 5: schema_extensibility.versioning (current: 75%, 0.6 pts at stake)\n    Failed check: Versioning scored 75% instead of 100%\n    Expected: Complete versioning strategy\n    Found: Version field and migration documentation present\n    \u2192 ACTION: Enhance the versioning section by adding a 'schema_version' field to each major entity (tenants, plans, subscriptions, invoices) to support entity-level versioning alongside the global schema version.\n",
+  "focus_areas": [
+    "schema_completeness",
+    "schema_correctness"
+  ],
+  "protected_criteria": [
+    "schema_extensibility",
+    "schema_realworld"
+  ],
+  "improvement_targets": [
+    "schema_completeness",
+    "schema_correctness"
+  ],
+  "prior_score": 0.7387,
+  "prior_criterion_scores": {
+    "schema_completeness": 0.6625,
+    "schema_correctness": 0.6125,
+    "schema_extensibility": 0.75,
+    "schema_realworld": 1.0
+  }
+}

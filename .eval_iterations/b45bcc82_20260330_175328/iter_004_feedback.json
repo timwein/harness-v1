@@ -1,0 +1,24 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: The solution demonstrates solid SQL fundamentals but needs enhancement in advanced domain expertise areas. The main gaps are in aggregation logic validation, advanced CTE patterns, and complete business rule modeling. Performance is perfect and should remain unchanged.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 sql_performance: Perfect score (6/6) - all performance best practices followed\n  \u2713 sql_schema.normalization: Strong 3NF implementation with proper separation of concerns\n  \u2713 sql_correctness.null_handling: Comprehensive COALESCE usage and LEFT JOIN strategy\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sql_correctness.aggregation_logic (current: 50%, 4.8 pts at stake)\n    Failed check: LTV calculation logic not fully correct\n    Expected: Correct LTV calculation as SUM(charges) - SUM(refunds) with proper mathematical logic\n    Found: Standard aggregation approach but missing advanced domain expertise\n    \u2192 ACTION: Enhance the LTV calculation by adding a validation step that shows the mathematical proof: add a comment block demonstrating that (total_charges - total_refunds) equals net customer value, and include a sample calculation with specific numbers (e.g., 'Customer A: $500 charges - $50 refunds = $450 LTV').\n\n  FIX 2: sql_schema.refund_modeling (current: 75%, 3.5 pts at stake)\n    Failed check: Refund modeling missing some advanced constraints\n    Expected: Complete refund modeling with all business rules\n    Found: Good refund modeling with payment_type ENUM and reference relationships\n    \u2192 ACTION: Add a CHECK constraint ensuring refund amounts cannot exceed the original charge amount: 'CONSTRAINT chk_refund_amount CHECK (payment_type = 'charge' OR amount <= (SELECT amount FROM payments WHERE payment_id = reference_payment_id))' and document this business rule.\n\n  FIX 3: sql_schema.realistic_columns (current: 75%, 3.5 pts at stake)\n    Failed check: Missing some realistic business columns\n    Expected: Comprehensive realistic columns with business-appropriate naming\n    Found: Good column design with proper types and constraints\n    \u2192 ACTION: Add these realistic business columns to the customers table: 'acquisition_channel VARCHAR(50)', 'customer_segment ENUM('bronze', 'silver', 'gold', 'platinum')', and 'marketing_consent BOOLEAN DEFAULT FALSE' to better reflect real-world customer data requirements.\n\n  FIX 4: sql_schema.normalization (current: 75%, 3.0 pts at stake)\n    Failed check: Schema could be more perfectly normalized\n    Expected: Perfect 3NF normalization with all best practices\n    Found: Good 3NF implementation with proper separation\n    \u2192 ACTION: Create a separate 'payment_methods' lookup table (payment_method_id, method_name, processing_fee_pct) and reference it from the payments table instead of storing payment method as a string, demonstrating complete normalization of reference data.\n\n  FIX 5: sql_readability.cte_usage (current: 50%, 2.8 pts at stake)\n    Failed check: CTE structure lacks advanced domain expertise\n    Expected: CTEs for distinct logical steps with advanced SQL patterns\n    Found: Standard CTE usage following best practices\n    \u2192 ACTION: Add a fourth CTE called 'customer_metrics' that calculates additional business metrics (transaction_count, avg_order_value, days_since_last_purchase) to demonstrate advanced CTE chaining and provide richer customer insights beyond basic LTV.\n\n  FIX 6: sql_readability.formatting (current: 50%, 2.4 pts at stake)\n    Failed check: Formatting lacks advanced professional touches\n    Expected: Clean formatting with advanced professional styling\n    Found: Standard formatting practices\n    \u2192 ACTION: Add SQL block delimiters (/* ===== SECTION: DATA PREPARATION ===== */) before each major CTE section, and align all column definitions using consistent spacing (e.g., all AS clauses vertically aligned at column 40).\n",
+  "focus_areas": [
+    "sql_schema",
+    "sql_correctness",
+    "sql_readability"
+  ],
+  "protected_criteria": [
+    "sql_performance"
+  ],
+  "improvement_targets": [
+    "sql_schema",
+    "sql_correctness",
+    "sql_readability"
+  ],
+  "prior_score": 0.7222,
+  "prior_criterion_scores": {
+    "sql_schema": 0.75,
+    "sql_correctness": 0.65,
+    "sql_readability": 0.5875,
+    "sql_performance": 1.0
+  }
+}

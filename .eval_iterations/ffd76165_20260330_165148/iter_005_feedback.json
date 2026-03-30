@@ -1,0 +1,31 @@
+{
+  "iteration": 5,
+  "feedback_text": "DIAGNOSIS: The email has strong fundamentals but loses points on length/formatting issues and social proof restraint. The subject line needs 5 characters trimmed, social proof needs condensing to 2 points, and paragraph structure needs fixing for scannability.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: Perfect score (8/8) - keep the TechCrunch interview reference opening unchanged\n  \u2713 email_tone: Strong score (5/6) - maintain the peer-to-peer conversational tone\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_length.scannability (current: 0%, 3.0 pts at stake)\n    Failed check: All paragraphs \u22643 sentences check\n    Expected: Every paragraph must have 3 sentences or fewer\n    Found: Second paragraph has 4+ sentences\n    \u2192 ACTION: Break the second paragraph (value proposition section) into two separate paragraphs, ensuring each has maximum 3 sentences.\n\n  FIX 2: email_subject.brevity (current: 25%, 2.5 pts at stake)\n    Failed check: Under 60 characters check\n    Expected: Subject line \u226460 characters for full points\n    Found: 65 characters: 'DataVault \u2014 your zero-trust timing is perfect (here's why)'\n    \u2192 ACTION: Shorten subject line to exactly 60 characters or fewer. Try: 'DataVault \u2014 your zero-trust timing is perfect' (49 chars)\n\n  FIX 3: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Failed check: Fully verifiable claims check\n    Expected: All claims must be verifiable with named companies/specific metrics\n    Found: '3 Fortune 100 companies' and 'SOC2 Type II audits in under 90 days' lack specific company names or verifiable details\n    \u2192 ACTION: Replace '3 Fortune 100 companies' with '3 Fortune 100 CISOs including [specific company]' and add a specific metric to the SOC2 claim like 'helped 5 portfolio companies complete SOC2 audits in under 90 days.'\n\n  FIX 4: email_social_proof.restraint (current: 0%, 1.5 pts at stake)\n    Failed check: Uses 1-2 tight proof points check\n    Expected: 1-2 concise proof points maximum\n    Found: Multiple proof points: CyberTech scaling, Microsoft acquisition, SOC2 audits, portfolio deals across several sentences\n    \u2192 ACTION: Condense social proof to exactly 2 proof points in one sentence: 'I scaled CyberTech from 50 to 2,000+ customers before Microsoft acquired us, and helped portfolio companies close $40M+ in enterprise deals in 2023.'\n\n  FIX 5: email_length.word_count (current: 70%, 1.5 pts at stake)\n    Failed check: Under 150 words check\n    Expected: \u2264150 words total for full points\n    Found: Approximately 180-200 words\n    \u2192 ACTION: Cut 30-50 words to reach exactly 150 words. Remove the sentence about SOC2 audits and combine the value proposition sentences.\n\n  FIX 6: email_tone.humble_brag (current: -100%, 1.0 pts at stake)\n    Failed check: Humble brag penalty triggered\n    Expected: No humble bragging language\n    Found: Multiple achievement mentions that read as humble bragging\n    \u2192 ACTION: Reframe the Microsoft acquisition mention from achievement to relevant experience: Change 'Scaled CyberTech from 50 to 2,000+ enterprise customers before Microsoft acquired us' to 'My enterprise security background (CyberTech, acquired by Microsoft) gives me...'\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.6689,
+  "prior_criterion_scores": {
+    "email_subject": 0.4375,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.475,
+    "email_cta": 0.5,
+    "email_tone": 0.8333,
+    "email_length": 0.7812
+  }
+}

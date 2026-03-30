@@ -1,0 +1,23 @@
+{
+  "iteration": 5,
+  "feedback_text": "DIAGNOSIS: The summary achieves good compression and standalone clarity but loses significant points on fidelity and sentence structure. Primary fixes needed: verify all statistics against source material, break compound sentences into simple ones, and trim to under 100 words while strengthening the central thesis capture.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 sum_compression: Strong performance at 8.5/10 - keep the 3-bullet structure and concise style\n  \u2713 sum_standalone: Perfect score - maintain the self-contained framing without source references\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sum_fidelity.no_hallucination (current: 25%, 3.6 pts at stake)\n    Failed check: Cannot verify claims against source material\n    Expected: All specific claims traceable to source with no invented statistics\n    Found: Specific numbers like '92%', '$0.0003', '8 months' cannot be verified without source\n    \u2192 ACTION: Replace any unverifiable statistics with general statements or remove specific numbers that cannot be traced to the source material. If the 92% figure is not in the source, change to 'dramatically reduced' or similar qualitative language.\n\n  FIX 2: sum_compression.bullet_density (current: 0%, 3.5 pts at stake)\n    Failed check: Bullets contain compound sentences\n    Expected: Each bullet is 1-2 sentences with no semicolons, em-dashes, or compound sentences\n    Found: All three bullets contain compound sentences with comma splices or complex structures\n    \u2192 ACTION: Break each bullet into simple sentences. Split 'Specialized clusters now process 1K tokens for $0.0003 versus $0.004 on previous hardware' into two sentences. Do the same for the other compound sentences in bullets 2 and 3.\n\n  FIX 3: sum_compression.total_length (current: 0%, 3.5 pts at stake)\n    Failed check: Content exceeds 100 words\n    Expected: Total word count under 100 words for full points\n    Found: Content appears to be approximately 110-120 words\n    \u2192 ACTION: Trim content to exactly 100 words or fewer. Remove redundant phrases, combine related concepts, and eliminate any unnecessary qualifiers while preserving the core message and key numbers.\n\n  FIX 4: sum_fidelity.thesis_capture (current: 50%, 2.4 pts at stake)\n    Failed check: Thesis capture only partially successful\n    Expected: First bullet captures the central claim or main finding completely\n    Found: 92% cost reduction presented but may not be the complete central thesis\n    \u2192 ACTION: Ensure the first bullet captures the complete central argument from the source, not just one data point. If the source's main thesis is broader than cost reduction, expand the first bullet to encompass the full central claim.\n\n  FIX 5: sum_fidelity.evidence_capture (current: 50%, 1.8 pts at stake)\n    Failed check: Evidence capture only partially successful\n    Expected: Strongest evidence from source preserved\n    Found: Some evidence included but may not be the strongest available\n    \u2192 ACTION: Replace secondary evidence with the most compelling proof points from the source. Prioritize the strongest statistical evidence, most authoritative citations, or most dramatic examples over routine supporting data.\n",
+  "focus_areas": [
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "protected_criteria": [
+    "sum_compression",
+    "sum_standalone"
+  ],
+  "improvement_targets": [
+    "sum_fidelity",
+    "sum_exec_value"
+  ],
+  "prior_score": 0.6283,
+  "prior_criterion_scores": {
+    "sum_compression": 0.8523,
+    "sum_fidelity": 0.425,
+    "sum_exec_value": 0.5,
+    "sum_standalone": 1.0
+  }
+}

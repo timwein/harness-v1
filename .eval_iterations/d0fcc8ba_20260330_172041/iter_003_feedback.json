@@ -1,0 +1,26 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The code is well-structured with excellent API design and Python idioms, but loses points on error handling specificity and test coverage. The main issues are using generic exception handling instead of specific exception types, and providing only basic examples instead of comprehensive test scenarios covering different CSV formats.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 code_api_design: scored 100% - keep function signature, docstring, and input flexibility unchanged\n  \u2713 code_idiomaticness: scored 100% - maintain current use of csv module and Python idioms\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: code_robustness.error_handling (current: 50%, 2.0 pts at stake)\n    Failed check: Uses generic 'except Exception' instead of specific exception types\n    Expected: 1.0 if structured error reporting, 0.5 if basic try/except, 0.0 if bare\n    Found: Mix of specific exceptions like 'csv.Error' and generic 'except Exception as e'\n    \u2192 ACTION: Replace all generic 'except Exception as e:' blocks with specific exception types. Use 'except (UnicodeDecodeError, IOError) as e:' for file operations, 'except (csv.Error, ValueError) as e:' for parsing operations, and create structured error messages that include the exception type and context.\n\n  FIX 2: code_testability.pure_function (current: 50%, 1.4 pts at stake)\n    Failed check: Function may have minor side effects beyond logging\n    Expected: 1.0 if pure, 0.5 if minor side effects (logging ok), 0.0 if writes files\n    Found: Function appears pure but may have subtle side effects\n    \u2192 ACTION: Ensure the function is completely pure by removing any potential side effects: verify that file objects passed as input are not modified (add file position reset if needed), and ensure no global state is modified during execution.\n\n  FIX 3: code_correctness.edge_case_resilience (current: 75%, 1.1 pts at stake)\n    Failed check: Missing handling for one or more edge cases\n    Expected: Handle empty rows, mixed quoting, jagged rows, trailing delimiters\n    Found: Most edge cases handled but may be missing complete coverage\n    \u2192 ACTION: Add explicit handling for files with only header row (no data rows) and files with inconsistent column counts across rows - ensure these scenarios generate appropriate warnings and don't crash the parser.\n\n  FIX 4: code_testability.test_examples (current: 50%, 1.1 pts at stake)\n    Failed check: Only shows one example format, doesn't cover different CSV scenarios\n    Expected: 1.0 if test cases included, 0.5 if doctest, 0.0 if none\n    Found: One example shown, but doesn't demonstrate multiple delimiter types or edge cases\n    \u2192 ACTION: Expand the docstring examples to include 3 different scenarios: (1) semicolon-delimited with headers, (2) tab-delimited without headers, and (3) pipe-delimited with empty rows. Show the expected ParseResult output for each, including the warnings and metadata fields.\n\n  FIX 5: code_correctness.delimiter_detection (current: 75%, 1.1 pts at stake)\n    Failed check: Missing parameterized option for delimiter override\n    Expected: 1.0 if auto-detects from data, 0.5 if parameterized, 0.0 if hardcoded\n    Found: Auto-detection present but no clear parameterized fallback when delimiter is explicitly provided\n    \u2192 ACTION: Modify the delimiter detection logic to score the full 0.5 points for parameterized behavior: when `delimiter` parameter is provided, use it directly without auto-detection, but still validate it works with the data format.\n\n  FIX 6: code_correctness.header_handling (current: 75%, 1.1 pts at stake)\n    Failed check: Missing one aspect of header handling completeness\n    Expected: 1.0 if auto-detects + generates, 0.5 if one or other, 0.0 if assumes headers\n    Found: Both auto-detection and generation present but may lack full integration\n    \u2192 ACTION: Ensure the header handling achieves full integration by adding a clear code path that shows: when headers are auto-detected as missing, the generate_headers function is automatically called and the result is used consistently throughout parsing.\n",
+  "focus_areas": [
+    "code_correctness",
+    "code_robustness",
+    "code_testability"
+  ],
+  "protected_criteria": [
+    "code_api_design",
+    "code_idiomaticness"
+  ],
+  "improvement_targets": [
+    "code_correctness",
+    "code_robustness",
+    "code_testability"
+  ],
+  "prior_score": 0.7943,
+  "prior_criterion_scores": {
+    "code_correctness": 0.75,
+    "code_robustness": 0.65,
+    "code_api_design": 1.0,
+    "code_idiomaticness": 1.0,
+    "code_testability": 0.575
+  }
+}

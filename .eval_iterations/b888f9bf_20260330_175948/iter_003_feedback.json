@@ -1,0 +1,23 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: The content demonstrates strong nuanced reasoning and good structure but loses points primarily on depth and specificity. The steelman section needs more technical detail and novel insights, while the counter-arguments require an additional distinct thread and deeper definitional analysis.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 arg_nuance: Perfect score (8/8) - maintains uncertainty and avoids absolutism throughout\n  \u2713 arg_readability.persuasive_flow: Strong logical progression and memorable conclusion\n  \u2713 arg_readability.structure: Clear section headers and good synthesis in conclusion\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: arg_steelman.steelman_quality (current: 50%, 5.0 pts at stake)\n    Failed check: Generic steelman presentation without novel insights\n    Expected: Cites specific results/proponents with independent domain expertise\n    Found: Standard steelman format without novel insights\n    \u2192 ACTION: Enhance the steelman section by adding specific technical details: include exact benchmark scores (e.g., 'GPT-4 achieved 86.4% on MMLU'), cite specific research papers by name, and add unique analysis of why these results specifically support AGI-by-2030 claims\n\n  FIX 2: arg_steelman.specific_evidence (current: 50%, 3.0 pts at stake)\n    Failed check: Uses standard benchmarks without novel analysis\n    Expected: 2+ specific references with independent domain expertise\n    Found: Standard benchmarks and public expert statements without novel analysis\n    \u2192 ACTION: Replace generic references with specific, lesser-known evidence: cite particular research papers (with authors and publication venues), reference specific internal company reports or technical blog posts, and include precise dates and performance metrics\n\n  FIX 3: arg_counter_quality.definitional_challenge (current: 50%, 3.0 pts at stake)\n    Failed check: Standard definitional critique without novel philosophical insights\n    Expected: Substantive definitional argument with independent domain expertise\n    Found: Standard definitional critique without novel philosophical insights\n    \u2192 ACTION: Deepen the definitional challenge by adding specific philosophical frameworks: reference particular AGI definitions from researchers (e.g., Goertzel's vs. Legg's definitions), discuss the 'hard takeoff' vs 'soft takeoff' distinction, and explain how different definitions change timeline predictions by years\n\n  FIX 4: arg_counter_quality.argument_count (current: 50%, 2.4 pts at stake)\n    Failed check: Contains only 2 distinct counter-threads instead of 3+\n    Expected: 3+ distinct counter-threads for full points\n    Found: Three main sections identified but scorer marked as only 2 distinct threads\n    \u2192 ACTION: Add a fourth distinct counter-argument section addressing a different aspect (e.g., 'Hardware Bottlenecks' discussing chip supply constraints, energy requirements, or specialized architecture needs for AGI)\n\n  FIX 5: arg_readability.structure (current: 50%, 1.6 pts at stake)\n    Failed check: Thesis appears in conclusion, not first paragraph\n    Expected: Clear thesis with specific timeline prediction in first paragraph\n    Found: Thesis appears in conclusion, not first paragraph\n    \u2192 ACTION: Move your main thesis statement to the first paragraph: start with a clear position like 'While AGI proponents present compelling evidence, AGI by 2030 remains improbable due to definitional ambiguity, benchmark limitations, and structural deployment barriers.'\n\n  FIX 6: arg_readability.concision (current: 70%, 1.2 pts at stake)\n    Failed check: Content exceeds 800 words\n    Expected: Under 800 words for full points\n    Found: Content appears to be approximately 1000+ words\n    \u2192 ACTION: Trim content to under 800 words by condensing examples: combine similar benchmark citations into single sentences, reduce the number of expert quotes to 2-3 key ones, and eliminate redundant explanations while preserving all main arguments\n",
+  "focus_areas": [
+    "arg_steelman",
+    "arg_counter_quality"
+  ],
+  "protected_criteria": [
+    "arg_nuance",
+    "arg_readability"
+  ],
+  "improvement_targets": [
+    "arg_steelman",
+    "arg_counter_quality"
+  ],
+  "prior_score": 0.6479,
+  "prior_criterion_scores": {
+    "arg_steelman": 0.5,
+    "arg_counter_quality": 0.5,
+    "arg_nuance": 1.0,
+    "arg_readability": 0.7584
+  }
+}
