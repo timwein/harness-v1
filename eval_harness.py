@@ -252,6 +252,7 @@ async def generate_baseline(
     response = client.messages.create(
         model=model,
         max_tokens=4096,
+        temperature=0,
         messages=[{"role": "user", "content": task_prompt}],
     )
     gen_secs = time.monotonic() - t0
