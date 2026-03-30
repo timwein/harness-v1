@@ -42,6 +42,11 @@ from enum import Enum
 
 from rubric_system.models import CriterionScore, Iteration
 
+# Single source of truth for the default iteration limit.
+# eval_harness.py and rubric_harness.py both import this so the CLI default
+# and the policy default stay in sync automatically.
+DEFAULT_MAX_ITERATIONS: int = 5
+
 
 class CheckpointType(Enum):
     RUBRIC_REVIEW = "rubric_review"
@@ -127,7 +132,7 @@ class CheckpointPolicy:
         # Configuration
         self.task_complexity: str = "medium"  # low, medium, high
         self.has_critical_criteria: bool = False
-        self.max_iterations: int = 5
+        self.max_iterations: int = DEFAULT_MAX_ITERATIONS
         self.pass_threshold: float = 0.85
 
         # Learned thresholds (adjusted from history)
@@ -144,7 +149,7 @@ class CheckpointPolicy:
         self,
         task_complexity: str = "medium",
         has_critical_criteria: bool = False,
-        max_iterations: int = 5,
+        max_iterations: int = DEFAULT_MAX_ITERATIONS,
         pass_threshold: float = 0.85,
     ):
         """Configure policy for a specific run."""

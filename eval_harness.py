@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from rubric_system.models import CriterionScore, Rubric
 from rubric_system.sample_rubrics import SAMPLE_TASKS
+from rubric_system.checkpoint_policy import DEFAULT_MAX_ITERATIONS
 from rubric_harness import RubricLoop
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ from rubric_harness import RubricLoop
 # ──────────────────────────────────────────────────────────────────────────────
 
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
-DEFAULT_MAX_ITER = 5
+DEFAULT_MAX_ITER = DEFAULT_MAX_ITERATIONS  # single source of truth in checkpoint_policy
 DEFAULT_OUTPUT = "eval_results.json"
 
 # Pricing per 1M tokens (claude-sonnet-4 as of 2026-03)
