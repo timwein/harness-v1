@@ -105,8 +105,8 @@ Six isolated agents iterate the actual task output. Each has its own `Anthropic(
 |-------|------|--------------------|
 | **RubricNegotiationAgent** | Sprint contract: refines ambiguous/untestable criteria before iter 1 | Content, scores, generation strategy |
 | **GenerationAgent** | Content creation | Scoring calibration, scorer system prompt, negotiation transcript |
-| **ScoringAgent** | Adversarial two-stage measurement | Generation prompt, task context, prior attempts |
-| **FeedbackAgent** | Translates raw scores → actionable editing instructions | Generation prompts, scoring calibration |
+| **ScoringAgent** | Adversarial two-stage measurement with embedded critiques | Generation prompt, task context, prior attempts |
+| **FeedbackAgent** | Deterministic critique-to-instruction translator | Generation prompts, scoring calibration |
 | **EvaluationAgent** | Pass/fail, regression detection, convergence | Generation strategy, rubric design rationale |
 | **CriticAgent** | Rubric post-hoc calibration | Generation strategy |
 
@@ -116,11 +116,51 @@ Six isolated agents iterate the actual task output. Each has its own `Anthropic(
 
 **Two-stage checklist scoring** — Stage 1: binary fact extraction (YES/NO with evidence quotes). Stage 2: mechanical score mapping from Stage 1 facts. No holistic impressionistic ratings.
 
+**Embedded critiques** — The ScoringAgent emits a single JSON where every sub-attribute includes its numeric score alongside structured critique data: a `critique` (1-2 sentence summary of what failed), a `suggestion` (specific improvement instruction), and `checks` (binary YES/NO items with exact evidence quotes from the content). This replaces the old two-section output (separate text checklist + JSON scores) and eliminates the fragile regex parsing that connected them.
+
 **6 scoring methods**: `BINARY`, `PERCENTAGE`, `WEIGHTED_COMPONENTS`, `PENALTY_BASED`, `THRESHOLD_TIERS`, `COUNT_BASED`.
 
 **Deterministic verifiers** — Before LLM scoring, `DeterministicVerifier` routes programmatically checkable criteria (count-based, length-based, format-based, code syntax, presence-based) to zero-variance code checks. Evidence shows exact results (e.g., "Word count: 247, target: under 300 ✓"). Disable with `--no-deterministic`.
 
 **Anti-leniency** — Perfect score prohibition on iteration 1 (ceiling: 90%), calibration anchors, adversarial scorer system prompt.
+
+### FeedbackAgent: Deterministic Critique Pipeline
+
+The FeedbackAgent is the sole bridge between the ScoringAgent and the GenerationAgent. Its core design principle: **the scorer is the source of truth**, and feedback is constructed deterministically from the scorer's output — not by asking another LLM to interpret scores.
+
+**How it works:**
+
+1. The ScoringAgent scores content and emits structured critiques per sub-attribute: `{score, critique, suggestion, checks[{check, result, evidence}]}`.
+2. The FeedbackAgent reads `_last_critiques` from the ScoringAgent directly. For each failing sub-attribute (score < 75%), it builds a fix item by copying the scorer's own words: the critique becomes `what_failed`, the measurement spec becomes `what_was_expected`, the failed check evidence becomes `what_was_found`, and the suggestion becomes the `instruction`. No LLM reinterpretation.
+3. Fix items are sorted by `points_at_stake` (descending) so the generator works on the highest-leverage changes first.
+4. Passing criteria (≥ 75%) are listed as `preserve` items — explicit "do not change" instructions.
+
+**Regression content comparison (the one LLM call):** When a criterion's score drops >5% from its best prior iteration, the FeedbackAgent makes a single targeted LLM call that compares the actual content of the best iteration vs the current iteration. It returns three things: what content was lost, what change caused the regression, and a specific recovery instruction. This is the only part that requires content understanding and can't be done deterministically.
+
+**Single signal to the generator:** The generator receives structured feedback as its sole instruction set. The EDIT_PROMPT no longer includes a separate score breakdown or focus section — those were redundant and created conflicting signals. Rule 4 of the EDIT_PROMPT now reads: "The STRUCTURED FEEDBACK FROM EVALUATOR below is your SOLE instruction set."
+
+**Output format to the generator:**
+```
+REGRESSIONS (RECOVER THESE FIRST — highest priority):
+  REGRESSED: criterion_x — was 80% at iter 2, now 55% (-25%)
+    What was lost: [content comparison from LLM]
+    Why it dropped: [content comparison from LLM]
+    → RECOVER: [specific recovery instruction]
+
+DO NOT CHANGE (these sections are passing):
+  ✓ criterion_a: 85% — keep unchanged
+
+REQUIRED FIXES (ordered by point impact):
+  FIX 1: criterion_y.sub_z (current: 25%, 4.5 pts at stake)
+    Scorer's critique: [scorer's own words]
+    Measurement spec: [from rubric]
+    Evidence found: [scorer's evidence quote]
+    ✗ FAILED CHECK: Contains specific dollar thresholds
+      Evidence: 'material amounts' with no numeric definition
+    → ACTION: [scorer's own suggestion]
+```
+
+**FeedbackLearningLoop** tracks fix effectiveness across iterations: each prescribed fix is classified as EFFECTIVE, INEFFECTIVE, or HARMFUL based on whether the targeted criterion's score improved, stalled, or regressed. Accumulated learnings are distilled into markdown and injected into future runs.
 
 ### Iteration Control
 
