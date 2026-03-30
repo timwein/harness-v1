@@ -1,0 +1,42 @@
+{
+  "run_id": "7fa8e462_20260330_223742",
+  "iteration": 6,
+  "total_score": 25.87,
+  "max_score": 36,
+  "percentage": 0.7186111111111111,
+  "delta_from_prior": 0.0633,
+  "focus_areas": [
+    "expl_accuracy.multihead_purpose",
+    "expl_accessibility.jargon_handling",
+    "expl_accessibility.progressive_complexity",
+    "expl_completeness.significance",
+    "expl_accuracy.qkv_correctness"
+  ],
+  "content_path": ".eval_iterations/7fa8e462_20260330_223742/iter_006_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "expl_accuracy",
+      "points_earned": 7.95,
+      "max_points": 12,
+      "percentage": 0.6624999999999999
+    },
+    {
+      "criterion_id": "expl_accessibility",
+      "points_earned": 6.62,
+      "max_points": 10,
+      "percentage": 0.6624999999999999
+    },
+    {
+      "criterion_id": "expl_engagement",
+      "points_earned": 7.78,
+      "max_points": 8,
+      "percentage": 0.9724473257698542
+    },
+    {
+      "criterion_id": "expl_completeness",
+      "points_earned": 3.52,
+      "max_points": 6,
+      "percentage": 0.5874999999999999
+    }
+  ]
+}

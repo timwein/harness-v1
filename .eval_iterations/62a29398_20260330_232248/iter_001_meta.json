@@ -1,0 +1,42 @@
+{
+  "run_id": "62a29398_20260330_232248",
+  "iteration": 1,
+  "total_score": 34.55,
+  "max_score": 44,
+  "percentage": 0.7852272727272727,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/62a29398_20260330_232248/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "memo_structure",
+      "points_earned": 9.8,
+      "max_points": 10,
+      "percentage": 0.98
+    },
+    {
+      "criterion_id": "memo_market",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.6749999999999999
+    },
+    {
+      "criterion_id": "memo_thesis",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "memo_risks",
+      "points_earned": 6.0,
+      "max_points": 8,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "memo_deal_terms",
+      "points_earned": 4.5,
+      "max_points": 6,
+      "percentage": 0.75
+    }
+  ]
+}

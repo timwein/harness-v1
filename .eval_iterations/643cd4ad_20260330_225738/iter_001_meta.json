@@ -1,0 +1,42 @@
+{
+  "run_id": "643cd4ad_20260330_225738",
+  "iteration": 1,
+  "total_score": 21.75,
+  "max_score": 36,
+  "percentage": 0.6041666666666666,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/643cd4ad_20260330_225738/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.675
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.675
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.75,
+      "max_points": 6,
+      "percentage": 0.625
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 4.5,
+      "max_points": 6,
+      "percentage": 0.75
+    }
+  ]
+}

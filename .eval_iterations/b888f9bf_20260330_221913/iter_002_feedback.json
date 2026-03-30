@@ -1,0 +1,24 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: 7 failing sub-attributes (45.0 pts recoverable), 1 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 arg_readability: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: arg_nuance.absolutist_claim (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Uses probabilistic language like 'remains possible but improbable'\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: arg_nuance.dismisses_without_evidence (current: 0%, 8.0 pts at stake)\n    Scorer's critique: All dismissals are backed by specific evidence and analysis\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: arg_nuance.ignores_counterexamples (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Acknowledges pro-AGI evidence in steelman section\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: arg_nuance.no_uncertainty_acknowledgment (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Explicitly states 'AGI by 2030 remains possible but improbable' and discusses probability ranges\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: arg_nuance.appeal_to_authority_only (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Combines expert opinions with technical analysis and empirical evidence\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: arg_counter_quality.structural_barriers (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Good coverage of regulatory and safety barriers with specific expert survey data, but doesn't exceed standard treatment of these issues.\n    Measurement spec: 1.0 if specific structural argument, 0.5 if mentioned, 0.0 if absent\n    Evidence found: Goes beyond rubric guidance with independent domain expertise: While accurate, this follows standard AI safety discourse without novel insights\n    \u2717 FAILED CHECK: Goes beyond rubric guidance with independent domain expertise\n      Evidence: While accurate, this follows standard AI safety discourse without novel insights\n    \u2192 ACTION: Could strengthen by discussing specific regulatory proposals, international coordination challenges, or economic incentives that create deployment friction.\n\n  FIX 7: arg_steelman.good_faith (current: 50%, 2.0 pts at stake)\n    Scorer's critique: Fair representation of the pro-AGI position without dismissive language, but doesn't exceed basic good-faith requirements.\n    Measurement spec: 1.0 if fair, 0.0 if dismissive/strawman\n    Evidence found: Goes beyond rubric guidance with independent domain expertise: While fair, this is standard good-faith argumentation without additional insight\n    \u2717 FAILED CHECK: Goes beyond rubric guidance with independent domain expertise\n      Evidence: While fair, this is standard good-faith argumentation without additional insight\n    \u2192 ACTION: Could strengthen by acknowledging specific concerns AGI proponents have about skeptics or explaining why the position attracts serious researchers.\n",
+  "focus_areas": [
+    "arg_steelman",
+    "arg_counter_quality",
+    "arg_nuance"
+  ],
+  "protected_criteria": [
+    "arg_readability"
+  ],
+  "improvement_targets": [
+    "arg_steelman",
+    "arg_counter_quality",
+    "arg_nuance"
+  ],
+  "prior_score": 0.5903,
+  "prior_criterion_scores": {
+    "arg_steelman": 0.7,
+    "arg_counter_quality": 0.6875,
+    "arg_nuance": 0.0,
+    "arg_readability": 1.0
+  }
+}

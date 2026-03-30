@@ -1,0 +1,1816 @@
+[Mon Mar 30 21:46:52 UTC 2026] Starting eval (--resume)...
+Eval harness — rubric loop vs. vanilla Claude
+  Model:    claude-sonnet-4-20250514
+  Tasks:    10 (cold_outreach_email, csv_parser, exec_summary, sql_ltv_query, agi_counterargument, billing_schema, attention_explanation, startup_naming, bash_backup, investment_memo)
+  Max iter: 0
+  Output:   eval_results_run8.json
+  Mode:     full
+  Resume:   yes
+[resume] loaded 10 existing results from eval_results_run8.json
+
+============================================================
+[1/10] cold_outreach_email
+============================================================
+  [baseline] generating…
+  [baseline] 1660 chars | 22 in / 379 out | 10.5s
+  [baseline] scoring…
+  [baseline] 28.4/56 (50.7%) | scoring 61.1s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Write a cold outreach email to a Series A founder pitching a...
+============================================================
+Rubric: explicit (7 criteria, 56pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_214806_ffd76165.md
+Run ID: ffd76165_20260330_214806
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 5 criteria
+  [det] email_length: 3.37/6 — Word count: 267 (target: ≤150) ✗
+  Scoring breakdown: 1 deterministic, 6 LLM-scored
+
+Score: 41.7/56 (74.5%)
+   [WARN] email_subject: 6.6/10 (66%)
+      - specificity: 75%
+      - brevity: 75%
+      - curiosity_hook: 50%
+   [PASS] email_opening: 8.0/8 (100%)
+   [WARN] email_value_prop: 7.0/10 (70%)
+      - specificity: 75%
+      - relevance: 75%
+      - credibility: 50%
+   [WARN] email_social_proof: 5.4/8 (68%)
+      - proof_quality: 75%
+      - restraint: 50%
+      - natural_integration: 75%
+   [WARN] email_cta: 5.3/8 (66%)
+      - clarity: 50%
+      - low_friction: 75%
+      - specificity: 75%
+   [PASS] email_tone: 6.0/6 (100%)
+   [WARN] email_length: 3.4/6 (56%)
+  [Artifact] → .eval_iterations/ffd76165_20260330_214806/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 4 fix items, 2 preserved, 0 regressions (deterministic)
+  [Feedback] 4 fixes, 2 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: email_subject.curiosity_hook (50%)
+Editing current draft (74%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 5 criteria
+  [det] email_length: 4.57/6 — Word count: 197 (target: ≤150) ✗
+  Scoring breakdown: 1 deterministic, 6 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 1→2): 0 effective, 4 ineffective, 0 harmful
+
+Score: 42.9/56 (76.6%)
+   [WARN] email_subject: 6.6/10 (66%)
+      - specificity: 75%
+      - brevity: 75%
+      - curiosity_hook: 50%
+   [PASS] email_opening: 8.0/8 (100%)
+   [WARN] email_value_prop: 7.0/10 (70%)
+      - specificity: 75%
+      - relevance: 75%
+      - credibility: 50%
+   [WARN] email_social_proof: 5.4/8 (68%)
+      - proof_quality: 75%
+      - restraint: 50%
+      - natural_integration: 75%
+   [WARN] email_cta: 5.3/8 (66%)
+      - clarity: 50%
+      - low_friction: 75%
+      - specificity: 75%
+   [PASS] email_tone: 6.0/6 (100%)
+   [WARN] email_length: 4.6/6 (76%)
+  [Artifact] → .eval_iterations/ffd76165_20260330_214806/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 4 fix items, 3 preserved, 0 regressions (deterministic)
+  [Feedback] 4 fixes, 3 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: email_subject.curiosity_hook (50%)
+Editing current draft (77%) [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 5 criteria
+  [det] email_length: 4.48/6 — Word count: 201 (target: ≤150) ✗
+  Scoring breakdown: 1 deterministic, 6 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 2→3): 1 effective, 6 ineffective, 1 harmful
+
+Score: 43.0/56 (76.8%)
+   [WARN] email_subject: 7.5/10 (75%)
+      - specificity: 75%
+      - brevity: 75%
+      - curiosity_hook: 75%
+   [PASS] email_opening: 8.0/8 (100%)
+   [WARN] email_value_prop: 7.0/10 (70%)
+      - specificity: 75%
+      - relevance: 75%
+      - credibility: 50%
+   [WARN] email_social_proof: 5.4/8 (68%)
+      - proof_quality: 75%
+      - restraint: 50%
+      - natural_integration: 75%
+   [WARN] email_cta: 4.6/8 (57%)
+      - clarity: 50%
+      - low_friction: 50%
+      - specificity: 75%
+   [PASS] email_tone: 6.0/6 (100%)
+   [WARN] email_length: 4.5/6 (75%)
+  [Artifact] → .eval_iterations/ffd76165_20260330_214806/iter_003_content.md
+  [Mask] Iter 1 offloaded (74%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback] Built 4 fix items, 3 preserved, 0 regressions (deterministic)
+  [Feedback] 4 fixes, 3 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: email_value_prop.credibility (50%)
+Editing current draft (77%) [iter 4/0]...
+  [Adaptive] Plateau detected (76.6% → 76.8%, Δ=0.1%) — injecting meta-prompt to evaluator
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 5 criteria
+  [det] email_length: 4.02/6 — Word count: 224 (target: ≤150) ✗
+  Scoring breakdown: 1 deterministic, 6 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 3→4): 3 effective, 7 ineffective, 2 harmful
+
+Score: 42.0/56 (75.1%)
+   [WARN] email_subject: 6.6/10 (66%)
+      - specificity: 75%
+      - brevity: 75%
+      - curiosity_hook: 50%
+   [PASS] email_opening: 8.0/8 (100%)
+   [WARN] email_value_prop: 7.0/10 (70%)
+      - specificity: 75%
+      - relevance: 75%
+      - credibility: 50%
+   [WARN] email_social_proof: 4.4/8 (55%)
+      - proof_quality: 75%
+      - restraint: 25%
+      - natural_integration: 50%
+   [WARN] email_cta: 6.0/8 (75%)
+      - clarity: 75%
+      - low_friction: 75%
+      - specificity: 75%
+   [PASS] email_tone: 6.0/6 (100%)
+   [WARN] email_length: 4.0/6 (67%)
+[Evaluator] Convergence detected: scores plateaued within 1.7%
+  [Artifact] → .eval_iterations/ffd76165_20260330_214806/iter_004_content.md
+  [Mask] Iter 2 offloaded (77%) → iter_002_content.md
+
+Converged at iteration 4 — scores plateaued. Stopping.
+
+Loop ended. Last: 75.1% (iter 4), Best was: 76.8% (iter 3)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    email_length: 56% → best 75%, final 67%
+    email_subject: 66% → best 75%, final 66%
+  REGRESSED (feedback harmful/ineffective):
+    email_cta: 66% → best 57%, final 75%
+  PLATEAUED (no significant change):
+    email_opening: 100% → best 100%
+    email_value_prop: 70% → best 70%
+    email_social_proof: 68% → best 68%
+    email_tone: 100% → best 100%
+[Loop3] Saved scored rubric: run_ffd761654683_20260330_215236
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+[RegressionSuite] Added entry for task (score: 76.8%, 7 criteria)
+[RegressionSuite] Entry added/updated (score: 76.8%, 7 criteria)
+  [harness] loop done: 76.8% in 4 iter / 270.7s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 28.4/56 (50.7%) | 47.7s
+  → delta: -0.1%
+
+============================================================
+[2/10] csv_parser
+============================================================
+  [baseline] generating…
+  [baseline] 10002 chars | 27 in / 2818 out | 37.5s
+  [baseline] scoring…
+  [baseline] 20.8/44 (47.2%) | scoring 51.4s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Generate a Python function that parses messy CSV data with i...
+============================================================
+Rubric: explicit (5 criteria, 44pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_215454_d0fcc8ba.md
+Run ID: d0fcc8ba_20260330_215454
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 17 embedded critiques across 5 criteria
+
+Score: 25.2/44 (57.3%)
+   [WARN] code_correctness: 8.1/12 (68%)
+      - delimiter_detection: 75%
+      - header_handling: 75%
+      - edge_case_resilience: 50%
+   [WARN] code_robustness: 6.6/10 (66%)
+      - error_handling: 75%
+      - data_integrity: 50%
+      - return_metadata: 75%
+   [WARN] code_api_design: 6.0/8 (75%)
+      - type_hints: 75%
+      - docstring: 75%
+      - input_flexibility: 75%
+   [FAIL] code_idiomaticness: 0.0/8 (0%)
+   [WARN] code_testability: 4.5/6 (75%)
+      - pure_function: 75%
+      - modularity: 75%
+      - test_examples: 75%
+  [Artifact] → .eval_iterations/d0fcc8ba_20260330_215454/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 7 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 7 fixes, 1 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: code_idiomaticness.reinvents_csv_module (0%)
+Editing current draft (57%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 17 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 1→2): 2 effective, 5 ineffective, 0 harmful
+
+Score: 27.0/44 (61.4%)
+   [WARN] code_correctness: 9.0/12 (75%)
+      - delimiter_detection: 75%
+      - header_handling: 75%
+      - edge_case_resilience: 75%
+   [WARN] code_robustness: 7.5/10 (75%)
+      - error_handling: 75%
+      - data_integrity: 75%
+      - return_metadata: 75%
+   [WARN] code_api_design: 6.0/8 (75%)
+      - type_hints: 75%
+      - docstring: 75%
+      - input_flexibility: 75%
+   [FAIL] code_idiomaticness: 0.0/8 (0%)
+   [WARN] code_testability: 4.5/6 (75%)
+      - pure_function: 75%
+      - modularity: 75%
+      - test_examples: 75%
+  [Artifact] → .eval_iterations/d0fcc8ba_20260330_215454/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 5 fix items, 2 preserved, 0 regressions (deterministic)
+  [Feedback] 5 fixes, 2 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: code_idiomaticness.reinvents_csv_module (0%)
+Editing current draft (61%) [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 17 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 2→3): 2 effective, 10 ineffective, 0 harmful
+
+Score: 23.4/44 (53.1%)
+   [WARN] code_correctness: 9.0/12 (75%)
+      - delimiter_detection: 75%
+      - header_handling: 75%
+      - edge_case_resilience: 75%
+   [WARN] code_robustness: 5.9/10 (59%)
+      - error_handling: 50%
+      - data_integrity: 75%
+      - return_metadata: 50%
+   [WARN] code_api_design: 4.6/8 (57%)
+      - type_hints: 50%
+      - docstring: 75%
+      - input_flexibility: 50%
+   [FAIL] code_idiomaticness: 0.0/8 (0%)
+   [WARN] code_testability: 3.9/6 (65%)
+      - pure_function: 50%
+      - modularity: 75%
+      - test_examples: 75%
+[Evaluator] Regression: 53.1% vs best 61.4% (8.3% drop)
+  [Artifact] → .eval_iterations/d0fcc8ba_20260330_215454/iter_003_content.md
+  [Mask] Iter 1 offloaded (57%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback]   [Regression] Comparing content for code_robustness (iter 2 75% → iter 3 59%)...
+[Feedback]   [Regression] Comparing content for code_api_design (iter 2 75% → iter 3 57%)...
+[Feedback]   [Regression] Comparing content for code_testability (iter 2 75% → iter 3 65%)...
+[Feedback] Built 10 fix items, 0 preserved, 3 regressions (deterministic)
+  [Feedback] 10 fixes, 0 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: code_idiomaticness.reinvents_csv_module (0%)
+Editing current draft (53%) [REGRESSION from iter 2 61%] [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 17 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 3→4): 6 effective, 16 ineffective, 0 harmful
+
+Score: 26.4/44 (60.0%)
+   [WARN] code_correctness: 9.0/12 (75%)
+      - delimiter_detection: 75%
+      - header_handling: 75%
+      - edge_case_resilience: 75%
+   [WARN] code_robustness: 7.5/10 (75%)
+      - error_handling: 75%
+      - data_integrity: 75%
+      - return_metadata: 75%
+   [WARN] code_api_design: 6.0/8 (75%)
+      - type_hints: 75%
+      - docstring: 75%
+      - input_flexibility: 75%
+   [FAIL] code_idiomaticness: 0.0/8 (0%)
+   [WARN] code_testability: 3.9/6 (65%)
+      - pure_function: 50%
+      - modularity: 75%
+      - test_examples: 75%
+  [Artifact] → .eval_iterations/d0fcc8ba_20260330_215454/iter_004_content.md
+  [Mask] Iter 2 offloaded (61%) → iter_002_content.md
+
+[Stall detected] Stopping after iter 4 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 60.0% (iter 4), Best was: 61.4% (iter 2)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    code_robustness: 66% → best 75%, final 75%
+    code_correctness: 68% → best 75%, final 75%
+  PLATEAUED (no significant change):
+    code_api_design: 75% → best 75%
+    code_idiomaticness: 0% → best 0%
+    code_testability: 75% → best 75%
+[Loop3] Saved scored rubric: run_d0fcc8ba083f_20260330_220346
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 61.4% in 4 iter / 532.7s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 27.0/44 (61.4%) | 61.5s
+  → delta: +14.1%
+
+============================================================
+[3/10] exec_summary
+============================================================
+  [baseline] generating…
+  [baseline] 520 chars | 28 in / 123 out | 3.2s
+  [baseline] scoring…
+  [baseline] 16.1/38 (42.4%) | scoring 33.0s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Summarize a 2,000-word technical blog post into a 3-bullet e...
+============================================================
+Rubric: explicit (4 criteria, 38pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_220525_08ccdb63.md
+Run ID: 08ccdb63_20260330_220525
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 13 embedded critiques across 4 criteria
+  [det] sum_compression: 3.79/10 — Word count: 264 (target: ≤100) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+
+Score: 15.4/38 (40.6%)
+   [FAIL] sum_compression: 3.8/10 (38%)
+   [WARN] sum_fidelity: 6.9/12 (57%)
+      - thesis_capture: 50%
+      - evidence_capture: 75%
+      - no_hallucination: 50%
+   [FAIL] sum_exec_value: 4.8/10 (48%)
+      - actionability: 25%
+      - quantification: 75%
+      - declarative_framing: 50%
+   [FAIL] sum_standalone: 0.0/6 (0%)
+  [Artifact] → .eval_iterations/08ccdb63_20260330_220525/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 10 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 10 fixes, 0 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: sum_standalone.references_source (0%)
+Editing current draft (41%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 13 embedded critiques across 4 criteria
+  [det] sum_compression: 7.46/10 — Word count: 134 (target: ≤100) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 1→2): 4 effective, 6 ineffective, 0 harmful
+
+Score: 21.9/38 (57.5%)
+   [WARN] sum_compression: 7.5/10 (75%)
+   [WARN] sum_fidelity: 6.9/12 (57%)
+      - thesis_capture: 50%
+      - evidence_capture: 75%
+      - no_hallucination: 50%
+   [WARN] sum_exec_value: 7.5/10 (75%)
+      - actionability: 75%
+      - quantification: 75%
+      - declarative_framing: 75%
+   [FAIL] sum_standalone: 0.0/6 (0%)
+  [Artifact] → .eval_iterations/08ccdb63_20260330_220525/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 8 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 8 fixes, 1 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: sum_standalone.references_source (0%)
+Editing current draft (58%) [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 13 embedded critiques across 4 criteria
+  [det] sum_compression: 9.35/10 — Word count: 107 (target: ≤100) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 2→3): 6 effective, 10 ineffective, 2 harmful
+
+Score: 20.2/38 (53.2%)
+   [PASS] sum_compression: 9.3/10 (93%)
+   [FAIL] sum_fidelity: 5.1/12 (42%)
+      - thesis_capture: 50%
+      - evidence_capture: 50%
+      - no_hallucination: 25%
+   [WARN] sum_exec_value: 5.8/10 (57%)
+      - actionability: 50%
+      - quantification: 50%
+      - declarative_framing: 75%
+   [FAIL] sum_standalone: 0.0/6 (0%)
+[Evaluator] Regression: 53.2% vs best 57.5% (4.4% drop)
+  [Artifact] → .eval_iterations/08ccdb63_20260330_220525/iter_003_content.md
+  [Mask] Iter 1 offloaded (41%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback]   [Regression] Comparing content for sum_fidelity (iter 2 57% → iter 3 42%)...
+[Feedback]   [Regression] Comparing content for sum_exec_value (iter 2 75% → iter 3 57%)...
+[Feedback] Built 9 fix items, 1 preserved, 2 regressions (deterministic)
+  [Feedback] 9 fixes, 1 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: sum_standalone.references_source (0%)
+Editing current draft (53%) [REGRESSION from iter 2 58%] [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 13 embedded critiques across 4 criteria
+  [det] sum_compression: 2.65/10 — Word count: 377 (target: ≤100) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 3→4): 11 effective, 14 ineffective, 2 harmful
+
+Score: 15.4/38 (40.5%)
+   [FAIL] sum_compression: 2.6/10 (27%)
+   [WARN] sum_fidelity: 6.0/12 (50%)
+      - thesis_capture: 50%
+      - evidence_capture: 75%
+      - no_hallucination: 25%
+   [WARN] sum_exec_value: 6.8/10 (68%)
+      - actionability: 75%
+      - quantification: 75%
+      - declarative_framing: 50%
+   [FAIL] sum_standalone: 0.0/6 (0%)
+[Evaluator] Regression: 40.5% vs best 57.5% (17.0% drop)
+  [Artifact] → .eval_iterations/08ccdb63_20260330_220525/iter_004_content.md
+  [Mask] Iter 2 offloaded (58%) → iter_002_content.md
+
+[Stall detected] Stopping after iter 4 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 40.5% (iter 4), Best was: 57.5% (iter 2)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    sum_compression: 38% → best 75%, final 27%
+    sum_exec_value: 48% → best 75%, final 68%
+  PLATEAUED (no significant change):
+    sum_fidelity: 57% → best 57%
+    sum_standalone: 0% → best 0%
+[Loop3] Saved scored rubric: run_08ccdb638c32_20260330_220929
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 57.5% in 4 iter / 244.8s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 21.9/38 (57.5%) | 31.3s
+  → delta: +15.2%
+
+============================================================
+[4/10] sql_ltv_query
+============================================================
+  [baseline] generating…
+  [baseline] 4236 chars | 31 in / 1394 out | 16.1s
+  [baseline] scoring…
+  [baseline] 18.0/36 (50.1%) | scoring 39.9s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Create a SQL query to find the top 10 customers by lifetime ...
+============================================================
+Rubric: explicit (4 criteria, 36pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_221057_b45bcc82.md
+Run ID: b45bcc82_20260330_221057
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 4 criteria
+
+Score: 21.0/36 (58.3%)
+   [WARN] sql_schema: 7.5/10 (75%)
+      - normalization: 75%
+      - refund_modeling: 75%
+      - realistic_columns: 75%
+   [WARN] sql_correctness: 8.1/12 (68%)
+      - aggregation_logic: 75%
+      - grouping: 50%
+      - null_handling: 75%
+   [WARN] sql_readability: 5.4/8 (68%)
+      - cte_usage: 75%
+      - formatting: 50%
+      - documentation: 75%
+   [FAIL] sql_performance: 0.0/6 (0%)
+  [Artifact] → .eval_iterations/b45bcc82_20260330_221057/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 7 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 7 fixes, 0 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: sql_performance.select_star (0%)
+Editing current draft (58%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 1→2): 1 effective, 6 ineffective, 0 harmful
+
+Score: 21.6/36 (60.0%)
+   [WARN] sql_schema: 7.5/10 (75%)
+      - normalization: 75%
+      - refund_modeling: 75%
+      - realistic_columns: 75%
+   [WARN] sql_correctness: 8.1/12 (68%)
+      - aggregation_logic: 75%
+      - grouping: 50%
+      - null_handling: 75%
+   [WARN] sql_readability: 6.0/8 (75%)
+      - cte_usage: 75%
+      - formatting: 75%
+      - documentation: 75%
+   [FAIL] sql_performance: 0.0/6 (0%)
+  [Artifact] → .eval_iterations/b45bcc82_20260330_221057/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 6 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 6 fixes, 0 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: sql_performance.select_star (0%)
+Editing current draft (60%) [iter 3/0]...
+  [Adaptive] Plateau detected (58.3% → 60.0%, Δ=1.7%) — injecting meta-prompt to evaluator
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 2→3): 2 effective, 11 ineffective, 0 harmful
+
+Score: 22.5/36 (62.5%)
+   [WARN] sql_schema: 7.5/10 (75%)
+      - normalization: 75%
+      - refund_modeling: 75%
+      - realistic_columns: 75%
+   [WARN] sql_correctness: 9.0/12 (75%)
+      - aggregation_logic: 75%
+      - grouping: 75%
+      - null_handling: 75%
+   [WARN] sql_readability: 6.0/8 (75%)
+      - cte_usage: 75%
+      - formatting: 75%
+      - documentation: 75%
+   [FAIL] sql_performance: 0.0/6 (0%)
+  [Artifact] → .eval_iterations/b45bcc82_20260330_221057/iter_003_content.md
+  [Mask] Iter 1 offloaded (58%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback] Built 5 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 5 fixes, 1 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: sql_performance.select_star (0%)
+Editing current draft (62%) [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 14 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 3→4): 2 effective, 16 ineffective, 0 harmful
+
+Score: 21.0/36 (58.3%)
+   [WARN] sql_schema: 7.5/10 (75%)
+      - normalization: 75%
+      - refund_modeling: 75%
+      - realistic_columns: 75%
+   [WARN] sql_correctness: 8.1/12 (68%)
+      - aggregation_logic: 75%
+      - grouping: 50%
+      - null_handling: 75%
+   [WARN] sql_readability: 5.4/8 (68%)
+      - cte_usage: 75%
+      - formatting: 50%
+      - documentation: 75%
+   [FAIL] sql_performance: 0.0/6 (0%)
+[Evaluator] Regression: 58.3% vs best 62.5% (4.2% drop)
+  [Artifact] → .eval_iterations/b45bcc82_20260330_221057/iter_004_content.md
+  [Mask] Iter 2 offloaded (60%) → iter_002_content.md
+
+[Stall detected] Same focus areas repeated 3 consecutive times (sql_performance.cartesian_join_risk, sql_performance.correlated_subquery, sql_performance.function_on_indexed_column, sql_performance.missing_index_suggestion, sql_performance.select_star) — generation agent is stuck. Stopping.
+
+Loop ended. Last: 58.3% (iter 4), Best was: 62.5% (iter 3)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    sql_correctness: 68% → best 75%, final 68%
+    sql_readability: 68% → best 75%, final 68%
+  PLATEAUED (no significant change):
+    sql_schema: 75% → best 75%
+    sql_performance: 0% → best 0%
+[Loop3] Saved scored rubric: run_b45bcc82104d_20260330_221732
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 62.5% in 4 iter / 394.7s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 21.6/36 (60.0%) | 48.5s
+  → delta: +9.9%
+
+============================================================
+[5/10] agi_counterargument
+============================================================
+  [baseline] generating…
+  [baseline] 1941 chars | 26 in / 385 out | 10.6s
+  [baseline] scoring…
+  [baseline] 12.3/36 (34.3%) | scoring 41.0s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Write a counterargument to the claim 'AGI will arrive before...
+============================================================
+Rubric: explicit (4 criteria, 36pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_221913_b888f9bf.md
+Run ID: b888f9bf_20260330_221913
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+  [det] arg_readability: 6.0/6 — Word count: 608 (target: ≤800) ✓
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+
+Score: 21.2/36 (59.0%)
+   [WARN] arg_steelman: 7.0/10 (70%)
+      - steelman_quality: 75%
+      - specific_evidence: 75%
+      - good_faith: 50%
+   [WARN] arg_counter_quality: 8.2/12 (69%)
+      - argument_count: 75%
+      - definitional_challenge: 75%
+      - empirical_grounding: 75%
+      - structural_barriers: 50%
+   [FAIL] arg_nuance: 0.0/8 (0%)
+   [PASS] arg_readability: 6.0/6 (100%)
+  [Artifact] → .eval_iterations/b888f9bf_20260330_221913/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 7 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 7 fixes, 1 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: arg_nuance.absolutist_claim (0%)
+Editing current draft (59%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+  [det] arg_readability: 6.0/6 — Word count: 774 (target: ≤800) ✓
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 1→2): 2 effective, 5 ineffective, 0 harmful
+
+Score: 22.5/36 (62.5%)
+   [WARN] arg_steelman: 7.5/10 (75%)
+      - steelman_quality: 75%
+      - specific_evidence: 75%
+      - good_faith: 75%
+   [WARN] arg_counter_quality: 9.0/12 (75%)
+      - argument_count: 75%
+      - definitional_challenge: 75%
+      - empirical_grounding: 75%
+      - structural_barriers: 75%
+   [FAIL] arg_nuance: 0.0/8 (0%)
+   [PASS] arg_readability: 6.0/6 (100%)
+  [Artifact] → .eval_iterations/b888f9bf_20260330_221913/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 5 fix items, 3 preserved, 0 regressions (deterministic)
+  [Feedback] 5 fixes, 3 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: arg_nuance.absolutist_claim (0%)
+Editing current draft (62%) [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+  [det] arg_readability: 4.51/6 — Word count: 1,065 (target: ≤800) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 2→3): 2 effective, 10 ineffective, 0 harmful
+
+Score: 21.0/36 (58.4%)
+   [WARN] arg_steelman: 7.5/10 (75%)
+      - steelman_quality: 75%
+      - specific_evidence: 75%
+      - good_faith: 75%
+   [WARN] arg_counter_quality: 9.0/12 (75%)
+      - argument_count: 75%
+      - definitional_challenge: 75%
+      - empirical_grounding: 75%
+      - structural_barriers: 75%
+   [FAIL] arg_nuance: 0.0/8 (0%)
+   [WARN] arg_readability: 4.5/6 (75%)
+[Evaluator] Regression: 58.4% vs best 62.5% (4.1% drop)
+  [Artifact] → .eval_iterations/b888f9bf_20260330_221913/iter_003_content.md
+  [Mask] Iter 1 offloaded (59%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback]   [Regression] Comparing content for arg_readability (iter 2 100% → iter 3 75%)...
+[Feedback] Built 5 fix items, 3 preserved, 1 regressions (deterministic)
+  [Feedback] 5 fixes, 3 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: arg_nuance.absolutist_claim (0%)
+Editing current draft (58%) [REGRESSION from iter 2 62%] [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+  [det] arg_readability: 5.0/6 — Word count: 960 (target: ≤800) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 3→4): 2 effective, 15 ineffective, 0 harmful
+
+Score: 21.5/36 (59.7%)
+   [WARN] arg_steelman: 7.5/10 (75%)
+      - steelman_quality: 75%
+      - specific_evidence: 75%
+      - good_faith: 75%
+   [WARN] arg_counter_quality: 9.0/12 (75%)
+      - argument_count: 75%
+      - definitional_challenge: 75%
+      - empirical_grounding: 75%
+      - structural_barriers: 75%
+   [FAIL] arg_nuance: 0.0/8 (0%)
+   [PASS] arg_readability: 5.0/6 (83%)
+  [Artifact] → .eval_iterations/b888f9bf_20260330_221913/iter_004_content.md
+  [Mask] Iter 2 offloaded (62%) → iter_002_content.md
+
+[Stall detected] Stopping after iter 4 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 59.7% (iter 4), Best was: 62.5% (iter 2)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    arg_counter_quality: 69% → best 75%, final 75%
+    arg_steelman: 70% → best 75%, final 75%
+  PLATEAUED (no significant change):
+    arg_nuance: 0% → best 0%
+    arg_readability: 100% → best 100%
+[Loop3] Saved scored rubric: run_b888f9bf4feb_20260330_222536
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 62.5% in 4 iter / 383.2s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 22.5/36 (62.5%) | 53.2s
+  → delta: +28.2%
+
+============================================================
+[6/10] billing_schema
+============================================================
+  [baseline] generating…
+  [baseline] 14365 chars | 30 in / 4096 out | 38.4s
+  [baseline] scoring…
+  [baseline] 19.1/38 (50.1%) | scoring 45.2s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Design a JSON schema for a multi-tenant SaaS billing system ...
+============================================================
+Rubric: explicit (4 criteria, 38pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_222753_c16ed719.md
+Run ID: c16ed719_20260330_222753
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+
+Score: 20.6/38 (54.1%)
+   [WARN] schema_completeness: 9.0/12 (75%)
+      - entity_coverage: 75%
+      - pricing_model_support: 75%
+      - billing_lifecycle: 75%
+   [WARN] schema_correctness: 6.8/10 (68%)
+      - schema_validity: 50%
+      - ref_usage: 75%
+      - constraint_quality: 75%
+   [WARN] schema_extensibility: 4.8/8 (60%)
+      - metered_extensibility: 75%
+      - metadata_support: 50%
+      - versioning: 50%
+   [FAIL] schema_realworld: 0.0/8 (0%)
+  [Artifact] → .eval_iterations/c16ed719_20260330_222753/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 9 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 9 fixes, 0 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: schema_realworld.no_currency_handling (0%)
+Editing current draft (54%) [iter 2/0]...
+  [ERROR] billing_schema: Expecting value: line 1 column 1 (char 0)
+
+============================================================
+[7/10] attention_explanation
+============================================================
+  [baseline] generating…
+  [baseline] 3559 chars | 21 in / 820 out | 21.3s
+  [baseline] scoring…
+  [baseline] 24.4/36 (67.9%) | scoring 52.4s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Explain transformer attention mechanisms to a smart 16-year-...
+============================================================
+Rubric: explicit (4 criteria, 36pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_223742_7fa8e462.md
+Run ID: 7fa8e462_20260330_223742
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 5.23/8 — Word count: 917 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+
+Score: 22.6/36 (62.7%)
+   [WARN] expl_accuracy: 8.0/12 (66%)
+      - qkv_correctness: 75%
+      - attention_math: 50%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [WARN] expl_engagement: 5.2/8 (65%)
+   [WARN] expl_completeness: 3.5/6 (59%)
+      - motivation: 75%
+      - mechanism: 50%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 7 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 7 fixes, 0 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: expl_accuracy.attention_math (50%)
+Editing current draft (63%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 5.59/8 — Word count: 858 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 1→2): 0 effective, 6 ineffective, 1 harmful
+
+Score: 19.9/36 (55.4%)
+   [FAIL] expl_accuracy: 5.0/12 (41%)
+      - qkv_correctness: 50%
+      - attention_math: 25%
+      - multihead_purpose: 50%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [WARN] expl_engagement: 5.6/8 (70%)
+   [WARN] expl_completeness: 3.5/6 (59%)
+      - motivation: 75%
+      - mechanism: 50%
+      - significance: 50%
+[Evaluator] Regression: 55.4% vs best 62.7% (7.3% drop)
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback]   [Regression] Comparing content for expl_accuracy (iter 1 66% → iter 2 41%)...
+[Feedback] Built 9 fix items, 0 preserved, 1 regressions (deterministic)
+  [Feedback] 9 fixes, 0 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: expl_accuracy.attention_math (25%)
+Editing current draft (55%) [REGRESSION from iter 1 63%] [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 5.18/8 — Word count: 926 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 2→3): 5 effective, 8 ineffective, 3 harmful
+
+Score: 23.1/36 (64.0%)
+   [WARN] expl_accuracy: 8.0/12 (66%)
+      - qkv_correctness: 75%
+      - attention_math: 50%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [WARN] expl_engagement: 5.2/8 (65%)
+   [WARN] expl_completeness: 4.0/6 (68%)
+      - motivation: 75%
+      - mechanism: 75%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_003_content.md
+  [Mask] Iter 1 offloaded (63%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback] Built 6 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 6 fixes, 0 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: expl_accuracy.attention_math (50%)
+Editing current draft (64%) [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 6.68/8 — Word count: 719 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 3→4): 7 effective, 12 ineffective, 3 harmful
+
+Score: 24.6/36 (68.2%)
+   [WARN] expl_accuracy: 8.0/12 (66%)
+      - qkv_correctness: 75%
+      - attention_math: 50%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [PASS] expl_engagement: 6.7/8 (83%)
+   [WARN] expl_completeness: 4.0/6 (68%)
+      - motivation: 75%
+      - mechanism: 75%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_004_content.md
+  [Mask] Iter 2 offloaded (55%) → iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 4)...
+[Feedback] Built 4 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 4 fixes, 1 preserved
+  [Feedback] Persisted → iter_005_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 5 (threshold: 85%)
+Focus: expl_accuracy.attention_math (50%)
+Editing current draft (68%) [iter 5/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 5.57/8 — Word count: 861 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 4→5): 7 effective, 16 ineffective, 3 harmful
+
+Score: 23.6/36 (65.5%)
+   [WARN] expl_accuracy: 8.1/12 (68%)
+      - qkv_correctness: 75%
+      - attention_math: 75%
+      - multihead_purpose: 50%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [WARN] expl_engagement: 5.6/8 (70%)
+   [WARN] expl_completeness: 4.0/6 (68%)
+      - motivation: 75%
+      - mechanism: 75%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_005_content.md
+  [Mask] Iter 3 offloaded (64%) → iter_003_content.md
+[Feedback] Building deterministic feedback (iteration 5)...
+[Feedback]   [Regression] Comparing content for expl_engagement (iter 4 83% → iter 5 70%)...
+[Feedback] Built 6 fix items, 0 preserved, 1 regressions (deterministic)
+  [Feedback] 6 fixes, 0 preserved
+  [Feedback] Persisted → iter_006_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 6 (threshold: 85%)
+Focus: expl_accuracy.multihead_purpose (50%)
+Editing current draft (66%) [REGRESSION from iter 4 68%] [iter 6/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 7.78/8 — Word count: 617 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 5→6): 11 effective, 17 ineffective, 4 harmful
+
+Score: 25.9/36 (71.9%)
+   [WARN] expl_accuracy: 8.0/12 (66%)
+      - qkv_correctness: 75%
+      - attention_math: 50%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 6.6/10 (66%)
+      - jargon_handling: 75%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [PASS] expl_engagement: 7.8/8 (97%)
+   [WARN] expl_completeness: 3.5/6 (59%)
+      - motivation: 75%
+      - mechanism: 50%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_006_content.md
+  [Mask] Iter 4 offloaded (68%) → iter_004_content.md
+[Feedback] Building deterministic feedback (iteration 6)...
+[Feedback] Built 4 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 4 fixes, 1 preserved
+  [Feedback] Persisted → iter_007_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 7 (threshold: 85%)
+Focus: expl_accuracy.attention_math (50%)
+Editing current draft (72%) [iter 7/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 5.95/8 — Word count: 807 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 6→7): 14 effective, 17 ineffective, 5 harmful
+
+Score: 24.9/36 (69.1%)
+   [WARN] expl_accuracy: 9.0/12 (75%)
+      - qkv_correctness: 75%
+      - attention_math: 75%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [WARN] expl_engagement: 6.0/8 (74%)
+   [WARN] expl_completeness: 4.0/6 (68%)
+      - motivation: 75%
+      - mechanism: 75%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_007_content.md
+  [Mask] Iter 5 offloaded (66%) → iter_005_content.md
+[Feedback] Building deterministic feedback (iteration 7)...
+[Feedback]   [Regression] Comparing content for expl_accessibility (iter 6 66% → iter 7 59%)...
+[Feedback]   [Regression] Comparing content for expl_engagement (iter 6 97% → iter 7 74%)...
+[Feedback] Built 5 fix items, 0 preserved, 2 regressions (deterministic)
+  [Feedback] 5 fixes, 0 preserved
+  [Feedback] Persisted → iter_008_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 8 (threshold: 85%)
+Focus: expl_accessibility.jargon_handling (50%)
+Editing current draft (69%) [REGRESSION from iter 6 72%] [iter 8/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 12 embedded critiques across 4 criteria
+  [det] expl_engagement: 7.13/8 — Word count: 673 (target: ≤600) ✗
+  Scoring breakdown: 1 deterministic, 3 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 7→8): 16 effective, 20 ineffective, 5 harmful
+
+Score: 25.0/36 (69.4%)
+   [WARN] expl_accuracy: 8.0/12 (66%)
+      - qkv_correctness: 75%
+      - attention_math: 50%
+      - multihead_purpose: 75%
+   [WARN] expl_accessibility: 5.9/10 (59%)
+      - jargon_handling: 50%
+      - analogy_quality: 75%
+      - progressive_complexity: 50%
+   [PASS] expl_engagement: 7.1/8 (89%)
+   [WARN] expl_completeness: 4.0/6 (68%)
+      - motivation: 75%
+      - mechanism: 75%
+      - significance: 50%
+  [Artifact] → .eval_iterations/7fa8e462_20260330_223742/iter_008_content.md
+  [Mask] Iter 6 offloaded (72%) → iter_006_content.md
+
+[Stall detected] Stopping after iter 8 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 69.4% (iter 8), Best was: 71.9% (iter 6)
+
+Per-criterion delta analysis (8 iterations):
+  IMPROVED (feedback effective):
+    expl_engagement: 65% → best 97%, final 89%
+    expl_accessibility: 59% → best 66%, final 59%
+  PLATEAUED (no significant change):
+    expl_accuracy: 66% → best 66%
+    expl_completeness: 59% → best 59%
+[Loop3] Saved scored rubric: run_7fa8e462ff7a_20260330_225544
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+[RegressionSuite] Added entry for task (score: 71.9%, 4 criteria)
+[RegressionSuite] Entry added/updated (score: 71.9%, 4 criteria)
+  [harness] loop done: 71.9% in 8 iter / 1081.9s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 25.7/36 (71.2%) | 57.7s
+  → delta: +3.4%
+
+============================================================
+[8/10] startup_naming
+============================================================
+  [baseline] generating…
+  [baseline] 842 chars | 28 in / 200 out | 5.1s
+  [baseline] scoring…
+  [baseline] 17.2/36 (47.9%) | scoring 49.9s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Generate 5 names for a startup that does AI-powered contract...
+============================================================
+Rubric: explicit (5 criteria, 36pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_225738_643cd4ad.md
+Run ID: 643cd4ad_20260330_225738
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 11 embedded critiques across 5 criteria
+
+Score: 21.8/36 (60.4%)
+   [FAIL] name_count: 0.0/4 (0%)
+   [WARN] name_memorability: 6.8/10 (68%)
+      - pronounceability: 75%
+      - brevity: 50%
+      - distinctiveness: 75%
+   [WARN] name_domain_resonance: 6.8/10 (68%)
+      - domain_signal: 75%
+      - avoids_generic_ai: 75%
+      - trust_register: 50%
+   [WARN] name_availability: 3.8/6 (62%)
+      - domain_plausibility: 50%
+      - no_trademark_conflicts: 75%
+   [WARN] name_variety: 4.5/6 (75%)
+      - strategy_diversity: 75%
+      - range_of_tone: 75%
+  [Artifact] → .eval_iterations/643cd4ad_20260330_225738/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 3 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 3 fixes, 1 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: name_memorability.brevity (50%)
+Editing current draft (60%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 10 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 1→2): 1 effective, 1 ineffective, 1 harmful
+
+Score: 21.8/36 (60.4%)
+   [FAIL] name_count: 0.0/4 (0%)
+   [WARN] name_memorability: 6.8/10 (68%)
+      - pronounceability: 75%
+      - brevity: 50%
+      - distinctiveness: 75%
+   [WARN] name_domain_resonance: 7.5/10 (75%)
+      - domain_signal: 75%
+      - avoids_generic_ai: 75%
+      - trust_register: 75%
+   [WARN] name_availability: 3.0/6 (50%)
+      - domain_plausibility: 50%
+      - no_trademark_conflicts: 50%
+   [WARN] name_variety: 4.5/6 (75%)
+      - strategy_diversity: 75%
+      - range_of_tone: 75%
+  [Artifact] → .eval_iterations/643cd4ad_20260330_225738/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback]   [Regression] Comparing content for name_availability (iter 1 62% → iter 2 50%)...
+[Feedback] Built 4 fix items, 2 preserved, 1 regressions (deterministic)
+  [Feedback] 4 fixes, 2 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: name_memorability.brevity (50%)
+Editing current draft (60%) [iter 3/0]...
+  [Adaptive] Plateau detected (60.4% → 60.4%, Δ=0.0%) — injecting meta-prompt to evaluator
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 10 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 2→3): 1 effective, 4 ineffective, 2 harmful
+
+Score: 20.2/36 (56.2%)
+   [FAIL] name_count: 0.0/4 (0%)
+   [WARN] name_memorability: 6.0/10 (60%)
+      - pronounceability: 75%
+      - brevity: 50%
+      - distinctiveness: 50%
+   [WARN] name_domain_resonance: 7.5/10 (75%)
+      - domain_signal: 75%
+      - avoids_generic_ai: 75%
+      - trust_register: 75%
+   [WARN] name_availability: 3.0/6 (50%)
+      - domain_plausibility: 50%
+      - no_trademark_conflicts: 50%
+   [WARN] name_variety: 3.8/6 (62%)
+      - strategy_diversity: 75%
+      - range_of_tone: 50%
+[Evaluator] Regression: 56.2% vs best 60.4% (4.2% drop)
+  [Artifact] → .eval_iterations/643cd4ad_20260330_225738/iter_003_content.md
+  [Mask] Iter 1 offloaded (60%) → iter_001_content.md
+
+[Stall detected] Stopping after iter 3 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 56.2% (iter 3), Best was: 60.4% (iter 1)
+
+Per-criterion delta analysis (3 iterations):
+  PLATEAUED (no significant change):
+    name_count: 0% → best 0%
+    name_memorability: 68% → best 68%
+    name_domain_resonance: 68% → best 68%
+    name_availability: 62% → best 62%
+    name_variety: 75% → best 75%
+[Loop3] Saved scored rubric: run_643cd4adce4c_20260330_230518
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 60.4% in 3 iter / 460.5s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 21.8/36 (60.4%) | 50.1s
+  → delta: +12.5%
+
+============================================================
+[9/10] bash_backup
+============================================================
+  [baseline] generating…
+  [baseline] 12454 chars | 30 in / 3947 out | 49.4s
+  [baseline] scoring…
+  [baseline] 28.0/44 (63.7%) | scoring 52.7s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Write a bash script that backs up a PostgreSQL database to S...
+============================================================
+Rubric: explicit (5 criteria, 44pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_230751_5fbad573.md
+Run ID: 5fbad573_20260330_230751
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 20 embedded critiques across 5 criteria
+
+Score: 20.9/44 (47.4%)
+   [WARN] bash_correctness: 6.0/12 (50%)
+      - dump_command: 50%
+      - compression: 50%
+      - s3_upload: 50%
+      - rotation: 50%
+   [FAIL] bash_safety: 0.0/10 (0%)
+   [WARN] bash_logging: 5.3/8 (66%)
+      - log_function: 75%
+      - log_completeness: 75%
+      - log_destination: 50%
+   [WARN] bash_notifications: 5.5/8 (69%)
+      - notification_impl: 75%
+      - error_context: 75%
+      - configurability: 50%
+   [WARN] bash_configurability: 4.0/6 (68%)
+      - env_var_config: 75%
+      - validation: 50%
+      - help_flag: 75%
+  [Artifact] → .eval_iterations/5fbad573_20260330_230751/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 14 fix items, 0 preserved, 0 regressions (deterministic)
+  [Feedback] 14 fixes, 0 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: bash_safety.no_set_e (0%)
+Editing current draft (47%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 20 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 1→2): 4 effective, 10 ineffective, 0 harmful
+
+Score: 23.9/44 (54.2%)
+   [WARN] bash_correctness: 9.0/12 (75%)
+      - dump_command: 75%
+      - compression: 75%
+      - s3_upload: 75%
+      - rotation: 75%
+   [FAIL] bash_safety: 0.0/10 (0%)
+   [WARN] bash_logging: 5.3/8 (66%)
+      - log_function: 75%
+      - log_completeness: 75%
+      - log_destination: 50%
+   [WARN] bash_notifications: 5.5/8 (69%)
+      - notification_impl: 75%
+      - error_context: 75%
+      - configurability: 50%
+   [WARN] bash_configurability: 4.0/6 (68%)
+      - env_var_config: 75%
+      - validation: 75%
+      - help_flag: 50%
+  [Artifact] → .eval_iterations/5fbad573_20260330_230751/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 10 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 10 fixes, 1 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: bash_safety.no_set_e (0%)
+Editing current draft (54%) [iter 3/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 20 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 2→3): 6 effective, 18 ineffective, 0 harmful
+
+Score: 25.0/44 (56.8%)
+   [WARN] bash_correctness: 9.0/12 (75%)
+      - dump_command: 75%
+      - compression: 75%
+      - s3_upload: 75%
+      - rotation: 75%
+   [FAIL] bash_safety: 0.0/10 (0%)
+   [WARN] bash_logging: 6.0/8 (75%)
+      - log_function: 75%
+      - log_completeness: 75%
+      - log_destination: 75%
+   [WARN] bash_notifications: 5.5/8 (69%)
+      - notification_impl: 75%
+      - error_context: 75%
+      - configurability: 50%
+   [WARN] bash_configurability: 4.5/6 (75%)
+      - env_var_config: 75%
+      - validation: 75%
+      - help_flag: 75%
+  [Artifact] → .eval_iterations/5fbad573_20260330_230751/iter_003_content.md
+  [Mask] Iter 1 offloaded (47%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback] Built 8 fix items, 2 preserved, 0 regressions (deterministic)
+  [Feedback] 8 fixes, 2 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: bash_safety.no_set_e (0%)
+Editing current draft (57%) [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 20 embedded critiques across 5 criteria
+[FeedbackLearning] Fix outcomes (iter 3→4): 7 effective, 25 ineffective, 0 harmful
+
+Score: 15.1/44 (34.3%)
+   [FAIL] bash_correctness: 0.0/12 (0%)
+      - dump_command: 0%
+      - compression: 0%
+      - s3_upload: 0%
+      - rotation: 0%
+   [FAIL] bash_safety: 0.0/10 (0%)
+   [WARN] bash_logging: 4.6/8 (57%)
+      - log_function: 75%
+      - log_completeness: 25%
+      - log_destination: 75%
+   [WARN] bash_notifications: 6.0/8 (75%)
+      - notification_impl: 75%
+      - error_context: 75%
+      - configurability: 75%
+   [WARN] bash_configurability: 4.5/6 (75%)
+      - env_var_config: 75%
+      - validation: 75%
+      - help_flag: 75%
+[Evaluator] Regression: 34.3% vs best 56.8% (22.5% drop)
+  [Artifact] → .eval_iterations/5fbad573_20260330_230751/iter_004_content.md
+  [Mask] Iter 2 offloaded (54%) → iter_002_content.md
+
+[Stall detected] Same focus areas repeated 3 consecutive times (bash_safety.hardcoded_password, bash_safety.no_pipefail, bash_safety.no_set_e, bash_safety.no_temp_file_cleanup, bash_safety.no_trap_cleanup) — generation agent is stuck. Stopping.
+
+Loop ended. Last: 34.3% (iter 4), Best was: 56.8% (iter 3)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    bash_correctness: 50% → best 75%, final 0%
+    bash_logging: 66% → best 75%, final 57%
+    bash_configurability: 68% → best 75%, final 75%
+  PLATEAUED (no significant change):
+    bash_safety: 0% → best 0%
+    bash_notifications: 69% → best 69%
+[Loop3] Saved scored rubric: run_5fbad5735151_20260330_232032
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 56.8% in 4 iter / 760.8s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 25.0/44 (56.8%) | 52.7s
+  → delta: -6.9%
+
+============================================================
+[10/10] investment_memo
+============================================================
+  [baseline] generating…
+  [baseline] 2254 chars | 27 in / 543 out | 14.4s
+  [baseline] scoring…
+  [baseline] 15.7/44 (35.7%) | scoring 68.4s
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Draft a 1-page investment memo on a hypothetical Series A co...
+============================================================
+Rubric: explicit (5 criteria, 44pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_232248_62a29398.md
+Run ID: 62a29398_20260330_232248
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 5 criteria
+  [det] memo_structure: 9.8/10 — Word count: 490 (target: 500–700) ✗
+  Scoring breakdown: 1 deterministic, 4 LLM-scored
+
+Score: 34.5/44 (78.5%)
+   [PASS] memo_structure: 9.8/10 (98%)
+   [WARN] memo_market: 6.8/10 (68%)
+      - market_specificity: 75%
+      - credible_sizing: 50%
+      - tailwind_identification: 75%
+   [WARN] memo_thesis: 7.5/10 (75%)
+      - insight_clarity: 75%
+      - team_match: 75%
+      - timing_catalyst: 75%
+   [WARN] memo_risks: 6.0/8 (75%)
+      - risk_quality: 75%
+      - risk_coverage: 75%
+      - mitigants: 75%
+   [WARN] memo_deal_terms: 4.5/6 (75%)
+      - completeness: 75%
+      - stage_appropriateness: 75%
+      - use_of_funds: 75%
+  [Artifact] → .eval_iterations/62a29398_20260330_232248/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 1 fix items, 4 preserved, 0 regressions (deterministic)
+  [Feedback] 1 fixes, 4 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: memo_market.credible_sizing (50%)
+Editing current draft (79%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 5 criteria
+  [det] memo_structure: 10.0/10 — Word count: 504 (target: 500–700) ✓
+  Scoring breakdown: 1 deterministic, 4 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 1→2): 0 effective, 1 ineffective, 0 harmful
+
+Score: 34.3/44 (78.0%)
+   [PASS] memo_structure: 10.0/10 (100%)
+   [WARN] memo_market: 6.8/10 (68%)
+      - market_specificity: 75%
+      - credible_sizing: 50%
+      - tailwind_identification: 75%
+   [WARN] memo_thesis: 7.5/10 (75%)
+      - insight_clarity: 75%
+      - team_match: 75%
+      - timing_catalyst: 75%
+   [WARN] memo_risks: 6.0/8 (75%)
+      - risk_quality: 75%
+      - risk_coverage: 75%
+      - mitigants: 75%
+   [WARN] memo_deal_terms: 4.0/6 (68%)
+      - completeness: 75%
+      - stage_appropriateness: 50%
+      - use_of_funds: 75%
+  [Artifact] → .eval_iterations/62a29398_20260330_232248/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback]   [Regression] Comparing content for memo_deal_terms (iter 1 75% → iter 2 68%)...
+[Feedback] Built 2 fix items, 3 preserved, 1 regressions (deterministic)
+  [Feedback] 2 fixes, 3 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: memo_market.credible_sizing (50%)
+Editing current draft (78%) [REGRESSION from iter 1 79%] [iter 3/0]...
+  [Adaptive] Plateau detected (78.5% → 78.0%, Δ=0.6%) — injecting meta-prompt to evaluator
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 5 criteria
+  [det] memo_structure: 10.0/10 — Word count: 651 (target: 500–700) ✓
+  Scoring breakdown: 1 deterministic, 4 LLM-scored
+[FeedbackLearning] Fix outcomes (iter 2→3): 0 effective, 3 ineffective, 0 harmful
+
+Score: 33.5/44 (76.2%)
+   [PASS] memo_structure: 10.0/10 (100%)
+   [WARN] memo_market: 6.8/10 (68%)
+      - market_specificity: 75%
+      - credible_sizing: 50%
+      - tailwind_identification: 75%
+   [WARN] memo_thesis: 7.5/10 (75%)
+      - insight_clarity: 75%
+      - team_match: 75%
+      - timing_catalyst: 75%
+   [WARN] memo_risks: 5.4/8 (68%)
+      - risk_quality: 75%
+      - risk_coverage: 50%
+      - mitigants: 75%
+   [WARN] memo_deal_terms: 3.9/6 (65%)
+      - completeness: 50%
+      - stage_appropriateness: 75%
+      - use_of_funds: 75%
+  [Artifact] → .eval_iterations/62a29398_20260330_232248/iter_003_content.md
+  [Mask] Iter 1 offloaded (79%) → iter_001_content.md
+
+[Stall detected] Stopping after iter 3 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 76.2% (iter 3), Best was: 78.5% (iter 1)
+
+Per-criterion delta analysis (3 iterations):
+  PLATEAUED (no significant change):
+    memo_structure: 98% → best 98%
+    memo_market: 68% → best 68%
+    memo_thesis: 75% → best 75%
+    memo_risks: 75% → best 75%
+    memo_deal_terms: 75% → best 75%
+[Loop3] Saved scored rubric: run_62a29398e87c_20260330_232856
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+[RegressionSuite] Added entry for task (score: 78.5%, 5 criteria)
+[RegressionSuite] Entry added/updated (score: 78.5%, 5 criteria)
+  [harness] loop done: 78.5% in 3 iter / 367.6s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 34.5/44 (78.5%) | 60.1s
+  → delta: +42.8%
+
+[done] JSON results → eval_results_run8.json
+[done] Markdown report → eval_results_run8.md
+
+── Aggregate Results ──────────────────────
+  Tasks evaluated : 9
+  Mean lift       : +13.2%
+  Median lift     : +12.5%
+  Std dev         : 15.0%
+  Improved / total: 7/9
+  Baseline avg %  : 49.0%
+  Harness avg %   : 62.1%
+──────────────────────────────────────────
+
+[atexit] saved 10 results to eval_results_run8.json
+[Mon Mar 30 23:30:09 UTC 2026] Tasks complete: 9/10
+[Mon Mar 30 23:30:09 UTC 2026] Restarting in 5s...
+[Mon Mar 30 23:30:14 UTC 2026] Starting eval (--resume)...
+Eval harness — rubric loop vs. vanilla Claude
+  Model:    claude-sonnet-4-20250514
+  Tasks:    10 (cold_outreach_email, csv_parser, exec_summary, sql_ltv_query, agi_counterargument, billing_schema, attention_explanation, startup_naming, bash_backup, investment_memo)
+  Max iter: 0
+  Output:   eval_results_run8.json
+  Mode:     full
+  Resume:   yes
+[resume] loaded 10 existing results from eval_results_run8.json
+
+============================================================
+[1/10] cold_outreach_email
+============================================================
+  [skip] baseline already done (50.7%)
+  [skip] harness already done (50.7%)
+
+============================================================
+[2/10] csv_parser
+============================================================
+  [skip] baseline already done (47.2%)
+  [skip] harness already done (61.4%)
+
+============================================================
+[3/10] exec_summary
+============================================================
+  [skip] baseline already done (42.4%)
+  [skip] harness already done (57.5%)
+
+============================================================
+[4/10] sql_ltv_query
+============================================================
+  [skip] baseline already done (50.1%)
+  [skip] harness already done (60.0%)
+
+============================================================
+[5/10] agi_counterargument
+============================================================
+  [skip] baseline already done (34.3%)
+  [skip] harness already done (62.5%)
+
+============================================================
+[6/10] billing_schema
+============================================================
+  [skip] baseline already done (50.1%)
+  [harness] starting loop (max_iter=0)…
+
+============================================================
+Task: Design a JSON schema for a multi-tenant SaaS billing system ...
+============================================================
+Rubric: explicit (4 criteria, 38pts)
+
+[Sprint Contract] Skipped (--skip-negotiation).
+Rubric saved: rubrics/rubric_2026-03-30_233016_c16ed719.md
+Run ID: c16ed719_20260330_233016
+
+──────────────────────────────────────────────────
+Iteration 1 (threshold: 85%)
+Generating content...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+
+Score: 21.9/38 (57.6%)
+   [WARN] schema_completeness: 9.0/12 (75%)
+      - entity_coverage: 75%
+      - pricing_model_support: 75%
+      - billing_lifecycle: 75%
+   [WARN] schema_correctness: 7.5/10 (75%)
+      - schema_validity: 75%
+      - ref_usage: 75%
+      - constraint_quality: 75%
+   [WARN] schema_extensibility: 5.4/8 (68%)
+      - metered_extensibility: 75%
+      - metadata_support: 75%
+      - versioning: 50%
+   [FAIL] schema_realworld: 0.0/8 (0%)
+  [Artifact] → .eval_iterations/c16ed719_20260330_233016/iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 1)...
+[Feedback] Built 7 fix items, 1 preserved, 0 regressions (deterministic)
+  [Feedback] 7 fixes, 1 preserved
+  [Feedback] Persisted → iter_002_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 2 (threshold: 85%)
+Focus: schema_realworld.no_currency_handling (0%)
+Editing current draft (58%) [iter 2/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 1→2): 1 effective, 6 ineffective, 0 harmful
+
+Score: 22.5/38 (59.2%)
+   [WARN] schema_completeness: 9.0/12 (75%)
+      - entity_coverage: 75%
+      - pricing_model_support: 75%
+      - billing_lifecycle: 75%
+   [WARN] schema_correctness: 7.5/10 (75%)
+      - schema_validity: 75%
+      - ref_usage: 75%
+      - constraint_quality: 75%
+   [WARN] schema_extensibility: 6.0/8 (75%)
+      - metered_extensibility: 75%
+      - metadata_support: 75%
+      - versioning: 75%
+   [FAIL] schema_realworld: 0.0/8 (0%)
+  [Artifact] → .eval_iterations/c16ed719_20260330_233016/iter_002_content.md
+[Feedback] Building deterministic feedback (iteration 2)...
+[Feedback] Built 6 fix items, 2 preserved, 0 regressions (deterministic)
+  [Feedback] 6 fixes, 2 preserved
+  [Feedback] Persisted → iter_003_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 3 (threshold: 85%)
+Focus: schema_realworld.no_currency_handling (0%)
+Editing current draft (59%) [iter 3/0]...
+  [Adaptive] Plateau detected (57.6% → 59.2%, Δ=1.6%) — injecting meta-prompt to evaluator
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 2→3): 1 effective, 12 ineffective, 0 harmful
+
+Score: 20.5/38 (54.0%)
+   [WARN] schema_completeness: 9.0/12 (75%)
+      - entity_coverage: 75%
+      - pricing_model_support: 75%
+      - billing_lifecycle: 75%
+   [WARN] schema_correctness: 6.1/10 (61%)
+      - schema_validity: 50%
+      - ref_usage: 50%
+      - constraint_quality: 75%
+   [WARN] schema_extensibility: 5.4/8 (68%)
+      - metered_extensibility: 75%
+      - metadata_support: 50%
+      - versioning: 75%
+   [FAIL] schema_realworld: 0.0/8 (0%)
+[Evaluator] Regression: 54.0% vs best 59.2% (5.2% drop)
+  [Artifact] → .eval_iterations/c16ed719_20260330_233016/iter_003_content.md
+  [Mask] Iter 1 offloaded (58%) → iter_001_content.md
+[Feedback] Building deterministic feedback (iteration 3)...
+[Feedback]   [Regression] Comparing content for schema_correctness (iter 2 75% → iter 3 61%)...
+[Feedback]   [Regression] Comparing content for schema_extensibility (iter 2 75% → iter 3 68%)...
+[Feedback] Built 9 fix items, 0 preserved, 2 regressions (deterministic)
+  [Feedback] 9 fixes, 0 preserved
+  [Feedback] Persisted → iter_004_feedback.json
+
+──────────────────────────────────────────────────
+Iteration 4 (threshold: 85%)
+Focus: schema_realworld.no_currency_handling (0%)
+Editing current draft (54%) [REGRESSION from iter 2 59%] [iter 4/0]...
+[Scorer] Scoring content (isolated agent)...
+[Scorer] Captured 15 embedded critiques across 4 criteria
+[FeedbackLearning] Fix outcomes (iter 3→4): 4 effective, 18 ineffective, 0 harmful
+
+Score: 22.5/38 (59.2%)
+   [WARN] schema_completeness: 9.0/12 (75%)
+      - entity_coverage: 75%
+      - pricing_model_support: 75%
+      - billing_lifecycle: 75%
+   [WARN] schema_correctness: 7.5/10 (75%)
+      - schema_validity: 75%
+      - ref_usage: 75%
+      - constraint_quality: 75%
+   [WARN] schema_extensibility: 6.0/8 (75%)
+      - metered_extensibility: 75%
+      - metadata_support: 75%
+      - versioning: 75%
+   [FAIL] schema_realworld: 0.0/8 (0%)
+  [Artifact] → .eval_iterations/c16ed719_20260330_233016/iter_004_content.md
+  [Mask] Iter 2 offloaded (59%) → iter_002_content.md
+
+[Stall detected] Stopping after iter 4 — no improvement for 2 consecutive iterations
+
+Loop ended. Last: 59.2% (iter 4), Best was: 59.2% (iter 2)
+
+Per-criterion delta analysis (4 iterations):
+  IMPROVED (feedback effective):
+    schema_extensibility: 68% → best 75%, final 75%
+  PLATEAUED (no significant change):
+    schema_completeness: 75% → best 75%
+    schema_correctness: 75% → best 75%
+    schema_realworld: 0% → best 0%
+[Loop3] Saved scored rubric: run_c16ed71934f5_20260330_233934
+[RubricRAG] Saved rubric to retrieval store
+[RubricRAG] Saved per-criterion effectiveness metadata
+[OutcomeTracker] Git scan found 0 outcome signals
+  [harness] loop done: 59.2% in 4 iter / 558.5s
+  [harness] re-scoring final output for fair comparison…
+  [harness] re-scored: 22.5/38 (59.2%) | 51.9s
+  → delta: +9.1%
+
+============================================================
+[7/10] attention_explanation
+============================================================
+  [skip] baseline already done (67.9%)
+  [skip] harness already done (71.2%)
+
+============================================================
+[8/10] startup_naming
+============================================================
+  [skip] baseline already done (47.9%)
+  [skip] harness already done (60.4%)
+
+============================================================
+[9/10] bash_backup
+============================================================
+  [skip] baseline already done (63.7%)
+  [skip] harness already done (56.8%)
+
+============================================================
+[10/10] investment_memo
+============================================================
+  [skip] baseline already done (35.7%)
+  [skip] harness already done (78.5%)
+
+[done] JSON results → eval_results_run8.json
+[done] Markdown report → eval_results_run8.md
+
+── Aggregate Results ──────────────────────
+  Tasks evaluated : 10
+  Mean lift       : +12.8%
+  Median lift     : +11.2%
+  Std dev         : 14.2%
+  Improved / total: 8/10
+  Baseline avg %  : 49.0%
+  Harness avg %   : 61.8%
+──────────────────────────────────────────
+
+[atexit] saved 10 results to eval_results_run8.json
+[Mon Mar 30 23:40:45 UTC 2026] Tasks complete: 10/10
+[Mon Mar 30 23:40:45 UTC 2026] All tasks done. Exiting.

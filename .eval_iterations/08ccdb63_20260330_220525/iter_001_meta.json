@@ -1,0 +1,36 @@
+{
+  "run_id": "08ccdb63_20260330_220525",
+  "iteration": 1,
+  "total_score": 15.440000000000001,
+  "max_score": 38,
+  "percentage": 0.40631578947368424,
+  "delta_from_prior": null,
+  "focus_areas": [],
+  "content_path": ".eval_iterations/08ccdb63_20260330_220525/iter_001_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "sum_compression",
+      "points_earned": 3.79,
+      "max_points": 10,
+      "percentage": 0.3787878787878788
+    },
+    {
+      "criterion_id": "sum_fidelity",
+      "points_earned": 6.9,
+      "max_points": 12,
+      "percentage": 0.575
+    },
+    {
+      "criterion_id": "sum_exec_value",
+      "points_earned": 4.75,
+      "max_points": 10,
+      "percentage": 0.475
+    },
+    {
+      "criterion_id": "sum_standalone",
+      "points_earned": 0,
+      "max_points": 6,
+      "percentage": 0.0
+    }
+  ]
+}

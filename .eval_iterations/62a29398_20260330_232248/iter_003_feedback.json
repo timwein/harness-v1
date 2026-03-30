@@ -1,0 +1,25 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 2 failing sub-attributes (4.8 pts recoverable), 3 passing. 1 regressions detected \u2014 recovery is top priority.\n\n==================================================\nREGRESSIONS (RECOVER THESE FIRST \u2014 highest priority):\n==================================================\n\n  REGRESSED: memo_deal_terms \u2014 was 75% at iter 1, now 68% (-8%)\n    What was lost: The detailed use of funds breakdown that was present in the best version. The best version included specific information about funding allocation, while the current version cuts off abruptly in the 'Key Risks & Mitigants' section without completing the memo or providing any use of funds information.\n    Why it dropped: The current version appears to be truncated or incomplete - it ends mid-sentence in the mitigants section and never includes a use of funds breakdown, which is a key component of the memo_deal_terms criterion. This directly impacts the 'use_of_funds' measurement, causing the score to drop from 75% to 68%.\n    \u2192 RECOVER: Complete the memo by finishing the 'Key Risks & Mitigants' section and add a dedicated 'Use of Funds' section that provides a specific breakdown of how the $20M Series A will be allocated across categories like R&D, regulatory compliance, team expansion, and go-to-market activities with specific dollar amounts and percentages.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 memo_thesis: 75% \u2014 keep unchanged\n  \u2713 memo_risks: 75% \u2014 keep unchanged\n  \u2713 memo_structure: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: memo_market.credible_sizing (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Market numbers are plausible and multiple data points provided, but no sources are cited to establish credibility of the sizing.\n    Measurement spec: 1.0 if sourced/constructed, 0.5 if asserted, 0.0 if absent\n    Evidence found: Market numbers have cited or constructed basis: Numbers provided but no sources cited; Does content go beyond rubric with independent domain expertise: no evidence of independent insight on market sizing methodology\n    \u2717 FAILED CHECK: Market numbers have cited or constructed basis\n      Evidence: Numbers provided but no sources cited\n    \u2717 FAILED CHECK: Does content go beyond rubric with independent domain expertise\n      Evidence: no evidence of independent insight on market sizing methodology\n    \u2192 ACTION: Add sources for market sizing data, such as '(Source: DoD Budget Request FY26)' or '(Frost & Sullivan Defense Market Report)'.\n\n  FIX 2: memo_deal_terms.stage_appropriateness (current: 50%, 1.8 pts at stake)\n    Scorer's critique: Deal terms are within reasonable ranges for Series A defense startup, though $60M pre-money is at the higher end of the typical range.\n    Measurement spec: 1.0 if realistic, 0.5 if slightly off, 0.0 if unrealistic\n    Evidence found: Does content go beyond rubric with independent domain expertise: no evidence of independent insight on valuation methodology\n    \u2717 FAILED CHECK: Does content go beyond rubric with independent domain expertise\n      Evidence: no evidence of independent insight on valuation methodology\n    \u2192 ACTION: Consider providing valuation justification or comparables to support the $60M pre-money valuation.\n",
+  "focus_areas": [
+    "memo_market",
+    "memo_deal_terms"
+  ],
+  "protected_criteria": [
+    "memo_structure",
+    "memo_thesis",
+    "memo_risks"
+  ],
+  "improvement_targets": [
+    "memo_market",
+    "memo_deal_terms"
+  ],
+  "prior_score": 0.7795,
+  "prior_criterion_scores": {
+    "memo_structure": 1.0,
+    "memo_market": 0.675,
+    "memo_thesis": 0.75,
+    "memo_risks": 0.75,
+    "memo_deal_terms": 0.675
+  }
+}

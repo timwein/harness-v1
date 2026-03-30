@@ -1,0 +1,23 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 6 failing sub-attributes (48.0 pts recoverable), 2 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 schema_correctness: 75% \u2014 keep unchanged\n  \u2713 schema_extensibility: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: schema_realworld.no_currency_handling (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Proper currency handling with ISO 4217 codes and cent-based amounts\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"money\": { \"type\": \"object\", \"properties\": { \"amount\": { \"type\": \"integer\", \"description\": \"Amount in cents (smallest currency unit)\", \"minimum\": 0 }, \"currency\": { \"type\": \"string\", \"pattern\": \"^[A-Z]{3}$\", \"description\": \"ISO 4217 currency code\" } }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: schema_realworld.calculated_total_without_line_items (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Invoices include line_items array\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"line_items\": { \"type\": \"array\", \"items\": { \"$ref\": \"#/definitions/invoice_line_item\" } }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: schema_realworld.no_idempotency (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Usage records include idempotency_key\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"idempotency_key\": { \"type\": \"string\", \"maxLength\": 255 }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: schema_realworld.no_invoice_status_lifecycle (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Invoice status lifecycle properly modeled\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"status\": { \"type\": \"string\", \"enum\": [\"draft\", \"open\", \"paid\", \"uncollectible\", \"void\"] }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: schema_realworld.naive_date_handling (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Proper ISO date-time format used throughout\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"format\": \"date-time\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: schema_realworld.single_currency_assumption (current: 0%, 8.0 pts at stake)\n    Scorer's critique: ABSENT - Multi-currency support with ISO codes\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"currency\": { \"type\": \"string\", \"pattern\": \"^[A-Z]{3}$\", \"description\": \"ISO 4217 currency code\" }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n",
+  "focus_areas": [
+    "schema_completeness",
+    "schema_realworld"
+  ],
+  "protected_criteria": [
+    "schema_correctness",
+    "schema_extensibility"
+  ],
+  "improvement_targets": [
+    "schema_completeness",
+    "schema_realworld"
+  ],
+  "prior_score": 0.5921,
+  "prior_criterion_scores": {
+    "schema_completeness": 0.75,
+    "schema_correctness": 0.75,
+    "schema_extensibility": 0.75,
+    "schema_realworld": 0.0
+  }
+}

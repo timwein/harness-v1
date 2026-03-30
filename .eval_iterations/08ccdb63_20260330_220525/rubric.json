@@ -1,0 +1,176 @@
+{
+  "task": "Summarize a 2,000-word technical blog post into a 3-bullet executive summary",
+  "domain": "summarization",
+  "total_points": 38,
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "sum_compression",
+      "category": "structure",
+      "description": "Achieves 20:1+ compression \u2014 exactly 3 bullets, each 1-2 sentences",
+      "pass_condition": "Exactly 3 bullets. Each bullet is 1-2 sentences. Total under 100 words. No filler or hedging.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "bullet_count",
+            "description": "Exactly 3 bullets",
+            "weight": 0.3,
+            "measurement": "1.0 if exactly 3, 0.5 if 2 or 4, 0.0 if other",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "bullet_density",
+            "description": "Each bullet is 1-2 sentences, no filler",
+            "weight": 0.35,
+            "measurement": "% of bullets that are 1-2 tight sentences",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "total_length",
+            "description": "Total under 100 words",
+            "weight": 0.35,
+            "measurement": "1.0 if \u2264100 words, 0.7 if \u2264130, 0.3 if \u2264160, 0.0 if >160",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "3 bullets, 85 words total, each bullet one declarative sentence + one supporting"
+      ],
+      "fail_examples": [
+        "5 bullets, 200 words, mini-paragraphs disguised as bullets"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sum_fidelity",
+      "category": "accuracy",
+      "description": "Bullets capture the actual thesis and key claims \u2014 no hallucination",
+      "pass_condition": "Bullet 1 = core thesis/finding. Bullet 2 = key evidence or mechanism. Bullet 3 = implication or so-what. All traceable to source text.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "thesis_capture",
+            "description": "First bullet nails the core thesis",
+            "weight": 0.4,
+            "measurement": "1.0 if captures central claim, 0.5 if tangential, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "evidence_capture",
+            "description": "Key supporting evidence or mechanism included",
+            "weight": 0.3,
+            "measurement": "1.0 if strongest evidence cited, 0.5 if secondary, 0.0 if missing",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "no_hallucination",
+            "description": "Nothing claimed that isn't in the source",
+            "weight": 0.3,
+            "measurement": "1.0 if all claims traceable, 0.0 per hallucinated claim",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Thesis + strongest data point + strategic implication, all from source"
+      ],
+      "fail_examples": [
+        "Vague paraphrase that could describe any post on the topic"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sum_exec_value",
+      "category": "utility",
+      "description": "An executive could make a decision or take action from these 3 bullets alone",
+      "pass_condition": "Answers 'so what?' and 'what do I do with this?'. Quantifies where possible. Uses declarative framing, not passive/descriptive.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "actionability",
+            "description": "Reader knows what to do or think differently after reading",
+            "weight": 0.4,
+            "measurement": "1.0 if clear action/decision implication, 0.5 if informational, 0.0 if academic",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "quantification",
+            "description": "Numbers, magnitudes, or concrete specifics included",
+            "weight": 0.3,
+            "measurement": "1.0 if key numbers preserved, 0.5 if qualitative only, 0.0 if vague",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "declarative_framing",
+            "description": "Bullets state claims, not 'the post discusses...'",
+            "weight": 0.3,
+            "measurement": "1.0 if all declarative, 0.5 if mixed, 0.0 if all descriptive/passive",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'LLM inference costs dropped 90% in 18 months \u2014 implications for build-vs-buy decisions in 2026'"
+      ],
+      "fail_examples": [
+        "'The author discusses various aspects of LLM cost trends'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "sum_standalone",
+      "category": "clarity",
+      "description": "Summary is self-contained \u2014 no context needed to understand it",
+      "pass_condition": "Doesn't reference 'the post' or 'the author'. Defines any jargon. A reader with no context gets the point.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 6,
+        "sub_attributes": [],
+        "penalties": {
+          "references_source": -2.0,
+          "undefined_jargon": -1.5,
+          "assumes_context": -1.5,
+          "passive_voice_dominant": -1.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Self-contained claims that work as standalone intelligence"
+      ],
+      "fail_examples": [
+        "'The author argues that...' or 'This post explores...'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

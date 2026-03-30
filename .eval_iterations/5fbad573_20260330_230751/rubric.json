@@ -1,0 +1,232 @@
+{
+  "task": "Write a bash script that backs up a PostgreSQL database to S3 with rotation, logging, and error notifications",
+  "domain": "bash_scripting",
+  "total_points": 44,
+  "pass_threshold": 0.85,
+  "criteria": [
+    {
+      "id": "bash_correctness",
+      "category": "functionality",
+      "description": "Script performs correct pg_dump \u2192 compress \u2192 upload \u2192 rotate pipeline",
+      "pass_condition": "Uses pg_dump with appropriate flags. Compresses output (gzip/zstd). Uploads to S3 with aws cli. Rotates old backups by age or count.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 12,
+        "sub_attributes": [
+          {
+            "sub_id": "dump_command",
+            "description": "pg_dump with correct flags (--format, --no-owner, etc.)",
+            "weight": 0.3,
+            "measurement": "1.0 if pg_dump with appropriate format flags, 0.5 if basic, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "compression",
+            "description": "Output compressed before upload",
+            "weight": 0.2,
+            "measurement": "1.0 if compressed (gzip/zstd), 0.0 if raw SQL upload",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "s3_upload",
+            "description": "aws s3 cp/sync with correct path and options",
+            "weight": 0.25,
+            "measurement": "1.0 if correct aws s3 cp with proper path, 0.0 if wrong",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "rotation",
+            "description": "Deletes backups older than N days or keeps last N",
+            "weight": 0.25,
+            "measurement": "1.0 if implemented correctly, 0.5 if partially, 0.0 if missing",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "pg_dump -Fc | gzip > backup.gz && aws s3 cp ... && find/delete old"
+      ],
+      "fail_examples": [
+        "pg_dump with no compression, no rotation logic"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "bash_safety",
+      "category": "reliability",
+      "description": "Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure",
+      "pass_condition": "set -euo pipefail. Trap for cleanup. No hardcoded passwords. Uses .pgpass or env vars. Temp files cleaned up.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 10,
+        "sub_attributes": [],
+        "penalties": {
+          "no_set_e": -2.0,
+          "no_pipefail": -1.5,
+          "hardcoded_password": -3.0,
+          "no_trap_cleanup": -1.5,
+          "no_temp_file_cleanup": -1.0,
+          "unquoted_variables": -1.0,
+          "no_lockfile": -0.5
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "set -euo pipefail, trap cleanup EXIT, reads creds from env"
+      ],
+      "fail_examples": [
+        "No error handling, password in script, temp files left behind"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "bash_logging",
+      "category": "observability",
+      "description": "Comprehensive logging with timestamps and log levels",
+      "pass_condition": "Timestamped log function. Logs start/success/failure/rotation. Writes to file AND stdout. Includes backup size and duration.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "log_function",
+            "description": "Dedicated log function with timestamps",
+            "weight": 0.3,
+            "measurement": "1.0 if log() function with ISO timestamps, 0.5 if echo with date, 0.0 if plain echo",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "log_completeness",
+            "description": "Logs all key events (start, size, duration, rotate, done)",
+            "weight": 0.35,
+            "measurement": "% of key events logged",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "log_destination",
+            "description": "Writes to both file and stdout",
+            "weight": 0.35,
+            "measurement": "1.0 if tee to file + stdout, 0.5 if one, 0.0 if neither",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "log() { echo \"[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [$1] $2\" | tee -a $LOG; }"
+      ],
+      "fail_examples": [
+        "Random echo statements with no timestamps"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "bash_notifications",
+      "category": "alerting",
+      "description": "Error notifications via practical channel (email, Slack, PagerDuty)",
+      "pass_condition": "On failure: sends notification with error details and context. Configurable notification channel. Includes backup name, error message, timestamp.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "notification_impl",
+            "description": "Actually sends notification on failure",
+            "weight": 0.4,
+            "measurement": "1.0 if implemented (curl to Slack, mail, etc.), 0.0 if TODO/placeholder",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "error_context",
+            "description": "Notification includes useful context (timestamp, db, error)",
+            "weight": 0.35,
+            "measurement": "1.0 if rich context, 0.5 if basic, 0.0 if just 'backup failed'",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "configurability",
+            "description": "Channel/endpoint configurable via env var",
+            "weight": 0.25,
+            "measurement": "1.0 if configurable, 0.5 if hardcoded but works, 0.0 if neither",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Slack webhook with formatted message including db name, error, and log tail"
+      ],
+      "fail_examples": [
+        "# TODO: add notifications"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "bash_configurability",
+      "category": "usability",
+      "description": "Script is configurable via environment variables with sensible defaults",
+      "pass_condition": "Key params via env vars: DB_NAME, S3_BUCKET, RETENTION_DAYS, etc. Defaults provided. Usage/help flag. Validates required vars.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 6,
+        "sub_attributes": [
+          {
+            "sub_id": "env_var_config",
+            "description": "Key params from env vars with defaults",
+            "weight": 0.4,
+            "measurement": "% of configurable params using env vars with fallback defaults",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "validation",
+            "description": "Validates required vars exist before starting",
+            "weight": 0.3,
+            "measurement": "1.0 if checks all required vars, 0.5 if some, 0.0 if none",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "help_flag",
+            "description": "--help flag with usage instructions",
+            "weight": 0.3,
+            "measurement": "1.0 if --help works, 0.0 if no help",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "DB_NAME=${DB_NAME:?'DB_NAME required'}, RETENTION=${RETENTION_DAYS:-30}"
+      ],
+      "fail_examples": [
+        "Hardcoded db name, bucket, and retention in script body"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

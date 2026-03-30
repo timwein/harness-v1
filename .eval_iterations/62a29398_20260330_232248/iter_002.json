@@ -1,0 +1,198 @@
+{
+  "run_id": "62a29398_20260330_232248",
+  "iteration": 2,
+  "content": "# INVESTMENT MEMO: NEXUS AEROSPACE SYSTEMS\n\n## Executive Summary  \n**Investment Opportunity:** \n\nDefense sUAS market growing at 7.6% CAGR to $22.8B by 2030\n\n, with \n\nReplicator initiative fielding thousands of attritable autonomous systems by 2025\n\n. Nexus Aerospace has the only NDAA-compliant autonomy stack integrating with existing C2 systems, built by ex-Anduril engineers who shipped the first production Altius system.  \n**Investment Thesis:** DoD is shifting from $50M prime-built systems to $500K attritable drones. \n\nJoint Interagency Task Force 401 now serves as principal advisor on counter-sUAS matters\n\n, creating unified procurement standards favoring interoperable solutions.  \n**Deal Terms:** $20M Series A at $60M pre-money. Target 12% ownership with pro-rata rights.\n\n## Market Opportunity  \n**Defense sUAS TAM:** \n\n$68.3 billion in FY26 for aircraft and related systems including UAS\n\n, with \n\n$132 million boost for counter-UAS activities and C-sUAS procurement campaign\n\n  \n**Key Market Drivers:**  \n\u2022 \n\nReplicator 2 focuses on counter-sUAS for critical installations and force concentrations\n\n  \n\u2022 \n\nFY26 NDAA expands counter-UAS authorities across DoD, DHS, DOE, and DOJ\n\n  \n\u2022 \n\n$18.3 billion added for acquisition programs above FY26 request\n\n driving attritable system procurement  \n**Policy Tailwinds:** \n\nFY26 NDAA Section 842 directs DoD to strengthen U.S. small UAS industrial base\n\n while reducing foreign dependency\n\n## Company Overview  \n**Product:** AI-powered autonomy stack for sUAS enabling swarm coordination and C2 integration  \n**Key Differentiators:**  \n\u2022 Only solution with \n\nITAR-compliant architecture handling CUI and controlled data securely\n\n  \n\u2022 \n\nModular Open Systems Approach (MOSA) supporting future C2 integration\n\n  \n\u2022 Proven interoperability with \n\nexisting command and control nodes via UHF/VHF, Satcom, 4G\n\n  \n**Traction:** $2.3M SBIR Phase II awarded; prototype validated with 82nd Airborne\n\n## Investment Thesis  \n**Core Insight:** \n\nDoD's second Replicator tranche focuses on software enabling system collaboration against dynamic threats\n\n. Current solutions are hardware-centric; Nexus provides the missing software layer.  \n**Team Match:** Co-founders led Anduril's Altius program through production. CTO holds DSP-5/DSP-73 clearances from Lockheed tenure, enabling rapid ITAR compliance.  \n**Timing Catalyst:** \n\nJoint Interagency Task Force 401 must coordinate all DoD counter-sUAS efforts\n\n, creating demand for unified autonomous command systems.\n\n## Competitive Landscape  \n**Direct:** Anduril (Lattice OS), L3Harris (ASView), General Atomics (Optix.C2)  \n**Advantages:**  \n\u2022 \n\nAnduril's $14B valuation proves startups can beat traditional primes with modern software\n\n  \n\u2022 Nexus's modular approach vs. competitors' proprietary ecosystems  \n\u2022 Faster development cycles (18-month delivery vs. 36-month prime timelines)\n\n## Key Risks & Mitigants  \n**ITAR Compliance Burden:** Complex export controls limit sales velocity  \n*Mitigant:* CTO's existing clearances and established DSP processes reduce compliance timeline by 8-12 months  \n**Procurement Cycle Risk:** \n\n18-month government sales cycles\n\n strain cash flow  \n*Mitigant:* SBIR Phase III direct-award pathway bypasses full competition  \n**Technical Integration:** Legacy C2 systems resist new software integration  \n*Mitigant:* \n\nGovernment evaluates interoperability with commercial and government C2 systems\n\n\n\n## Deal Terms  \n**Valuation:** $60M pre-money ($80M post)  \n**Round Size:** $20M Series A  \n**Ownership Target:** 12% fully-diluted with pro-rata rights  \n**Use of Funds:**  \n\u2022 Engineering/Autonomy R&D: 40% ($8M)  \n\u2022 ITAR facility buildout: 25% ($5M)  \n\u2022 Business development: 20% ($4M)  \n\u2022 Operations/Working capital: 15% ($3M)\n\n**Lead Investor:** Andreessen Horowitz (a16z) American Dynamism fund  \n**Strategic Value:** Portfolio includes defense contractors with proven DoD relationships and ITAR experience",
+  "total_score": 34.3,
+  "max_score": 44,
+  "percentage": 0.7795454545454544,
+  "criterion_scores": [
+    {
+      "criterion_id": "memo_structure",
+      "points_earned": 10.0,
+      "max_points": 10,
+      "percentage": 1.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "Word count: 504 (target: 500\u2013700) \u2713",
+      "methodology": "Deterministic: word count in range",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "memo_market",
+      "points_earned": 6.75,
+      "max_points": 10,
+      "percentage": 0.6749999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "market_specificity",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "credible_sizing",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "tailwind_identification",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: market_specificity: 75%x35% + credible_sizing: 50%x30% + tailwind_identification: 75%x35%",
+      "improvement_hints": [
+        "credible_sizing: 50% -> 80% (+0.9 pts)",
+        "market_specificity: 75% -> 80% (+0.2 pts)",
+        "tailwind_identification: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "memo_thesis",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75,
+      "sub_scores": [
+        {
+          "sub_id": "insight_clarity",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "team_match",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "timing_catalyst",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: insight_clarity: 75%x40% + team_match: 75%x30% + timing_catalyst: 75%x30%",
+      "improvement_hints": [
+        "insight_clarity: 75% -> 80% (+0.2 pts)",
+        "team_match: 75% -> 80% (+0.2 pts)",
+        "timing_catalyst: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "memo_risks",
+      "points_earned": 6.0,
+      "max_points": 8,
+      "percentage": 0.75,
+      "sub_scores": [
+        {
+          "sub_id": "risk_quality",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "risk_coverage",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "mitigants",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: risk_quality: 75%x40% + risk_coverage: 75%x30% + mitigants: 75%x30%",
+      "improvement_hints": [
+        "risk_quality: 75% -> 80% (+0.2 pts)",
+        "risk_coverage: 75% -> 80% (+0.1 pts)",
+        "mitigants: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "memo_deal_terms",
+      "points_earned": 4.05,
+      "max_points": 6,
+      "percentage": 0.675,
+      "sub_scores": [
+        {
+          "sub_id": "completeness",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "stage_appropriateness",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "use_of_funds",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: completeness: 75%x40% + stage_appropriateness: 50%x30% + use_of_funds: 75%x30%",
+      "improvement_hints": [
+        "stage_appropriateness: 50% -> 80% (+0.5 pts)",
+        "completeness: 75% -> 80% (+0.1 pts)",
+        "use_of_funds: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    }
+  ],
+  "focus_areas": [
+    "memo_market.credible_sizing",
+    "memo_market.market_specificity",
+    "memo_market.tailwind_identification",
+    "memo_thesis.insight_clarity",
+    "memo_thesis.team_match"
+  ]
+}

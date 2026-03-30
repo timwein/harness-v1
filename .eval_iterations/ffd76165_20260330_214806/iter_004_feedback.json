@@ -1,0 +1,31 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: 4 failing sub-attributes (10.0 pts recoverable), 3 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_subject: 75% \u2014 keep unchanged\n  \u2713 email_opening: 100% \u2014 keep unchanged\n  \u2713 email_tone: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Scorer's critique: CTA is clear with single ask for 15-minute call, though includes optional alternative offer.\n    Measurement spec: 1.0 if one clear ask, 0.5 if implied, 0.0 if multiple/confusing\n    Evidence found: Goes beyond rubric with independent domain expertise: Standard clear CTA format without additional sophistication\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard clear CTA format without additional sophistication\n\n  FIX 2: email_cta.low_friction (current: 50%, 2.8 pts at stake)\n    Scorer's critique: CTA is appropriately low-friction with 15-minute call and alternative async option.\n    Measurement spec: 1.0 if 15-min call or async, 0.5 if meeting, 0.0 if big ask\n    Evidence found: Goes beyond rubric with independent domain expertise: Standard low-friction approach without additional insight\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard low-friction approach without additional insight\n\n  FIX 3: email_social_proof.restraint (current: 50%, 2.4 pts at stake)\n    Scorer's critique: Shows appropriate restraint with focused proof points about Oracle experience and procurement scaling.\n    Measurement spec: 1.0 if 1-2 tight proof points, 0.5 if 3-4, 0.0 if resume paragraph\n    Evidence found: Goes beyond rubric with independent domain expertise: Follows standard restraint approach without additional sophistication\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Follows standard restraint approach without additional sophistication\n\n  FIX 4: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Scorer's critique: Claims are verifiable with specific companies (Oracle) and outcomes ($2B to $8B spend), meeting credibility requirements.\n    Measurement spec: 1.0 if verifiable claims, 0.5 if plausible, 0.0 if unsubstantiated\n    Evidence found: Goes beyond rubric with independent domain expertise: While claims are specific and verifiable, they follow standard format without additional insight\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: While claims are specific and verifiable, they follow standard format without additional insight\n",
+  "focus_areas": [
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta",
+    "email_length"
+  ],
+  "protected_criteria": [
+    "email_subject",
+    "email_opening",
+    "email_tone"
+  ],
+  "improvement_targets": [
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta",
+    "email_length"
+  ],
+  "prior_score": 0.7675,
+  "prior_criterion_scores": {
+    "email_subject": 0.75,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.675,
+    "email_cta": 0.575,
+    "email_tone": 1.0,
+    "email_length": 0.7463
+  }
+}

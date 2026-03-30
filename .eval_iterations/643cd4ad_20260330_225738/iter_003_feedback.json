@@ -1,0 +1,26 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 4 failing sub-attributes (13.0 pts recoverable), 2 passing. 1 regressions detected \u2014 recovery is top priority.\n\n==================================================\nREGRESSIONS (RECOVER THESE FIRST \u2014 highest priority):\n==================================================\n\n  REGRESSED: name_availability \u2014 was 62% at iter 1, now 50% (-12%)\n    What was lost: The 'Legal' suffix in 'Meridian Legal' and 'Vantage Legal' that made these names more distinctive and less likely to conflict with existing trademarks, plus the clean single-word 'Inkwell' that avoided generic tech suffixes\n    Why it dropped: Changed 'Meridian Legal' to just 'Meridian' (creating trademark conflicts with existing Meridian companies), 'Vantage Legal' to 'Vantagepoint' (less distinctive), and 'Inkwell' to 'Inkwelltech' (adding generic tech suffix that reduces uniqueness)\n    \u2192 RECOVER: Restore the 'Legal' suffix to Meridian and Vantage (making them 'Meridian Legal' and 'Vantage Legal'), and remove the 'tech' suffix from Inkwell to return it to the original single word, while keeping the improved 'Redlinehq' and 'Clauseforge' unchanged\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 name_domain_resonance: 75% \u2014 keep unchanged\n  \u2713 name_variety: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: name_count (current: 0%, 4.0 pts at stake)\n    Scorer's critique: Score 0% below 75% threshold\n    Measurement spec: Exactly 5 names provided, each with rationale\n    Evidence found: (no detailed critique from scorer)\n    \u2192 ACTION: Improve name_count to meet: Exactly 5 names provided, each with rationale\n\n  FIX 2: name_availability.domain_plausibility (current: 50%, 3.0 pts at stake)\n    Scorer's critique: 4 out of 5 names have good domain availability prospects, but Meridian as a common English word is likely taken. Shows awareness of domain strategy.\n    Measurement spec: % of names where .com is plausible (not a common English word)\n    Evidence found: Not common English words: Meridian is a common English word, likely taken; Beyond rubric guidance with independent domain expertise: Basic application of availability principles without deeper domain strategy insight\n    \u2717 FAILED CHECK: Not common English words\n      Evidence: Meridian is a common English word, likely taken\n    \u2717 FAILED CHECK: Beyond rubric guidance with independent domain expertise\n      Evidence: Basic application of availability principles without deeper domain strategy insight\n    \u2192 ACTION: Replace Meridian with a coined variant like 'Meridianx' or 'Meridius' to improve domain availability while maintaining the navigation metaphor.\n\n  FIX 3: name_availability.no_trademark_conflicts (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Meridian presents potential trademark conflicts as it's used by established companies. Other names appear clear of major conflicts.\n    Measurement spec: % of names with no obvious trademark conflict\n    Evidence found: Not existing well-known brand names: Meridian is used by multiple financial and tech companies; Beyond rubric guidance with independent domain expertise: Standard trademark avoidance without deeper IP strategy insight\n    \u2717 FAILED CHECK: Not existing well-known brand names\n      Evidence: Meridian is used by multiple financial and tech companies\n    \u2717 FAILED CHECK: Beyond rubric guidance with independent domain expertise\n      Evidence: Standard trademark avoidance without deeper IP strategy insight\n    \u2192 ACTION: Research Meridian trademark landscape more thoroughly or select an alternative like 'Compass' or 'Bearing' to avoid potential conflicts.\n\n  FIX 4: name_memorability.brevity (current: 50%, 3.0 pts at stake)\n    Scorer's critique: 4 out of 5 names meet the \u22643 syllable guideline, but Meridian at 4 syllables exceeds the preferred brevity standard.\n    Measurement spec: % of names at \u22643 syllables\n    Evidence found: Short and punchy: Meridian has 4 syllables, exceeding the 3-syllable preference; Beyond rubric guidance with independent domain expertise: Standard application of syllable counting without additional insight\n    \u2717 FAILED CHECK: Short and punchy\n      Evidence: Meridian has 4 syllables, exceeding the 3-syllable preference\n    \u2717 FAILED CHECK: Beyond rubric guidance with independent domain expertise\n      Evidence: Standard application of syllable counting without additional insight\n    \u2192 ACTION: Consider shortening Meridian to 'Merid' or replace with a 2-3 syllable alternative like 'Compass' or 'Bearing' to maintain the navigation metaphor.\n",
+  "focus_areas": [
+    "name_count",
+    "name_memorability",
+    "name_availability"
+  ],
+  "protected_criteria": [
+    "name_domain_resonance",
+    "name_variety"
+  ],
+  "improvement_targets": [
+    "name_count",
+    "name_memorability",
+    "name_availability"
+  ],
+  "prior_score": 0.6042,
+  "prior_criterion_scores": {
+    "name_count": 0.0,
+    "name_memorability": 0.675,
+    "name_domain_resonance": 0.75,
+    "name_availability": 0.5,
+    "name_variety": 0.75
+  }
+}

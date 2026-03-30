@@ -1,0 +1,26 @@
+{
+  "iteration": 4,
+  "feedback_text": "DIAGNOSIS: 8 failing sub-attributes (72.0 pts recoverable), 2 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 bash_correctness: 75% \u2014 keep unchanged\n  \u2713 bash_configurability: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: bash_safety.no_set_e (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - script properly uses set -euo pipefail\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: set -euo pipefail\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: bash_safety.no_pipefail (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - pipefail is included in set command\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: set -euo pipefail\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: bash_safety.hardcoded_password (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - password read from environment variable\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: : ${PGPASSWORD:?\"PGPASSWORD environment variable is required\"}\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: bash_safety.no_trap_cleanup (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - proper trap cleanup implemented\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: trap cleanup EXIT\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: bash_safety.no_temp_file_cleanup (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - temp files cleaned in cleanup function\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: if [[ -d \"$TEMP_DIR\" ]]; then rm -rf \"$TEMP_DIR\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: bash_safety.unquoted_variables (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - variables are consistently quoted\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: Variables properly quoted throughout: \"$DB_HOST\", \"$DB_PORT\", \"$TEMP_BACKUP\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 7: bash_safety.no_lockfile (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - lockfile mechanism implemented\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: LOCK_FILE=\"/var/run/pg_backup_${DB_NAME:-default}.lock\" and acquire_lock() function\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 8: bash_notifications.configurability (current: 50%, 2.0 pts at stake)\n    Scorer's critique: Proper configuration via environment variables with graceful handling of missing channels, following rubric guidance correctly.\n    Measurement spec: 1.0 if configurable, 0.5 if hardcoded but works, 0.0 if neither\n    Evidence found: Goes beyond rubric with advanced configuration: Configuration is comprehensive but follows standard patterns without independent innovation\n    \u2717 FAILED CHECK: Goes beyond rubric with advanced configuration\n      Evidence: Configuration is comprehensive but follows standard patterns without independent innovation\n",
+  "focus_areas": [
+    "bash_safety",
+    "bash_logging",
+    "bash_notifications"
+  ],
+  "protected_criteria": [
+    "bash_correctness",
+    "bash_configurability"
+  ],
+  "improvement_targets": [
+    "bash_safety",
+    "bash_logging",
+    "bash_notifications"
+  ],
+  "prior_score": 0.5682,
+  "prior_criterion_scores": {
+    "bash_correctness": 0.75,
+    "bash_safety": 0.0,
+    "bash_logging": 0.75,
+    "bash_notifications": 0.6875,
+    "bash_configurability": 0.75
+  }
+}

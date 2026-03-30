@@ -1,0 +1,24 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: 7 failing sub-attributes (50.4 pts recoverable), 1 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 schema_correctness: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: schema_realworld.no_currency_handling (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Currency handling is properly implemented with ISO 4217 codes - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"currency\": { \"type\": \"string\", \"pattern\": \"^[A-Z]{3}$\", \"description\": \"ISO 4217 currency code\" }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: schema_realworld.calculated_total_without_line_items (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Invoices include line_items array - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"line_items\": { \"type\": \"array\", \"items\": { \"$ref\": \"#/definitions/invoice_line_item\" } }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: schema_realworld.no_idempotency (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Idempotency keys are included in usage_record - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"idempotency_key\": { \"type\": \"string\", \"maxLength\": 255 }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: schema_realworld.no_invoice_status_lifecycle (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Complete invoice status lifecycle is modeled - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"status\": { \"type\": \"string\", \"enum\": [\"draft\", \"open\", \"paid\", \"uncollectible\", \"void\"] }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: schema_realworld.naive_date_handling (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Proper ISO date-time format used throughout - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"format\": \"date-time\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: schema_realworld.single_currency_assumption (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Multi-currency support with currency field on money type - no violation\n    Measurement spec: Schema reflects real billing system patterns (Stripe-informed, not academic)\n    Evidence found: \"currency\": { \"type\": \"string\", \"pattern\": \"^[A-Z]{3}$\" }\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 7: schema_extensibility.versioning (current: 50%, 2.4 pts at stake)\n    Scorer's critique: Basic versioning is present with schema_version field, but lacks comprehensive versioning strategy or migration considerations.\n    Measurement spec: 1.0 if versioned, 0.0 if not\n    Evidence found: Versioning strategy evident: not found in content; Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute?: Basic versioning present but no evidence of migration strategy or backward compatibility considerations\n    \u2717 FAILED CHECK: Versioning strategy evident\n      Evidence: not found in content\n    \u2717 FAILED CHECK: Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute?\n      Evidence: Basic versioning present but no evidence of migration strategy or backward compatibility considerations\n    \u2192 ACTION: Add versioning strategy documentation and consider backward compatibility patterns like optional new fields and deprecation markers.\n",
+  "focus_areas": [
+    "schema_completeness",
+    "schema_extensibility",
+    "schema_realworld"
+  ],
+  "protected_criteria": [
+    "schema_correctness"
+  ],
+  "improvement_targets": [
+    "schema_completeness",
+    "schema_extensibility",
+    "schema_realworld"
+  ],
+  "prior_score": 0.5763,
+  "prior_criterion_scores": {
+    "schema_completeness": 0.75,
+    "schema_correctness": 0.75,
+    "schema_extensibility": 0.675,
+    "schema_realworld": 0.0
+  }
+}

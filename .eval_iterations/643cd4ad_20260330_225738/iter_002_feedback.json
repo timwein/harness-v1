@@ -1,0 +1,27 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: 3 failing sub-attributes (9.0 pts recoverable), 1 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 name_variety: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: name_availability.domain_plausibility (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Only Clauseforge has plausible .com availability as a coined word. Other names are common English words likely already registered.\n    Measurement spec: % of names where .com is plausible (not a common English word)\n    Evidence found: Names likely have .com available: Redline, Inkwell, Meridian, Vantage are common English words likely taken; Names are not common English words: 4 out of 5 names are common words: Redline, Inkwell, Meridian, Vantage; Independent expertise beyond rubric guidance: No evidence of independent insight into domain availability\n    \u2717 FAILED CHECK: Names likely have .com available\n      Evidence: Redline, Inkwell, Meridian, Vantage are common English words likely taken\n    \u2717 FAILED CHECK: Names are not common English words\n      Evidence: 4 out of 5 names are common words: Redline, Inkwell, Meridian, Vantage\n    \u2717 FAILED CHECK: Independent expertise beyond rubric guidance\n      Evidence: No evidence of independent insight into domain availability\n    \u2192 ACTION: Create more coined words like 'Clauseforge' or add unique suffixes to common words (e.g., 'Redlinehq', 'Inkwellai') to improve domain availability.\n\n  FIX 2: name_memorability.brevity (current: 50%, 3.0 pts at stake)\n    Scorer's critique: 3 out of 5 names meet the \u22643 syllable preference, but Meridian Legal and Vantage Legal are longer.\n    Measurement spec: % of names at \u22643 syllables\n    Evidence found: Names are \u22643 syllables: Meridian Legal (5 syllables) and Vantage Legal (4 syllables) exceed 3 syllables; Independent expertise beyond rubric guidance: No evidence of independent insight beyond syllable counting\n    \u2717 FAILED CHECK: Names are \u22643 syllables\n      Evidence: Meridian Legal (5 syllables) and Vantage Legal (4 syllables) exceed 3 syllables\n    \u2717 FAILED CHECK: Independent expertise beyond rubric guidance\n      Evidence: No evidence of independent insight beyond syllable counting\n    \u2192 ACTION: Replace 'Meridian Legal' and 'Vantage Legal' with shorter alternatives like 'Meridian' and 'Vantage' to improve brevity.\n\n  FIX 3: name_domain_resonance.trust_register (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Most names achieve professional tone, but some creative names like Inkwell may not resonate with conservative law firm culture.\n    Measurement spec: % of names that feel professional enough for legal market\n    Evidence found: Names convey appropriate gravitas: Inkwell and Clauseforge may feel too casual/creative for conservative law firms; Independent expertise beyond rubric guidance: No evidence of independent insight into legal market psychology\n    \u2717 FAILED CHECK: Names convey appropriate gravitas\n      Evidence: Inkwell and Clauseforge may feel too casual/creative for conservative law firms\n    \u2717 FAILED CHECK: Independent expertise beyond rubric guidance\n      Evidence: No evidence of independent insight into legal market psychology\n    \u2192 ACTION: Consider testing creative names like 'Inkwell' and 'Clauseforge' with actual law firm partners to validate professional acceptability.\n",
+  "focus_areas": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "protected_criteria": [
+    "name_variety"
+  ],
+  "improvement_targets": [
+    "name_count",
+    "name_memorability",
+    "name_domain_resonance",
+    "name_availability"
+  ],
+  "prior_score": 0.6042,
+  "prior_criterion_scores": {
+    "name_count": 0.0,
+    "name_memorability": 0.675,
+    "name_domain_resonance": 0.675,
+    "name_availability": 0.625,
+    "name_variety": 0.75
+  }
+}
