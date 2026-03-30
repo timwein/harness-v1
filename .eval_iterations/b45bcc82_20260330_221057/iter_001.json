@@ -1,0 +1,175 @@
+{
+  "run_id": "b45bcc82_20260330_221057",
+  "iteration": 1,
+  "content": "## Database Schema and SQL Query for Top 10 Customers by Lifetime Value\n\n### Database Schema\n\n```sql\n-- E-commerce database schema optimized for customer lifetime value calculations\n-- Designed following Third Normal Form (3NF) principles\n\n-- Customers table: Core customer information\nCREATE TABLE customers (\n    customer_id BIGINT PRIMARY KEY AUTO_INCREMENT,\n    email VARCHAR(255) UNIQUE NOT NULL,\n    first_name VARCHAR(100) NOT NULL,\n    last_name VARCHAR(100) NOT NULL,\n    phone VARCHAR(20),\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n\n-- Orders table: Order header information\nCREATE TABLE orders (\n    order_id BIGINT PRIMARY KEY AUTO_INCREMENT,\n    customer_id BIGINT NOT NULL,\n    order_number VARCHAR(50) UNIQUE NOT NULL,\n    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    status ENUM('pending', 'confirmed', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',\n    currency_code CHAR(3) DEFAULT 'USD',\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    \n    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE RESTRICT\n);\n\n-- Order items table: Individual items within orders\nCREATE TABLE order_items (\n    order_item_id BIGINT PRIMARY KEY AUTO_INCREMENT,\n    order_id BIGINT NOT NULL,\n    product_id BIGINT NOT NULL,\n    quantity INT NOT NULL CHECK (quantity > 0),\n    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),\n    line_total DECIMAL(10,2) NOT NULL CHECK (line_total >= 0),\n    \n    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,\n    INDEX idx_order_items_order_id (order_id),\n    INDEX idx_order_items_product_id (product_id)\n);\n\n-- Payments table: All payment transactions (charges and refunds as separate records)\nCREATE TABLE payments (\n    payment_id BIGINT PRIMARY KEY AUTO_INCREMENT,\n    order_id BIGINT NOT NULL,\n    customer_id BIGINT NOT NULL,\n    payment_type ENUM('charge', 'refund') NOT NULL,\n    amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),\n    currency_code CHAR(3) DEFAULT 'USD',\n    payment_method VARCHAR(50) NOT NULL,\n    payment_gateway VARCHAR(50),\n    gateway_transaction_id VARCHAR(255),\n    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'pending',\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    \n    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE RESTRICT,\n    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE RESTRICT\n);\n\n-- Performance optimization indexes\nCREATE INDEX idx_orders_customer_id ON orders(customer_id);\nCREATE INDEX idx_payments_customer_id_type ON payments(customer_id, payment_type);\nCREATE INDEX idx_payments_order_id ON payments(order_id);\nCREATE INDEX idx_payments_date ON payments(payment_date);\n```\n\n### SQL Query: Top 10 Customers by Lifetime Value\n\n```sql\n-- Find the top 10 customers by lifetime value (total charges minus refunds)\n-- Uses CTEs for readability and proper null handling\n\nWITH customer_charges AS (\n    -- Calculate total charges per customer\n    SELECT \n        customer_id,\n        COALESCE(SUM(amount), 0) as total_charges\n    FROM payments\n    WHERE payment_type = 'charge' \n      AND status = 'completed'\n    GROUP BY customer_id\n),\n\ncustomer_refunds AS (\n    -- Calculate total refunds per customer\n    SELECT \n        customer_id,\n        COALESCE(SUM(amount), 0) as total_refunds\n    FROM payments\n    WHERE payment_type = 'refund' \n      AND status = 'completed'\n    GROUP BY customer_id\n),\n\ncustomer_lifetime_value AS (\n    -- Calculate net lifetime value by combining charges and refunds\n    SELECT \n        c.customer_id,\n        c.first_name,\n        c.last_name,\n        c.email,\n        COALESCE(charges.total_charges, 0) as total_charges,\n        COALESCE(refunds.total_refunds, 0) as total_refunds,\n        (COALESCE(charges.total_charges, 0) - COALESCE(refunds.total_refunds, 0)) as lifetime_value\n    FROM customers c\n    LEFT JOIN customer_charges charges ON c.customer_id = charges.customer_id\n    LEFT JOIN customer_refunds refunds ON c.customer_id = refunds.customer_id\n    -- Only include customers who have made at least one completed charge\n    WHERE charges.total_charges > 0\n)\n\n-- Final result: Top 10 customers by lifetime value\nSELECT \n    customer_id,\n    CONCAT(first_name, ' ', last_name) as customer_name,\n    email,\n    total_charges,\n    total_refunds,\n    lifetime_value,\n    -- Calculate percentage of charges that were refunded\n    CASE \n        WHEN total_charges > 0 THEN \n            ROUND((total_refunds / total_charges) * 100, 2)\n        ELSE 0 \n    END as refund_percentage\nFROM customer_lifetime_value\nORDER BY lifetime_value DESC\nLIMIT 10;\n```\n\n### Key Design Features\n\n**Schema Normalization**: \nThe schema follows Third Normal Form (3NF) principles to eliminate redundancy and ensure data integrity\n. \nEach table has proper primary and foreign keys with normalized relationships between customers, orders, order_items, and payments\n.\n\n**Refund Modeling**: \nRefunds are modeled as separate payment records with type='refund' rather than negative amounts, following financial transaction best practices\n. This approach maintains clear audit trails and simplifies aggregation logic.\n\n**Performance Optimization**: \nThe schema includes strategic indexes on foreign key columns and frequently queried fields\n, particularly the composite index on `payments(customer_id, payment_type)` which optimizes the lifetime value calculation query.\n\n**Query Design**: The query uses CTEs for readability and employs proper null handling with `COALESCE()` functions to ensure accurate calculations when customers have charges but no refunds, or vice versa. \nThe aggregation logic properly handles the separation of charges and refunds before combining them for the final lifetime value calculation\n.",
+  "total_score": 21.0,
+  "max_score": 36,
+  "percentage": 0.5833333333333334,
+  "criterion_scores": [
+    {
+      "criterion_id": "sql_schema",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.7499999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "normalization",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "refund_modeling",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "realistic_columns",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: normalization: 75%x30% + refund_modeling: 75%x35% + realistic_columns: 75%x35%",
+      "improvement_hints": [
+        "normalization: 75% -> 80% (+0.2 pts)",
+        "refund_modeling: 75% -> 80% (+0.2 pts)",
+        "realistic_columns: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "sql_correctness",
+      "points_earned": 8.1,
+      "max_points": 12,
+      "percentage": 0.675,
+      "sub_scores": [
+        {
+          "sub_id": "aggregation_logic",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "grouping",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "null_handling",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: aggregation_logic: 75%x40% + grouping: 50%x30% + null_handling: 75%x30%",
+      "improvement_hints": [
+        "grouping: 50% -> 80% (+1.1 pts)",
+        "aggregation_logic: 75% -> 80% (+0.2 pts)",
+        "null_handling: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "sql_readability",
+      "points_earned": 5.4,
+      "max_points": 8,
+      "percentage": 0.6749999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "cte_usage",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "formatting",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "documentation",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: cte_usage: 75%x35% + formatting: 50%x30% + documentation: 75%x35%",
+      "improvement_hints": [
+        "formatting: 50% -> 80% (+0.7 pts)",
+        "cte_usage: 75% -> 80% (+0.1 pts)",
+        "documentation: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "sql_performance",
+      "points_earned": 0,
+      "max_points": 6,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [
+        {
+          "violation": "select_star",
+          "penalty": -1.5
+        },
+        {
+          "violation": "correlated_subquery",
+          "penalty": -2.0
+        },
+        {
+          "violation": "missing_index_suggestion",
+          "penalty": -1.0
+        },
+        {
+          "violation": "cartesian_join_risk",
+          "penalty": -2.5
+        },
+        {
+          "violation": "function_on_indexed_column",
+          "penalty": -1.0
+        }
+      ],
+      "evidence": "",
+      "methodology": "Penalty: 6 - -8.0",
+      "improvement_hints": [
+        "Fix cartesian_join_risk (+2.5 pts)",
+        "Fix correlated_subquery (+2.0 pts)",
+        "Fix select_star (+1.5 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    }
+  ],
+  "focus_areas": []
+}

@@ -1,0 +1,24 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: 1 failing sub-attributes (3.0 pts recoverable), 4 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 memo_thesis: 75% \u2014 keep unchanged\n  \u2713 memo_risks: 75% \u2014 keep unchanged\n  \u2713 memo_deal_terms: 75% \u2014 keep unchanged\n  \u2713 memo_structure: 98% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: memo_market.credible_sizing (current: 50%, 3.0 pts at stake)\n    Scorer's critique: Market numbers appear plausible but lack source citations or methodology for how they were constructed.\n    Measurement spec: 1.0 if sourced/constructed, 0.5 if asserted, 0.0 if absent\n    Evidence found: Market numbers have cited or constructed basis: Numbers provided but no sources cited; Beyond rubric guidance with independent domain expertise: no evidence of independent insight\n    \u2717 FAILED CHECK: Market numbers have cited or constructed basis\n      Evidence: Numbers provided but no sources cited\n    \u2717 FAILED CHECK: Beyond rubric guidance with independent domain expertise\n      Evidence: no evidence of independent insight\n    \u2192 ACTION: Add sources for market sizing data, such as '(Frost & Sullivan, 2024)' or explain methodology: 'Based on DoD budget analysis and historical sUAS procurement trends'.\n",
+  "focus_areas": [
+    "memo_market"
+  ],
+  "protected_criteria": [
+    "memo_structure",
+    "memo_thesis",
+    "memo_risks",
+    "memo_deal_terms"
+  ],
+  "improvement_targets": [
+    "memo_market"
+  ],
+  "prior_score": 0.7852,
+  "prior_criterion_scores": {
+    "memo_structure": 0.98,
+    "memo_market": 0.675,
+    "memo_thesis": 0.75,
+    "memo_risks": 0.75,
+    "memo_deal_terms": 0.75
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 5 failing sub-attributes (40.0 pts recoverable), 3 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 arg_steelman: 75% \u2014 keep unchanged\n  \u2713 arg_counter_quality: 75% \u2014 keep unchanged\n  \u2713 arg_readability: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: arg_nuance.absolutist_claim (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Uses probabilistic language throughout: 'AGI by 2030 remains possible but improbable'\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: arg_nuance.dismisses_without_evidence (current: 0%, 8.0 pts at stake)\n    Scorer's critique: All dismissals are backed by specific evidence and citations\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: arg_nuance.ignores_counterexamples (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Acknowledges counterexamples: 'roughly 30% of researchers believe AGI is a realistic near-term possibility'\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: arg_nuance.no_uncertainty_acknowledgment (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Explicitly acknowledges uncertainty: 'AGI by 2030 remains possible but improbable' and 'the reasonable response isn't dismissal but measured preparation'\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: arg_nuance.appeal_to_authority_only (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Combines expert opinion with technical analysis and empirical evidence\n    Measurement spec: Avoids absolutism \u2014 acknowledges uncertainty and conditions\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n",
+  "focus_areas": [
+    "arg_nuance"
+  ],
+  "protected_criteria": [
+    "arg_steelman",
+    "arg_counter_quality",
+    "arg_readability"
+  ],
+  "improvement_targets": [
+    "arg_nuance"
+  ],
+  "prior_score": 0.625,
+  "prior_criterion_scores": {
+    "arg_steelman": 0.75,
+    "arg_counter_quality": 0.75,
+    "arg_nuance": 0.0,
+    "arg_readability": 1.0
+  }
+}

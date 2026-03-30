@@ -1,0 +1,292 @@
+{
+  "task": "Write a cold outreach email to a Series A founder pitching angel investment",
+  "domain": "cold_outreach_email",
+  "total_points": 56,
+  "pass_threshold": 0.8,
+  "criteria": [
+    {
+      "id": "email_subject",
+      "category": "engagement",
+      "description": "Subject line is compelling and specific \u2014 not generic or spammy",
+      "pass_condition": "Subject is <60 chars, references something specific to the recipient, creates curiosity without clickbait. No 'Quick question' or 'Touching base'.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "specificity",
+            "description": "References recipient's company/round/domain",
+            "weight": 0.4,
+            "measurement": "1.0 if names company or specific context, 0.0 if generic",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "brevity",
+            "description": "Under 60 chars, scannable on mobile",
+            "weight": 0.25,
+            "measurement": "1.0 if \u226460 chars, 0.5 if \u226480, 0.0 if >80",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "curiosity_hook",
+            "description": "Creates reason to open without being clickbait",
+            "weight": 0.35,
+            "measurement": "1.0 if compelling + honest, 0.5 if generic, 0.0 if spammy",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'$2M angel check for Acme's Series A \u2014 operator background in logistics'"
+      ],
+      "fail_examples": [
+        "'Quick question'",
+        "'Exciting investment opportunity!'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_opening",
+      "category": "engagement",
+      "description": "First sentence earns the right to the second \u2014 no throat-clearing",
+      "pass_condition": "Opens with specific signal: why now, why them, what you noticed. No 'I hope this finds you well' or self-introductions.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 8,
+        "sub_attributes": [],
+        "penalties": {
+          "generic_greeting": -3.0,
+          "self_intro_first": -2.0,
+          "no_specific_signal": -2.0,
+          "too_long_opening": -1.5
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Saw your Techcrunch piece on [X] \u2014 the way you're attacking [problem] maps to what I built at [company]'"
+      ],
+      "fail_examples": [
+        "'Hi, my name is Tim and I'm an angel investor...'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_value_prop",
+      "category": "persuasion",
+      "description": "Clearly articulates what the angel brings beyond capital",
+      "pass_condition": "Specific operational value: domain expertise, network, customer intros, hiring help. Concrete, not vague ('I can help').",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "specificity",
+            "description": "Names concrete value (intros, expertise, past wins)",
+            "weight": 0.45,
+            "measurement": "1.0 if 2+ specific offerings, 0.5 if 1 vague, 0.0 if just capital",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "relevance",
+            "description": "Value prop maps to recipient's actual needs/stage",
+            "weight": 0.35,
+            "measurement": "1.0 if clearly relevant to their domain/stage, 0.0 if generic",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "credibility",
+            "description": "Claims are verifiable (named companies, outcomes)",
+            "weight": 0.2,
+            "measurement": "1.0 if verifiable claims, 0.5 if plausible, 0.0 if unsubstantiated",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'I scaled logistics ops from $5M to $80M ARR at ShipCo \u2014 happy to open my network of 20+ VP Supply Chain contacts'"
+      ],
+      "fail_examples": [
+        "'I bring smart capital and strategic value to my portfolio companies'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_social_proof",
+      "category": "credibility",
+      "description": "Establishes credibility without bragging",
+      "pass_condition": "1-2 relevant proof points: portfolio wins, operating background, mutual connections. Woven in, not a resume dump.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "proof_quality",
+            "description": "Proof points are relevant and impressive",
+            "weight": 0.5,
+            "measurement": "1.0 if directly relevant wins, 0.5 if tangential, 0.0 if absent",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "restraint",
+            "description": "1-2 points, not a resume dump",
+            "weight": 0.3,
+            "measurement": "1.0 if 1-2 tight proof points, 0.5 if 3-4, 0.0 if resume paragraph",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "natural_integration",
+            "description": "Proof woven into narrative, not listed",
+            "weight": 0.2,
+            "measurement": "1.0 if organic, 0.0 if bullet-pointed credentials",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'...when I was CTO at [X] (acq. by Google), we solved a similar cold-start problem'"
+      ],
+      "fail_examples": [
+        "'I have 15 years of experience, 30 investments, board seats at...'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_cta",
+      "category": "conversion",
+      "description": "Call to action is low-friction and specific",
+      "pass_condition": "Single, clear ask. Low commitment (15-min call, not 'let's meet'). Suggests specific times or next step.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 8,
+        "sub_attributes": [
+          {
+            "sub_id": "clarity",
+            "description": "Single unambiguous ask",
+            "weight": 0.35,
+            "measurement": "1.0 if one clear ask, 0.5 if implied, 0.0 if multiple/confusing",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "low_friction",
+            "description": "Minimal commitment required",
+            "weight": 0.35,
+            "measurement": "1.0 if 15-min call or async, 0.5 if meeting, 0.0 if big ask",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "specificity",
+            "description": "Includes proposed time or concrete next step",
+            "weight": 0.3,
+            "measurement": "1.0 if specific availability, 0.5 if 'sometime this week', 0.0 if open-ended",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Free for a 15-min call Thursday or Friday afternoon? Happy to share my thesis on [space] first over email if you prefer.'"
+      ],
+      "fail_examples": [
+        "'Let me know if you're interested in chatting sometime.'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_tone",
+      "category": "voice",
+      "description": "Tone is peer-to-peer, confident but not presumptuous",
+      "pass_condition": "Reads like one founder talking to another. Not sycophantic, not salesy, not formal. Respects their time.",
+      "scoring": {
+        "method": "penalty_based",
+        "max_points": 6,
+        "sub_attributes": [],
+        "penalties": {
+          "sycophantic_language": -2.0,
+          "salesy_pressure": -2.0,
+          "overly_formal": -1.5,
+          "presumptuous_familiarity": -1.5,
+          "humble_brag": -1.0
+        },
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Direct, warm, brief \u2014 reads like a text from a smart friend"
+      ],
+      "fail_examples": [
+        "'I'd be truly honored to be part of your incredible journey'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "email_length",
+      "category": "structure",
+      "description": "Email is scannable in <30 seconds \u2014 under 150 words",
+      "pass_condition": "Under 150 words. Short paragraphs (1-3 sentences). White space between blocks. No walls of text.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 6,
+        "sub_attributes": [
+          {
+            "sub_id": "word_count",
+            "description": "Under 150 words total",
+            "weight": 0.5,
+            "measurement": "1.0 if \u2264150, 0.7 if \u2264200, 0.3 if \u2264250, 0.0 if >250",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "scannability",
+            "description": "Short paragraphs, visual breaks",
+            "weight": 0.5,
+            "measurement": "1.0 if all paragraphs \u22643 sentences with breaks, 0.0 if wall of text",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "5 short paragraphs, 120 words total"
+      ],
+      "fail_examples": [
+        "3 dense paragraphs, 300+ words"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

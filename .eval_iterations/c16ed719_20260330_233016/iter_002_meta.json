@@ -1,0 +1,42 @@
+{
+  "run_id": "c16ed719_20260330_233016",
+  "iteration": 2,
+  "total_score": 22.5,
+  "max_score": 38,
+  "percentage": 0.5921052631578947,
+  "delta_from_prior": 0.0158,
+  "focus_areas": [
+    "schema_realworld.no_currency_handling",
+    "schema_realworld.calculated_total_without_line_items",
+    "schema_realworld.no_idempotency",
+    "schema_realworld.no_invoice_status_lifecycle",
+    "schema_realworld.naive_date_handling"
+  ],
+  "content_path": ".eval_iterations/c16ed719_20260330_233016/iter_002_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "schema_completeness",
+      "points_earned": 9.0,
+      "max_points": 12,
+      "percentage": 0.7499999999999999
+    },
+    {
+      "criterion_id": "schema_correctness",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "schema_extensibility",
+      "points_earned": 6.0,
+      "max_points": 8,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "schema_realworld",
+      "points_earned": 0,
+      "max_points": 8,
+      "percentage": 0.0
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 4 failing sub-attributes (10.7 pts recoverable), 3 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_length: 76% \u2014 keep unchanged\n  \u2713 email_opening: 100% \u2014 keep unchanged\n  \u2713 email_tone: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_subject.curiosity_hook (current: 50%, 3.5 pts at stake)\n    Scorer's critique: Creates curiosity with the Oracle achievement but follows standard angel email format without innovative hook elements.\n    Measurement spec: 1.0 if compelling + honest, 0.5 if generic, 0.0 if spammy\n    Evidence found: Goes beyond rubric with independent domain expertise: Standard angel check format without unique hook innovation\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard angel check format without unique hook innovation\n    \u2192 ACTION: Consider a more unique angle, like 'Angel check for Lio \u2014 your Munich Re deal reminds me of my Oracle days' to create stronger curiosity.\n\n  FIX 2: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Scorer's critique: Clear single ask for a 15-minute call, but uses standard format without unique elements.\n    Measurement spec: 1.0 if one clear ask, 0.5 if implied, 0.0 if multiple/confusing\n    Evidence found: Goes beyond rubric with independent domain expertise: Standard call request format without innovative CTA approach\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard call request format without innovative CTA approach\n    \u2192 ACTION: Consider adding value preview: 'Free for a 15-min call Thursday or Friday? Happy to share my procurement buyer playbook first if helpful.'\n\n  FIX 3: email_social_proof.restraint (current: 50%, 2.4 pts at stake)\n    Scorer's critique: While not a resume dump, includes more than the ideal 1-2 proof points, spreading across multiple Oracle achievements.\n    Measurement spec: 1.0 if 1-2 tight proof points, 0.5 if 3-4, 0.0 if resume paragraph\n    Evidence found: Uses 1-2 tight proof points: Multiple proof elements: Oracle role, Redwood product, $2B-$8B scaling, Fortune 500 experience, buying committee experience; Goes beyond rubric with independent domain expertise: Standard approach to proof point presentation\n    \u2717 FAILED CHECK: Uses 1-2 tight proof points\n      Evidence: Multiple proof elements: Oracle role, Redwood product, $2B-$8B scaling, Fortune 500 experience, buying committee experience\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard approach to proof point presentation\n    \u2192 ACTION: Consolidate to one primary proof point: 'As Product Director at Oracle, I scaled procurement workflows from $2B to $8B in managed spend' and save other details for the call.\n\n  FIX 4: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Scorer's critique: Claims are verifiable with specific companies and metrics, but presented in standard format without additional credibility signals.\n    Measurement spec: 1.0 if verifiable claims, 0.5 if plausible, 0.0 if unsubstantiated\n    Evidence found: Goes beyond rubric with independent domain expertise: Standard credential presentation without unique verification approach\n    \u2717 FAILED CHECK: Goes beyond rubric with independent domain expertise\n      Evidence: Standard credential presentation without unique verification approach\n    \u2192 ACTION: Add a brief verification element like 'happy to connect you with my former Oracle procurement team lead' to enhance credibility.\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone",
+    "email_length"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta"
+  ],
+  "prior_score": 0.7661,
+  "prior_criterion_scores": {
+    "email_subject": 0.6625,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.675,
+    "email_cta": 0.6625,
+    "email_tone": 1.0,
+    "email_length": 0.7614
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "iteration": 2,
+  "feedback_text": "DIAGNOSIS: 4 failing sub-attributes (10.7 pts recoverable), 2 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 email_opening: 100% \u2014 keep unchanged\n  \u2713 email_tone: 100% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: email_subject.curiosity_hook (current: 50%, 3.5 pts at stake)\n    Scorer's critique: Subject creates clear reason to open with direct value proposition ($1M check) but uses fairly standard investor outreach format.\n    Measurement spec: 1.0 if compelling + honest, 0.5 if generic, 0.0 if spammy\n    Evidence found: Goes beyond rubric with independent expertise: Standard format for investor outreach - follows common patterns without unique creative approach\n    \u2717 FAILED CHECK: Goes beyond rubric with independent expertise\n      Evidence: Standard format for investor outreach - follows common patterns without unique creative approach\n    \u2192 ACTION: Consider adding a more unique angle or specific insight that differentiates from typical investor emails, while maintaining honesty.\n\n  FIX 2: email_cta.clarity (current: 50%, 2.8 pts at stake)\n    Scorer's critique: CTA offers two options (email or call) which reduces clarity by creating choice paralysis rather than one clear ask.\n    Measurement spec: 1.0 if one clear ask, 0.5 if implied, 0.0 if multiple/confusing\n    Evidence found: Single unambiguous ask: Two options presented: 'share my thesis on procurement automation over email first, or grab 15 minutes'; No confusing multiple asks: Presents two different options which could create decision paralysis; Goes beyond rubric with independent expertise: Standard dual-option CTA format commonly used in outreach\n    \u2717 FAILED CHECK: Single unambiguous ask\n      Evidence: Two options presented: 'share my thesis on procurement automation over email first, or grab 15 minutes'\n    \u2717 FAILED CHECK: No confusing multiple asks\n      Evidence: Presents two different options which could create decision paralysis\n    \u2717 FAILED CHECK: Goes beyond rubric with independent expertise\n      Evidence: Standard dual-option CTA format commonly used in outreach\n    \u2192 ACTION: Choose one primary CTA, such as: 'Free for a 15-min call Thursday or Friday afternoon?' and remove the email option to increase response rates.\n\n  FIX 3: email_social_proof.restraint (current: 50%, 2.4 pts at stake)\n    Scorer's critique: Good restraint with focused proof points, though could be even more concise.\n    Measurement spec: 1.0 if 1-2 tight proof points, 0.5 if 3-4, 0.0 if resume paragraph\n    Evidence found: Goes beyond rubric with independent expertise: Standard approach to social proof restraint - follows typical investor outreach format\n    \u2717 FAILED CHECK: Goes beyond rubric with independent expertise\n      Evidence: Standard approach to social proof restraint - follows typical investor outreach format\n    \u2192 ACTION: Consider condensing the Oracle experience into one tighter sentence to maximize impact.\n\n  FIX 4: email_value_prop.credibility (current: 50%, 2.0 pts at stake)\n    Scorer's critique: Claims are verifiable with specific metrics ($2B to $8B) and named company (Oracle), providing solid credibility foundation.\n    Measurement spec: 1.0 if verifiable claims, 0.5 if plausible, 0.0 if unsubstantiated\n    Evidence found: Goes beyond rubric with independent expertise: While claims are specific and verifiable, they follow standard format for operator-investor positioning without unique credibility markers\n    \u2717 FAILED CHECK: Goes beyond rubric with independent expertise\n      Evidence: While claims are specific and verifiable, they follow standard format for operator-investor positioning without unique credibility markers\n    \u2192 ACTION: Consider adding one more unique credibility marker, such as a specific procurement technology you built or a notable customer win.\n",
+  "focus_areas": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta",
+    "email_length"
+  ],
+  "protected_criteria": [
+    "email_opening",
+    "email_tone"
+  ],
+  "improvement_targets": [
+    "email_subject",
+    "email_value_prop",
+    "email_social_proof",
+    "email_cta",
+    "email_length"
+  ],
+  "prior_score": 0.7446,
+  "prior_criterion_scores": {
+    "email_subject": 0.6625,
+    "email_opening": 1.0,
+    "email_value_prop": 0.7,
+    "email_social_proof": 0.675,
+    "email_cta": 0.6625,
+    "email_tone": 1.0,
+    "email_length": 0.5618
+  }
+}

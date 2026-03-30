@@ -1,0 +1,26 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 5 failing sub-attributes (40.0 pts recoverable), 2 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 code_robustness: 75% \u2014 keep unchanged\n  \u2713 code_testability: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: code_idiomaticness.reinvents_csv_module (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Uses csv.reader, csv.Sniffer, and csv.Error appropriately\n    Measurement spec: Uses Python idioms and stdlib appropriately\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: code_idiomaticness.regex_only_parsing (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Builds on csv module rather than regex parsing\n    Measurement spec: Uses Python idioms and stdlib appropriately\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: code_idiomaticness.no_type_structures (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Uses @dataclass ParseResult for structured return\n    Measurement spec: Uses Python idioms and stdlib appropriately\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: code_idiomaticness.mutable_default_args (current: 0%, 8.0 pts at stake)\n    Scorer's critique: Uses None defaults with proper initialization\n    Measurement spec: Uses Python idioms and stdlib appropriately\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: code_idiomaticness.global_state (current: 0%, 8.0 pts at stake)\n    Scorer's critique: All functions are pure with no global state\n    Measurement spec: Uses Python idioms and stdlib appropriately\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n",
+  "focus_areas": [
+    "code_correctness",
+    "code_api_design",
+    "code_idiomaticness"
+  ],
+  "protected_criteria": [
+    "code_robustness",
+    "code_testability"
+  ],
+  "improvement_targets": [
+    "code_correctness",
+    "code_api_design",
+    "code_idiomaticness"
+  ],
+  "prior_score": 0.6136,
+  "prior_criterion_scores": {
+    "code_correctness": 0.75,
+    "code_robustness": 0.75,
+    "code_api_design": 0.75,
+    "code_idiomaticness": 0.0,
+    "code_testability": 0.75
+  }
+}

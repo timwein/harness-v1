@@ -1,0 +1,42 @@
+{
+  "run_id": "7fa8e462_20260330_223742",
+  "iteration": 2,
+  "total_score": 19.93,
+  "max_score": 36,
+  "percentage": 0.553611111111111,
+  "delta_from_prior": -0.0733,
+  "focus_areas": [
+    "expl_accuracy.attention_math",
+    "expl_accessibility.jargon_handling",
+    "expl_accessibility.progressive_complexity",
+    "expl_completeness.mechanism",
+    "expl_completeness.significance"
+  ],
+  "content_path": ".eval_iterations/7fa8e462_20260330_223742/iter_002_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "expl_accuracy",
+      "points_earned": 4.95,
+      "max_points": 12,
+      "percentage": 0.4125
+    },
+    {
+      "criterion_id": "expl_accessibility",
+      "points_earned": 5.87,
+      "max_points": 10,
+      "percentage": 0.5874999999999999
+    },
+    {
+      "criterion_id": "expl_engagement",
+      "points_earned": 5.59,
+      "max_points": 8,
+      "percentage": 0.6993006993006993
+    },
+    {
+      "criterion_id": "expl_completeness",
+      "points_earned": 3.52,
+      "max_points": 6,
+      "percentage": 0.5874999999999999
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "run_id": "b888f9bf_20260330_221913",
+  "iteration": 3,
+  "total_score": 21.009999999999998,
+  "max_score": 36,
+  "percentage": 0.5836111111111111,
+  "delta_from_prior": -0.0414,
+  "focus_areas": [
+    "arg_nuance.absolutist_claim",
+    "arg_nuance.dismisses_without_evidence",
+    "arg_nuance.ignores_counterexamples",
+    "arg_nuance.no_uncertainty_acknowledgment",
+    "arg_nuance.appeal_to_authority_only"
+  ],
+  "content_path": ".eval_iterations/b888f9bf_20260330_221913/iter_003_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "arg_steelman",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "arg_counter_quality",
+      "points_earned": 9.0,
+      "max_points": 12,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "arg_nuance",
+      "points_earned": 0,
+      "max_points": 8,
+      "percentage": 0.0
+    },
+    {
+      "criterion_id": "arg_readability",
+      "points_earned": 4.51,
+      "max_points": 6,
+      "percentage": 0.7511737089201878
+    }
+  ]
+}

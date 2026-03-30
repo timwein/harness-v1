@@ -1,0 +1,27 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 10 failing sub-attributes (76.6 pts recoverable), 1 passing.\n\nDO NOT CHANGE (these sections are passing):\n  \u2713 bash_correctness: 75% \u2014 keep unchanged\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: bash_safety.no_set_e (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - script properly uses set -euo pipefail\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: set -euo pipefail\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: bash_safety.no_pipefail (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - pipefail is included in the set command\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: set -euo pipefail\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: bash_safety.hardcoded_password (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - password is read from environment variable\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: : ${PGPASSWORD:?\"PGPASSWORD environment variable is required\"}\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: bash_safety.no_trap_cleanup (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - proper trap cleanup is implemented\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: trap cleanup EXIT\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: bash_safety.no_temp_file_cleanup (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - temp files are cleaned up in cleanup function\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: if [[ -d \"$TEMP_DIR\" ]]; then\n        rm -rf \"$TEMP_DIR\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: bash_safety.unquoted_variables (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - variables are consistently quoted\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: Variables are properly quoted throughout: \"$DB_HOST\", \"$DB_PORT\", \"$TEMP_BACKUP\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 7: bash_safety.no_lockfile (current: 0%, 10.0 pts at stake)\n    Scorer's critique: ABSENT - lockfile mechanism is implemented\n    Measurement spec: Script is safe \u2014 set -euo pipefail, no secrets in code, cleanup on failure\n    Evidence found: LOCK_FILE=\"/var/run/pg_backup_${DB_NAME:-default}.lock\"\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 8: bash_logging.log_destination (current: 50%, 2.8 pts at stake)\n    Scorer's critique: Properly implements dual output to both file and stdout using tee command as specified in rubric.\n    Measurement spec: 1.0 if tee to file + stdout, 0.5 if one, 0.0 if neither\n    Evidence found: Goes beyond rubric with additional features: Standard tee implementation without additional enhancements\n    \u2717 FAILED CHECK: Goes beyond rubric with additional features\n      Evidence: Standard tee implementation without additional enhancements\n\n  FIX 9: bash_notifications.configurability (current: 50%, 2.0 pts at stake)\n    Scorer's critique: All notification channels are properly configurable via environment variables as required by rubric.\n    Measurement spec: 1.0 if configurable, 0.5 if hardcoded but works, 0.0 if neither\n    Evidence found: Goes beyond rubric with additional features: Standard environment variable configuration without additional enhancements\n    \u2717 FAILED CHECK: Goes beyond rubric with additional features\n      Evidence: Standard environment variable configuration without additional enhancements\n\n  FIX 10: bash_configurability.help_flag (current: 50%, 1.8 pts at stake)\n    Scorer's critique: Implements comprehensive help system with usage instructions and environment variable documentation as required.\n    Measurement spec: 1.0 if --help works, 0.0 if no help\n    Evidence found: Goes beyond rubric with additional features: Standard help implementation without additional enhancements\n    \u2717 FAILED CHECK: Goes beyond rubric with additional features\n      Evidence: Standard help implementation without additional enhancements\n",
+  "focus_areas": [
+    "bash_safety",
+    "bash_logging",
+    "bash_notifications",
+    "bash_configurability"
+  ],
+  "protected_criteria": [
+    "bash_correctness"
+  ],
+  "improvement_targets": [
+    "bash_safety",
+    "bash_logging",
+    "bash_notifications",
+    "bash_configurability"
+  ],
+  "prior_score": 0.542,
+  "prior_criterion_scores": {
+    "bash_correctness": 0.75,
+    "bash_safety": 0.0,
+    "bash_logging": 0.6625,
+    "bash_notifications": 0.6875,
+    "bash_configurability": 0.675
+  }
+}

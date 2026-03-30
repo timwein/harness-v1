@@ -1,0 +1,42 @@
+{
+  "run_id": "b45bcc82_20260330_221057",
+  "iteration": 3,
+  "total_score": 22.5,
+  "max_score": 36,
+  "percentage": 0.625,
+  "delta_from_prior": 0.025,
+  "focus_areas": [
+    "sql_performance.select_star",
+    "sql_performance.correlated_subquery",
+    "sql_performance.missing_index_suggestion",
+    "sql_performance.cartesian_join_risk",
+    "sql_performance.function_on_indexed_column"
+  ],
+  "content_path": ".eval_iterations/b45bcc82_20260330_221057/iter_003_content.md",
+  "criterion_scores": [
+    {
+      "criterion_id": "sql_schema",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.7499999999999999
+    },
+    {
+      "criterion_id": "sql_correctness",
+      "points_earned": 9.0,
+      "max_points": 12,
+      "percentage": 0.75
+    },
+    {
+      "criterion_id": "sql_readability",
+      "points_earned": 6.0,
+      "max_points": 8,
+      "percentage": 0.7499999999999999
+    },
+    {
+      "criterion_id": "sql_performance",
+      "points_earned": 0,
+      "max_points": 6,
+      "percentage": 0.0
+    }
+  ]
+}

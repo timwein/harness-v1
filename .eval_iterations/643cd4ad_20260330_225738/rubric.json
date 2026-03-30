@@ -1,0 +1,203 @@
+{
+  "task": "Generate 5 names for a startup that does AI-powered contract review for mid-market law firms",
+  "domain": "creative_naming",
+  "total_points": 36,
+  "pass_threshold": 0.75,
+  "criteria": [
+    {
+      "id": "name_count",
+      "category": "structure",
+      "description": "Exactly 5 names provided, each with rationale",
+      "pass_condition": "Exactly 5 names. Each has 1-2 sentence rationale explaining the thinking behind it.",
+      "scoring": {
+        "method": "binary",
+        "max_points": 4,
+        "sub_attributes": [],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "5 names, each with explanation of etymology and positioning"
+      ],
+      "fail_examples": [
+        "3 names with no explanation, or 10 names dumped"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "name_memorability",
+      "category": "quality",
+      "description": "Names are memorable, pronounceable, and pass the 'phone test'",
+      "pass_condition": "Each name: \u22643 syllables preferred, no awkward letter combos, survives being spoken aloud, doesn't require spelling out.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "pronounceability",
+            "description": "Names can be said aloud without confusion",
+            "weight": 0.4,
+            "measurement": "% of names that pass the phone test (say it, spell it)",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "brevity",
+            "description": "Short, punchy \u2014 ideally \u22643 syllables",
+            "weight": 0.3,
+            "measurement": "% of names at \u22643 syllables",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "distinctiveness",
+            "description": "Doesn't blend in with existing brands",
+            "weight": 0.3,
+            "measurement": "% of names that are distinct from obvious competitors",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Clause' \u2014 1 syllable, legal meaning, memorable"
+      ],
+      "fail_examples": [
+        "'IntelliLegalContractAI' \u2014 unmemorable, generic compound"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "name_domain_resonance",
+      "category": "relevance",
+      "description": "Names signal legal/contract/AI domain without being generic",
+      "pass_condition": "Names evoke precision, trust, intelligence, or legal concepts. Not generic 'AI' prefix/suffix spam. Would feel at home on a law firm partner's desk.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 10,
+        "sub_attributes": [
+          {
+            "sub_id": "domain_signal",
+            "description": "Evokes legal/contract/precision without being literal",
+            "weight": 0.4,
+            "measurement": "% of names with subtle domain resonance",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "avoids_generic_ai",
+            "description": "No 'AI' prefix/suffix, no '-ify', no 'Smart[X]'",
+            "weight": 0.3,
+            "measurement": "% of names avoiding generic tech naming patterns",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "trust_register",
+            "description": "Would a law firm partner take a meeting with this company?",
+            "weight": 0.3,
+            "measurement": "% of names that feel professional enough for legal market",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Redline' \u2014 contract review term, implies precision and editing"
+      ],
+      "fail_examples": [
+        "'ContractAI', 'SmartReview', 'LegalBot'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "name_availability",
+      "category": "practicality",
+      "description": "Names are likely available \u2014 .com plausible, not taken by major brands",
+      "pass_condition": "At least 3/5 names have plausible .com availability (not common English words). None are existing well-known brands. Notes on availability included.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 6,
+        "sub_attributes": [
+          {
+            "sub_id": "domain_plausibility",
+            "description": "Names likely have .com available or reasonable variant",
+            "weight": 0.5,
+            "measurement": "% of names where .com is plausible (not a common English word)",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "no_trademark_conflicts",
+            "description": "Not an existing well-known brand name",
+            "weight": 0.5,
+            "measurement": "% of names with no obvious trademark conflict",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "'Clausebound' \u2014 coined word, .com likely available"
+      ],
+      "fail_examples": [
+        "'Scout' \u2014 common word, definitely taken"
+      ],
+      "domain": "",
+      "research_basis": ""
+    },
+    {
+      "id": "name_variety",
+      "category": "range",
+      "description": "Names span different naming strategies \u2014 not all the same pattern",
+      "pass_condition": "Mix of approaches: metaphorical, coined, real-word-repurposed, compound, classical/Latin root. At least 3 different strategies.",
+      "scoring": {
+        "method": "weighted_components",
+        "max_points": 6,
+        "sub_attributes": [
+          {
+            "sub_id": "strategy_diversity",
+            "description": "At least 3 different naming strategies used",
+            "weight": 0.5,
+            "measurement": "1.0 if 4+ strategies, 0.75 if 3, 0.5 if 2, 0.0 if all same",
+            "thresholds": {}
+          },
+          {
+            "sub_id": "range_of_tone",
+            "description": "Mix of serious/approachable/bold",
+            "weight": 0.5,
+            "measurement": "1.0 if clear tonal range, 0.5 if some variation, 0.0 if monotone",
+            "thresholds": {}
+          }
+        ],
+        "penalties": {},
+        "tiers": {},
+        "points_per_instance": 1.0,
+        "max_instances": 10
+      },
+      "source": "generated",
+      "pass_examples": [
+        "Metaphorical (Redline) + coined (Clausefy) + classical (Lex Machina) + compound (Inkwell)"
+      ],
+      "fail_examples": [
+        "5 variations of '[Legal word] + AI'"
+      ],
+      "domain": "",
+      "research_basis": ""
+    }
+  ],
+  "dimensions": null
+}

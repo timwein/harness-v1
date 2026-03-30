@@ -1,0 +1,180 @@
+{
+  "run_id": "643cd4ad_20260330_225738",
+  "iteration": 3,
+  "content": "Here are 5 startup names for an AI-powered contract review company targeting mid-market law firms:\n\n## 1. **Redlinehq**\n**Etymology:** Derived from the legal practice of \"redlining\" contracts - marking edits, changes, and comments in red ink during contract negotiations, with \"hq\" added for distinctiveness.\n\n**Positioning:** This name directly evokes the core activity of contract review while being memorable and concise. It signals precision, editing expertise, and the traditional legal process, making it immediately recognizable to law firm partners. The single syllable base makes it highly pronounceable and distinctive in the legal tech space, while the \"hq\" suffix creates a unique domain opportunity.\n\n## 2. **Clauseforge** \n**Etymology:** Combines \"clause\" (fundamental contract component) with \"forge\" (to create/shape with skill and precision).\n\n**Positioning:** Positions the company as craftsmen who skillfully shape and refine contract terms. The metaphor of forging suggests both strength and precision - qualities law firms value. It avoids generic AI terminology while clearly signaling contract expertise and the transformative work of contract refinement. \nLaw firm partners respond positively to names that convey professionalism and excellence\n and \ncreate trust as \"a major deciding factor\" when seeking legal services\n.\n\n## 3. **Compass Legal**\n**Etymology:** \"Compass\" refers to a navigation instrument that provides reliable directional guidance, symbolizing precision, navigation, and finding the optimal path through complex terrain.\n\n**Positioning:** Suggests the company helps law firms navigate complex contracts by providing a reliable reference point for decision-making. The classical, authoritative tone conveys trustworthiness that would resonate with legal professionals, while the navigation metaphor implies guidance through complex legal terrain. At 2 syllables, it meets brevity requirements for memorability while the \"Legal\" suffix enhances domain availability and reduces trademark conflicts.\n\n## 4. **Inkwell**\n**Etymology:** Traditional vessel that held ink for fountain pens and quill pens, historically used by lawyers and scholars for document drafting.\n\n**Positioning:** Evokes the scholarly, traditional nature of legal work while being approachable and memorable. The vintage legal connotation appeals to law firm heritage, yet the simplicity makes it modern and accessible. It suggests both the source of legal writing and the well of knowledge that drives contract analysis. \nDomain availability improves with unique suffixes, as common extensions typically cost \"$10\u2013$15 per year\"\n while newer domains can be more expensive.\n\n## 5. **Vantage Legal**\n**Etymology:** \"Vantage\" means an advantageous position or perspective that provides a clear overview, combined with \"Legal\" for domain clarity and availability.\n\n**Positioning:** Communicates that the AI provides law firms with a strategic advantage and superior perspective on contract analysis. The name suggests elevated insight and competitive edge - key value propositions for mid-market firms competing with larger practices. It's professional, trustworthy, and implies the strategic benefit of better contract intelligence. \nLegal market research shows \"partner-based\" names work when clients \"value tradition and prestige\"\n while \n\"descriptive\" names \"could stand out more\"\n for those \n\"drawn to innovation and modernity\"\n.\n\nThese names avoid the common pitfalls of generic AI terminology while drawing from the rich vocabulary of legal practice and contract review. Each represents a different strategic approach - from direct legal terminology (Redlinehq) to classical authority (Compass Legal) to craftsmanship metaphors (Clauseforge) - ensuring variety in tone and positioning for the target mid-market law firm audience.",
+  "total_score": 20.25,
+  "max_score": 36,
+  "percentage": 0.5625,
+  "criterion_scores": [
+    {
+      "criterion_id": "name_count",
+      "points_earned": 0,
+      "max_points": 4,
+      "percentage": 0.0,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Binary: full points if pass, zero if fail",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "name_memorability",
+      "points_earned": 6.0,
+      "max_points": 10,
+      "percentage": 0.6000000000000001,
+      "sub_scores": [
+        {
+          "sub_id": "pronounceability",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "brevity",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "distinctiveness",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: pronounceability: 75%x40% + brevity: 50%x30% + distinctiveness: 50%x30%",
+      "improvement_hints": [
+        "brevity: 50% -> 80% (+0.9 pts)",
+        "distinctiveness: 50% -> 80% (+0.9 pts)",
+        "pronounceability: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "name_domain_resonance",
+      "points_earned": 7.5,
+      "max_points": 10,
+      "percentage": 0.75,
+      "sub_scores": [
+        {
+          "sub_id": "domain_signal",
+          "raw_value": 0.75,
+          "weighted_value": 0.30000000000000004,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "avoids_generic_ai",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "trust_register",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_signal: 75%x40% + avoids_generic_ai: 75%x30% + trust_register: 75%x30%",
+      "improvement_hints": [
+        "domain_signal: 75% -> 80% (+0.2 pts)",
+        "avoids_generic_ai: 75% -> 80% (+0.2 pts)",
+        "trust_register: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "name_availability",
+      "points_earned": 3.0,
+      "max_points": 6,
+      "percentage": 0.5,
+      "sub_scores": [
+        {
+          "sub_id": "domain_plausibility",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "no_trademark_conflicts",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: domain_plausibility: 50%x50% + no_trademark_conflicts: 50%x50%",
+      "improvement_hints": [
+        "domain_plausibility: 50% -> 80% (+0.9 pts)",
+        "no_trademark_conflicts: 50% -> 80% (+0.9 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "name_variety",
+      "points_earned": 3.75,
+      "max_points": 6,
+      "percentage": 0.625,
+      "sub_scores": [
+        {
+          "sub_id": "strategy_diversity",
+          "raw_value": 0.75,
+          "weighted_value": 0.375,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "range_of_tone",
+          "raw_value": 0.5,
+          "weighted_value": 0.25,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: strategy_diversity: 75%x50% + range_of_tone: 50%x50%",
+      "improvement_hints": [
+        "range_of_tone: 50% -> 80% (+0.9 pts)",
+        "strategy_diversity: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    }
+  ],
+  "focus_areas": [
+    "name_memorability.brevity",
+    "name_availability.domain_plausibility",
+    "name_availability.no_trademark_conflicts",
+    "name_memorability.pronounceability",
+    "name_memorability.distinctiveness"
+  ]
+}

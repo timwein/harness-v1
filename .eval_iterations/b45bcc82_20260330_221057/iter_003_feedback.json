@@ -1,0 +1,24 @@
+{
+  "iteration": 3,
+  "feedback_text": "DIAGNOSIS: 6 failing sub-attributes (33.6 pts recoverable), 0 passing.\n\nREQUIRED FIXES (ordered by point impact):\n\n  FIX 1: sql_performance.select_star (current: 0%, 6.0 pts at stake)\n    Scorer's critique: Query uses explicit column selection throughout\n    Measurement spec: Query would perform well at scale (millions of rows)\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 2: sql_performance.correlated_subquery (current: 0%, 6.0 pts at stake)\n    Scorer's critique: Uses CTEs and JOINs instead of correlated subqueries\n    Measurement spec: Query would perform well at scale (millions of rows)\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 3: sql_performance.missing_index_suggestion (current: 0%, 6.0 pts at stake)\n    Scorer's critique: Includes comprehensive indexing strategy: 'CREATE INDEX idx_orders_customer_id ON orders(customer_id); CREATE INDEX idx_payments_customer_id_type ON payments(customer_id, payment_type)'\n    Measurement spec: Query would perform well at scale (millions of rows)\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 4: sql_performance.cartesian_join_risk (current: 0%, 6.0 pts at stake)\n    Scorer's critique: All JOINs use proper ON clauses with PK/FK relationships\n    Measurement spec: Query would perform well at scale (millions of rows)\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 5: sql_performance.function_on_indexed_column (current: 0%, 6.0 pts at stake)\n    Scorer's critique: Avoids functions on indexed columns in WHERE clauses as noted in performance comments\n    Measurement spec: Query would perform well at scale (millions of rows)\n    Evidence found: not found in content\n    \u26a0 This is a PENALTY violation \u2014 removing it recovers points\n\n  FIX 6: sql_correctness.grouping (current: 50%, 3.6 pts at stake)\n    Scorer's critique: Query uses proper GROUP BY customer_id, ORDER BY DESC, and LIMIT 10 as required. Implementation is correct but follows standard patterns.\n    Measurement spec: 1.0 if correct, 0.0 if missing or wrong\n    Evidence found: Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute?: Standard GROUP BY, ORDER BY, LIMIT implementation without additional sophistication\n    \u2717 FAILED CHECK: Does the content go BEYOND rubric guidance with independent domain expertise on this sub-attribute?\n      Evidence: Standard GROUP BY, ORDER BY, LIMIT implementation without additional sophistication\n",
+  "focus_areas": [
+    "sql_schema",
+    "sql_correctness",
+    "sql_readability",
+    "sql_performance"
+  ],
+  "protected_criteria": [],
+  "improvement_targets": [
+    "sql_schema",
+    "sql_correctness",
+    "sql_readability",
+    "sql_performance"
+  ],
+  "prior_score": 0.6,
+  "prior_criterion_scores": {
+    "sql_schema": 0.75,
+    "sql_correctness": 0.675,
+    "sql_readability": 0.75,
+    "sql_performance": 0.0
+  }
+}

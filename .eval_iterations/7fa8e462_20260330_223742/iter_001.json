@@ -1,0 +1,150 @@
+{
+  "run_id": "7fa8e462_20260330_223742",
+  "iteration": 1,
+  "content": "You know how autocomplete seems to read your mind? When you start typing \"The cat sat on the...\" and your phone suggests \"mat,\" it's doing something remarkably clever behind the scenes. Here's the secret: it's using **attention mechanisms** \u2014 the same technology that powers ChatGPT, Google Translate, and every major AI breakthrough you've heard about.\n\n## The Problem That Started It All\n\nBack in 2017, AI had a frustrating limitation. \nThe best language models used RNNs (recurrent neural networks), which were great at processing text but had a major flaw: they forgot things\n. \nRNNs favored more recent information contained in words at the end of a sentence, while information earlier in the sentence tended to be attenuated\n. \n\nImagine trying to understand this sentence by only remembering the last few words: \"The artist who painted the beautiful landscape that hangs in the museum **sold** the work last year.\" By the time you reach \"sold,\" you've forgotten who did the selling! \nThis made it difficult for an RNN to discern correlations that have many steps in between them. Attention mechanisms, conversely, can examine an entire sequence simultaneously\n.\n\n## Enter the Game-Changer: Attention\n\n\nIn 2017, the seminal paper \"Attention is All You Need\" introduced the transformer model, which eschews recurrence altogether in favor of only attention layers\n. But what exactly is attention doing?\n\nThink of it like this: every word in a sentence gets to ask questions about every other word, like a massive group chat where everyone can talk to everyone else simultaneously. \nThe mechanism itself computes importance values between each pair of words; every word looks at every other word to decide which ones are most important to understanding the context\n.\n\n## The Magic Behind the Curtain: Query, Key, Value\n\nHere's where it gets really clever. \nThe seminal \"Attention is All You Need\" paper articulated its attention mechanism by using the terminology of a relational database: queries, keys and values\n. \n\n\nThink of when you search for something on YouTube. YouTube stores all its videos as a pair of \"video title\" and the \"video file\" itself \u2014 a Key-Value pair, with the Key being the video title and the Value being the video itself. The text you put in the search box is called a Query. So when you search, YouTube compares your search Query with the Keys of all its videos, measures similarity, and ranks their Values from highest similarity down\n.\n\nAttention works exactly the same way:\n- **Query**: Each word asks \"What should I pay attention to?\" \nThe query vector represents the information a given token is seeking\n\n- **Key**: Each word advertises \"Here's what I know about!\" \nThe key vectors represent the information that each token contains\n\n- **Value**: Each word shares its actual content. \nThe value applies the attention-weighted information from the key vectors\n\n\n\nFor each position in our input sequence, we create a query asking \"What should I pay attention to?\" Then we compare this query against all the keys to find matches. Finally, we retrieve the values corresponding to the best matches\n.\n\n## The Math (Don't Worry, It's Intuitive!)\n\nHere's the beautiful part: \nThe query word vector is dot-product-ed with each key vector to get weights. These weights go through softmax normalization to values between 0 and 1. Finally, the value vectors are summed in a weighted average using these normalized weights\n.\n\n\nAttention weights are computed using a softmax function, which normalizes all values to a range between 0\u20131 such that they all add up to 1. An attention weight of 0 means that element should be ignored. An attention weight of 1 means that element should receive 100% attention\n.\n\n## Why Multiple Heads Matter\n\nBut wait, there's more! \nMulti-head attention enhances this process by introducing multiple parallel attention heads. Each attention head learns different linear projections of the Q, K, and V matrices. This allows the model to capture different aspects of relationships between words simultaneously, rather than focusing on a single aspect\n.\n\n\nSeparate sections of the embedding can learn different aspects of the meanings of each word, as it relates to other words in the sequence. This allows the Transformer to capture richer interpretations\n. \nFor instance, one section might capture the 'gender-ness' (male, female, neuter) of a noun while another might capture the 'cardinality' (singular vs plural) of a noun. This might be important during translation because, in many languages, the verb depends on these factors\n.\n\n\nBy running several smaller attention heads in parallel, the model can capture different patterns (such as syntax, positional, etc) simultaneously, improving accuracy and stability\n.\n\n## What This All Means\n\n\nThe transformer architecture has since become the backbone of the cutting-edge models powering the ongoing era of generative AI\n. \nStarting in 2018, the OpenAI GPT series of decoder-only transformers became state of the art in natural language generation\n.\n\nBy letting every word simultaneously attend to every other word, transformers solved the \"forgetting\" problem that plagued earlier models. \nThis self-attention mechanism allows the model to consider the entire sequence when computing attention scores, enabling it to capture relationships between distant words. This addresses one of the key limitations of RNNs, which struggle with long-term dependencies\n.\n\nThe result? AI that can write essays, translate languages, answer questions, and yes, predict that you probably want to type \"mat\" after \"The cat sat on the...\" \u2014 all because attention mechanisms let language models see the full picture, not just the last few words.",
+  "total_score": 22.57,
+  "max_score": 36,
+  "percentage": 0.6269444444444444,
+  "criterion_scores": [
+    {
+      "criterion_id": "expl_accuracy",
+      "points_earned": 7.95,
+      "max_points": 12,
+      "percentage": 0.6624999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "qkv_correctness",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "attention_math",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "multihead_purpose",
+          "raw_value": 0.75,
+          "weighted_value": 0.22499999999999998,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: qkv_correctness: 75%x35% + attention_math: 50%x35% + multihead_purpose: 75%x30%",
+      "improvement_hints": [
+        "attention_math: 50% -> 80% (+1.3 pts)",
+        "qkv_correctness: 75% -> 80% (+0.2 pts)",
+        "multihead_purpose: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "expl_accessibility",
+      "points_earned": 5.87,
+      "max_points": 10,
+      "percentage": 0.5874999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "jargon_handling",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "analogy_quality",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "progressive_complexity",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: jargon_handling: 50%x30% + analogy_quality: 75%x35% + progressive_complexity: 50%x35%",
+      "improvement_hints": [
+        "jargon_handling: 50% -> 80% (+0.9 pts)",
+        "progressive_complexity: 50% -> 80% (+1.1 pts)",
+        "analogy_quality: 75% -> 80% (+0.2 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "expl_engagement",
+      "points_earned": 5.23,
+      "max_points": 8,
+      "percentage": 0.6543075245365322,
+      "sub_scores": [],
+      "penalties_applied": [],
+      "evidence": "Word count: 917 (target: \u2264600) \u2717",
+      "methodology": "Deterministic: word count \u2264 max",
+      "improvement_hints": [],
+      "priority": 1,
+      "critique": ""
+    },
+    {
+      "criterion_id": "expl_completeness",
+      "points_earned": 3.52,
+      "max_points": 6,
+      "percentage": 0.5874999999999999,
+      "sub_scores": [
+        {
+          "sub_id": "motivation",
+          "raw_value": 0.75,
+          "weighted_value": 0.26249999999999996,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "mechanism",
+          "raw_value": 0.5,
+          "weighted_value": 0.175,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        },
+        {
+          "sub_id": "significance",
+          "raw_value": 0.5,
+          "weighted_value": 0.15,
+          "evidence": "",
+          "target": 0.8,
+          "details": {}
+        }
+      ],
+      "penalties_applied": [],
+      "evidence": "",
+      "methodology": "Weighted: motivation: 75%x35% + mechanism: 50%x35% + significance: 50%x30%",
+      "improvement_hints": [
+        "mechanism: 50% -> 80% (+0.6 pts)",
+        "significance: 50% -> 80% (+0.5 pts)",
+        "motivation: 75% -> 80% (+0.1 pts)"
+      ],
+      "priority": 1,
+      "critique": ""
+    }
+  ],
+  "focus_areas": []
+}
