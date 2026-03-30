@@ -6726,6 +6726,18 @@ class RubricLoop:
                 except Exception as _e:
                     self._log(f"[RubricRAG] Save failed (non-fatal): {_e}")
 
+                # RubricRAG seeding: persist per-criterion effectiveness metadata so
+                # future runs can retrieve individual criteria (not whole rubrics) that
+                # proved discriminating on similar tasks, injecting them as seeds.
+                if result.history:
+                    try:
+                        self.rag_store.save_criterion_effectiveness(
+                            result.rubric.task, result.rubric, result.history
+                        )
+                        self._log("[RubricRAG] Saved per-criterion effectiveness metadata")
+                    except Exception as _e:
+                        self._log(f"[RubricRAG] Criterion effectiveness save failed (non-fatal): {_e}")
+
             # Scan for outcome signals from prior runs
             signals = self.outcome_tracker.scan_git_outcomes(
                 repo_path=self.repo_path, lookback_days=14
