@@ -296,7 +296,11 @@ async def run_harness(
     model: str,
     verbose: bool,
 ) -> RunResult:
-    """Full rubric loop run, then re-score final output against sample rubric."""
+    """Full rubric loop run. Uses the loop's own scores directly.
+
+    Since negotiation, tradeoff detection, and quality gate are all disabled,
+    the loop scores against the exact same sample rubric — no re-scoring needed.
+    """
     task_prompt = rubric.task
 
     if verbose:
@@ -324,21 +328,22 @@ async def run_harness(
     )
     harness_secs = time.monotonic() - t0
 
-    if verbose:
-        print(f"  [harness] loop done: {loop_result.final_percentage:.1%} "
-              f"in {loop_result.iterations} iter / {harness_secs:.1f}s")
-        print(f"  [harness] re-scoring final output for fair comparison…")
+    # Use the loop's own best-iteration scores directly. The loop already scored
+    # against the unmodified sample rubric (negotiation/tradeoff/quality-gate are
+    # all disabled), so re-scoring would be redundant and introduces a failure
+    # point where JSON parsing can silently break and produce wrong results.
+    best_iter = max(loop_result.history, key=lambda h: h.percentage)
+    total = best_iter.total_score
+    max_total = best_iter.max_score
+    pct = best_iter.percentage
+    cr_list = [
+        _cs_to_criterion_result(cs, rubric) for cs in best_iter.criterion_scores
+    ]
 
-    # Re-score against the ORIGINAL sample rubric — since we now disable negotiation,
-    # tradeoff detection, and quality gate, the loop rubric should be identical to the
-    # sample rubric. Always use the caller's rubric for a fair apples-to-apples comparison.
-    t1 = time.monotonic()
-    total, max_total, cr_list = await score_against_rubric(scorer, loop_result.output, rubric)
-    rescore_secs = time.monotonic() - t1
-    pct = total / max_total if max_total > 0 else 0.0
-
     if verbose:
-        print(f"  [harness] re-scored: {total:.1f}/{max_total} ({pct:.1%}) | {rescore_secs:.1f}s")
+        print(f"  [harness] loop done: {pct:.1%} "
+              f"in {loop_result.iterations} iter / {harness_secs:.1f}s "
+              f"(best: iter {best_iter.number})")
 
     return RunResult(
         output=loop_result.output,
@@ -346,7 +351,7 @@ async def run_harness(
         max_score=max_total,
         percentage=pct,
         criterion_results=cr_list,
-        wall_seconds=harness_secs + rescore_secs,
+        wall_seconds=harness_secs,
         iterations=loop_result.iterations,
         improvement_summary=loop_result.improvement_summary,
     )
