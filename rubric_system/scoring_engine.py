@@ -547,7 +547,7 @@ class DocumentScorer:
 
         criteria_specs = format_criteria_for_measurement(criteria)
         prompt = MEASUREMENT_EXTRACTION_PROMPT.format(
-            content=content[:15000],
+            content=content[:60000],
             criteria_specs=criteria_specs
         )
 

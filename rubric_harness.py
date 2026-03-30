@@ -2447,6 +2447,13 @@ high-quality content that satisfies specific rubric criteria. You receive:
 - Rubric criteria with pass/fail examples
 - (On iterations 2+) The current best attempt and its score breakdown
 
+You have access to a web search tool. Use it proactively whenever the task or
+rubric requires specific facts, statistics, expert citations, recent research,
+named individuals/institutions, or empirical evidence. Search BEFORE writing
+so your content is grounded in real, verifiable information rather than
+generic claims. Criteria that require specific evidence cannot be satisfied
+without looking things up.
+
 The harness uses observation masking: bulk content from older iterations is
 offloaded to disk and resolved for you before being placed in this prompt.
 You always receive the actual content of the best prior attempt — never a
@@ -2467,14 +2474,20 @@ Produce content that earns high scores on every rubric criterion."""
             print(f"[Generator] {msg}")
 
     def generate(self, prompt: str, max_tokens: int = 12000) -> str:
-        """Generate content in an isolated context window."""
+        """Generate content in an isolated context window with web search."""
         response = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
             system=self.SYSTEM_PROMPT,
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+            }],
             messages=[{"role": "user", "content": prompt}],
         )
-        return response.content[0].text
+        # Response may include web_search_tool_result blocks; extract only text
+        text_parts = [block.text for block in response.content if hasattr(block, "text")]
+        return "\n".join(text_parts)
 
 
 class ScoringEngine:
@@ -5878,6 +5891,8 @@ FEEDBACK PRINCIPLES:
 
 6. ONE CHANGE PER ITEM: Each feedback item should describe exactly one change. Don't bundle multiple fixes into one instruction.
 
+7. TRAJECTORY AWARENESS: When a score trajectory is provided, analyze it before generating feedback. If a criterion REGRESSED (scored higher in a prior iteration than the current one), your fix instruction must explicitly say what the generator had before that worked, and what it changed that caused the drop. The generator must know: "iter N had X which scored Y%, iter N+1 replaced it with Z and scored lower — restore/recover X while keeping the improvements from iter N+1." Recovering a regression is higher priority than incrementally improving a stable low score.
+
 OUTPUT FORMAT:
 Return a JSON object with this structure:
 {
@@ -5937,6 +5952,7 @@ Return a JSON object with this structure:
         criterion_scores: list,
         rubric,
         iteration_number: int = 1,
+        history: list = None,
     ) -> dict:
         """Generate structured feedback from scoring output.
 
@@ -5945,6 +5961,7 @@ Return a JSON object with this structure:
             criterion_scores: list of CriterionScore objects
             rubric: the Rubric object with criteria definitions
             iteration_number: current iteration (for trajectory context)
+            history: list of prior Iteration objects for trajectory analysis
 
         Returns:
             dict with 'preserve', 'fix', and 'summary' keys
@@ -5997,11 +6014,48 @@ Return a JSON object with this structure:
                     + f"\n{note}\n"
                 )
 
+        # Build score trajectory section from history
+        trajectory_section = ""
+        if history and len(history) > 1:
+            all_crit_ids = [c.id for c in rubric.criteria]
+            best_iter = max(history, key=lambda h: h.percentage)
+            traj_lines = ["SCORE TRAJECTORY (per-criterion, all prior iterations):"]
+            for h in history:
+                scores_by_crit = {cs.criterion_id: cs.percentage for cs in h.criterion_scores}
+                best_flag = " ← BEST" if h.number == best_iter.number else ""
+                crit_parts = "  ".join(
+                    f"{cid}={scores_by_crit.get(cid, 0.0):.0%}" for cid in all_crit_ids
+                )
+                traj_lines.append(f"  iter {h.number} ({h.percentage:.0%}){best_flag}: {crit_parts}")
+
+            # Detect per-criterion regressions vs best
+            current = history[-1]
+            best_scores = {cs.criterion_id: cs.percentage for cs in best_iter.criterion_scores}
+            current_scores = {cs.criterion_id: cs.percentage for cs in current.criterion_scores}
+            regressions = []
+            for cid in all_crit_ids:
+                b_pct = best_scores.get(cid, 0.0)
+                c_pct = current_scores.get(cid, 0.0)
+                if b_pct > c_pct + 0.05:
+                    delta = int(round((b_pct - c_pct) * 100))
+                    regressions.append(
+                        f"  ↓ {cid}: was {b_pct:.0%} at iter {best_iter.number}, "
+                        f"now {c_pct:.0%} (-{delta}%) — MUST RECOVER"
+                    )
+            if regressions:
+                traj_lines.append("\nREGRESSIONS vs BEST ITERATION:")
+                traj_lines.extend(regressions)
+                traj_lines.append(
+                    "→ Fix instructions MUST address these regressions. "
+                    "Recovering lost points takes priority over fixing new issues."
+                )
+            trajectory_section = "\n".join(traj_lines)
+
         prompt = f"""Analyze these scoring results and produce structured feedback for a content generator.
 
 ITERATION: {iteration_number}
 
-RUBRIC CRITERIA (what was being measured):
+{trajectory_section + chr(10) if trajectory_section else ""}RUBRIC CRITERIA (what was being measured):
 {"".join(criteria_lines)}
 
 SCORING RESULTS:
@@ -6010,7 +6064,7 @@ SCORING RESULTS:
 STAGE 1 CHECKLIST (the scorer's binary observations):
 {checklist if checklist else "(No checklist captured — generate feedback from scores and criteria specs only)"}
 
-Generate structured feedback following your system prompt format. Focus on the FAIL criteria — those are where points are being lost. For each failed check, provide a specific, actionable editing instruction."""
+Generate structured feedback following your system prompt format. Focus on the FAIL criteria — those are where points are being lost. For each failed check, provide a specific, actionable editing instruction. If regressions are present in the trajectory, prioritize recovering those scores first."""
 
         self._log(f"Generating structured feedback (iteration {iteration_number})...")
 
@@ -7297,6 +7351,7 @@ class RubricLoop:
                     criterion_scores=criterion_scores,
                     rubric=rubric,
                     iteration_number=i,
+                    history=history,
                 )
                 last_feedback_text = self.feedback_agent.format_for_generator(structured_feedback)
                 self._log(f"  [Feedback] {len(structured_feedback.get('fix', []))} fixes, "
@@ -7400,10 +7455,10 @@ class RubricLoop:
 
         result = LoopResult(
             success=False,
-            output=self._resolve_attempt(last.attempt),
+            output=self._resolve_attempt(best.attempt),
             iterations=len(history),
-            final_score=last.total_score,
-            final_percentage=last.percentage,
+            final_score=best.total_score,
+            final_percentage=best.percentage,
             rubric=rubric,
             history=history,
             improvement_summary=improvements,
