@@ -1,6 +1,39 @@
-# Rubric Harness Eval — Run 4
+# Rubric Harness Eval Results
 
 The rubric harness is a generation-verification loop that generates task-specific scoring rubrics grounded in web research, then iterates generation and verification until a quality threshold is met. For each task it runs a baseline (single-shot generation) and a harness run (iterative regeneration guided by the rubric), then reports the score delta.
+
+---
+
+## Run 6 Results
+
+Run 6 used the resilient eval wrapper (`run_eval_resilient.sh`) which auto-restarts stalled tasks after 8 minutes. 6 of 8 tasks completed successfully; 2 tasks errored out.
+
+| Task | Description | Baseline | Harness | Delta | Iters |
+|---|---|---|---|---|---|
+| agi_counterargument | Write a counterargument to the claim 'AGI will arrive before 2030' | 39.6% | 83.1% | +43.6pp | 4 |
+| billing_schema | Design a JSON schema for a multi-tenant SaaS billing system supporting usage-based and seat-based pricing | 53.2% | 77.9% | +24.7pp | 5 |
+| exec_summary | Summarize a 2,000-word technical blog post into a 3-bullet executive summary | 51.2% | 69.1% | +17.9pp | 5 |
+| sql_ltv_query | Create a SQL query to find the top 10 customers by lifetime value excluding refunds, from a schema you define | 59.9% | 77.5% | +17.6pp | 4 |
+| cold_outreach_email | Write a cold outreach email to a Series A founder pitching angel investment | 51.6% | 68.8% | +17.2pp | 5 |
+| attention_explanation | Explain transformer attention mechanisms to a smart 16-year-old | 61.1% | 58.4% | -2.7pp | 4 |
+| csv_parser | Generate a Python function that parses messy CSV data with inconsistent delimiters and missing headers | 53.8% | ERROR | — | — |
+| startup_naming | Generate 5 names for a startup that does AI-powered contract review for mid-market law firms | 44.4% | ERROR | — | — |
+| **MEAN (6 valid)** | | **52.8%** | **72.5%** | **+19.7pp** | **4.5** |
+
+### Run 6 Observations
+
+- **agi_counterargument biggest win (+43.6pp)** — Consistent with prior runs; the harness excels at driving intellectual honesty and steelman criteria that baseline generation misses entirely.
+- **attention_explanation regression (-2.7pp)** — The only negative delta. The harness iterations degraded quality rather than improving it, suggesting the rubric may have introduced conflicting criteria for this explanatory task.
+- **csv_parser timeout** — Failed with an Anthropic API timeout during the harness phase. Code generation tasks with large outputs remain vulnerable to the 300-second timeout ceiling.
+- **startup_naming error** — Harness phase failed to complete. No error details captured.
+
+---
+
+## Run 5 (Incomplete)
+
+Run 5 was started but never completed. The eval stalled during iteration 4 of `cold_outreach_email` due to API timeouts (the Anthropic API hung with 0% CPU). A `--resume` attempt also stalled. Only 2 tasks were partially evaluated before the run was abandoned in favor of Run 6. No results file was persisted.
+
+The timeout issues identified in Run 5 led to the resilient wrapper script used in Run 6.
 
 ---
 
@@ -22,16 +55,18 @@ The rubric harness is a generation-verification loop that generates task-specifi
 
 ---
 
-## Run 3 vs Run 4 Comparison
+## Cross-Run Comparison
 
-Rubrics are regenerated from scratch each run, so baselines differ. The improvement in mean delta from Run 3 to Run 4 reflects better rubric quality and the new learning features introduced in Run 4.
+Rubrics are regenerated from scratch each run, so baselines differ across runs.
 
-| Run | Mean Baseline | Mean Harness | Mean Delta |
-|---|---|---|---|
-| Run 3 | 54.7% | 73.3% | +18.5pp |
-| Run 4 | 46.9% | 72.9% | +26.0pp |
+| Run | Tasks (valid) | Mean Baseline | Mean Harness | Mean Delta | Notes |
+|---|---|---|---|---|---|
+| Run 3 | 10 | 54.7% | 73.3% | +18.5pp | Initial eval |
+| Run 4 | 9 | 46.9% | 72.9% | +26.0pp | Added learning features |
+| Run 5 | — | — | — | — | Abandoned (API timeouts) |
+| Run 6 | 6 | 52.8% | 72.5% | +19.7pp | Resilient wrapper, 2 errors |
 
-Run 4 baselines are lower on average (harder rubrics), yet harness scores remain comparable — meaning the harness recovered more ground. Mean delta improved by +7.5pp run-over-run.
+Harness scores remain consistent in the 72–73% range across all completed runs. The delta variation is driven primarily by rubric difficulty (lower baselines = larger deltas). Run 4's +26.0pp remains the best delta, aided by harder rubrics and the learning features introduced that run.
 
 ---
 
