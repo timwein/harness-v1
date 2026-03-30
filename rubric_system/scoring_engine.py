@@ -212,6 +212,20 @@ class ScoringEngine:
     ) -> CriterionScore:
         scoring = criterion.scoring
 
+        # Guard against empty measurements — when JSON parsing fails, weighted_components
+        # silently defaults to 0% while penalty_based defaults to 100%. Both should
+        # return a midpoint estimate to avoid asymmetric scoring artifacts.
+        if not measurements and not violations:
+            midpoint = scoring.max_points * 0.5
+            return CriterionScore(
+                criterion_id=criterion.id,
+                points_earned=round(midpoint, 2),
+                max_points=scoring.max_points,
+                percentage=0.5,
+                evidence="WARNING: No measurements extracted — score is a 50% fallback estimate",
+                methodology="Fallback: no measurements available, defaulting to 50%",
+            )
+
         if scoring.method == ScoringMethod.BINARY:
             return self._score_binary(criterion, measurements)
         elif scoring.method == ScoringMethod.PERCENTAGE:

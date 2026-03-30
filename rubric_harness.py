@@ -1937,6 +1937,24 @@ CALIBRATION:
         # (no more fragile Stage 1 text extraction via regex)
         parsed = self._parse_scorer_json(raw)
 
+        # Retry once on parse failure — empty measurements cause asymmetric
+        # scoring (weighted_components→0%, penalty_based→100%) which produces
+        # wildly incorrect results like the Run 7 billing_schema regression.
+        if not parsed:
+            self._log("WARNING: Scorer JSON parse failed — retrying with fresh call...")
+            retry_response = self.client.messages.create(
+                model=self.model,
+                max_tokens=16000,
+                temperature=0,
+                system=self._scorer_system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            retry_raw = retry_response.content[0].text
+            self._last_raw_response = retry_raw
+            parsed = self._parse_scorer_json(retry_raw)
+            if not parsed:
+                self._log("ERROR: Scorer JSON parse failed on retry — scores will be unreliable")
+
         # Extract critiques from the structured JSON into a flat dict for the
         # FeedbackAgent. This is the single source of truth for all downstream
         # feedback — no more separate text checklist.
@@ -6801,6 +6819,15 @@ class RubricLoop:
 
             # Fall through to LLM-based scorer
             crit_measurements = measurements.get(criterion.id, {})
+            # Guard against empty measurements from JSON parse failure —
+            # without this, weighted_components silently scores 0% while
+            # penalty_based silently scores 100%, producing wildly wrong results.
+            if not crit_measurements and measurements:
+                self._log(
+                    f"  [WARN] No measurements for {criterion.id} "
+                    f"(scoring method: {criterion.scoring.method.value}) — "
+                    f"JSON parse may have returned wrong structure"
+                )
             violations = crit_measurements.pop("violations", []) if isinstance(crit_measurements, dict) else []
             score = self.engine.score_criterion(criterion, crit_measurements, violations)
             # Attach per-criterion critique from Stage 1 checklist
