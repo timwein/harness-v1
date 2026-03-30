@@ -6398,6 +6398,88 @@ Respond with a JSON object:
 
 
 # ============================================================================
+# Compute-Aware Iteration Planning (DGM-H Upgrade 5)
+# ============================================================================
+
+
+@_dataclass
+class IterationBudget:
+    """Snapshot of iteration budget state for ComputePlanner decisions."""
+    max_iterations: int
+    current_iteration: int
+    current_score: float
+    score_trajectory: list      # last N scores (floats)
+
+
+class ComputePlanner:
+    """Adapts iteration strategy based on remaining budget and score trajectory.
+
+    Mirrors the compute-aware planning that DGM-H agents developed autonomously —
+    built here deliberately rather than left to chance.
+    """
+
+    def should_run_self_editor(self, budget: IterationBudget) -> bool:
+        """Run SelfEditor when score is stuck and budget is available.
+
+        Don't run when: budget is tight, score is converging, or early in run.
+        """
+        if budget.current_iteration < 3:
+            return False  # too early — not enough data
+
+        # Don't run when close to budget limit
+        if budget.max_iterations > 0:
+            remaining = budget.max_iterations - budget.current_iteration
+            if remaining < 2:
+                return False
+
+        # Run if score has been flat for 2+ iterations
+        if len(budget.score_trajectory) >= 2:
+            recent_delta = abs(
+                budget.score_trajectory[-1] - budget.score_trajectory[-2]
+            )
+            if recent_delta < 0.02:  # stuck
+                return True
+
+        return False
+
+    def adjust_max_iterations(self, budget: IterationBudget) -> int:
+        """Extend or contract max_iterations based on trajectory.
+
+        - Fast converger: reduce to save budget
+        - Stuck but improving: extend to let it run
+        - Stuck flat: trigger SelfEditor instead of extending
+        """
+        if budget.max_iterations == 0:
+            return 0  # unlimited mode — don't cap
+
+        if len(budget.score_trajectory) < 3:
+            return budget.max_iterations
+
+        recent = budget.score_trajectory[-3:]
+        avg_delta = sum(abs(recent[i + 1] - recent[i]) for i in range(2)) / 2
+
+        if avg_delta < 0.01 and budget.current_score > 0.80:
+            # Converged at high score — stop early
+            return budget.current_iteration + 1
+
+        if avg_delta > 0.03 and budget.current_score < 0.75:
+            # Still improving at low score — extend
+            return min(budget.max_iterations + 3, 20)
+
+        return budget.max_iterations
+
+    def exploitation_mode(self, budget: IterationBudget) -> bool:
+        """Switch to exploitation (no new SelfEditor proposals) when budget < 20%."""
+        if budget.max_iterations == 0:
+            return False  # unlimited mode
+        pct_remaining = (
+            (budget.max_iterations - budget.current_iteration)
+            / budget.max_iterations
+        )
+        return pct_remaining < 0.2
+
+
+# ============================================================================
 # Main Harness
 # ============================================================================
 
@@ -7428,9 +7510,29 @@ class RubricLoop:
 
         self._log(f"Run ID: {run_id}")
 
+        # Compute-aware iteration planner (DGM-H Upgrade 5)
+        compute_planner = ComputePlanner()
+
         i = len(history)  # Resume continues from the last completed iteration
         while self.max_iterations == 0 or i < self.max_iterations:
             i += 1
+
+            # Build iteration budget and dynamically adjust max_iterations
+            score_trajectory = [h.percentage for h in history]
+            budget = IterationBudget(
+                max_iterations=self.max_iterations,
+                current_iteration=i,
+                current_score=score_trajectory[-1] if score_trajectory else 0.0,
+                score_trajectory=score_trajectory,
+            )
+            adjusted_max = compute_planner.adjust_max_iterations(budget)
+            if adjusted_max != self.max_iterations and adjusted_max > 0:
+                self._log(
+                    f"  [ComputePlanner] Adjusting max_iterations: "
+                    f"{self.max_iterations} → {adjusted_max}"
+                )
+                self.max_iterations = adjusted_max
+
             self._log(f"\n{'─'*50}")
             self._log(f"Iteration {i} (threshold: {self.pass_threshold:.0%})")
 
@@ -7565,6 +7667,21 @@ class RubricLoop:
                     stall_count = 0
                 else:
                     stall_count += 1
+
+                # DGM-H Upgrade 5: ComputePlanner mid-run self-improvement trigger
+                # When score is stuck and budget allows, run SelfEditor before giving up
+                if (stall_count >= 1
+                        and self.enable_self_improve
+                        and compute_planner.should_run_self_editor(budget)
+                        and not compute_planner.exploitation_mode(budget)):
+                    self._log(
+                        "[ComputePlanner] Score stuck — triggering mid-run self-improvement"
+                    )
+                    try:
+                        self._run_auto_improve()
+                    except Exception as _cp_e:
+                        self._log(f"[ComputePlanner] Mid-run self-improve failed: {_cp_e}")
+
                 if stall_count >= self.stall_threshold:
                     self._log(
                         f"\n[Stall detected] Stopping after iter {i} — "
@@ -7867,6 +7984,8 @@ class RubricLoop:
             self._check_post_apply_regression()
 
         # Auto self-improvement: propose and apply code edits when enough data
+        # DGM-H Upgrade 5: ComputePlanner can also trigger self-improvement
+        # mid-run when scores are stuck, independent of the interval trigger.
         if self._should_auto_improve():
             self._run_auto_improve()
 
