@@ -48,7 +48,7 @@ except ImportError:
 
 from rubric_system.rubric_learning import RubricStore, RubricLearner
 from rubric_system.rubric_store import RubricStore as RubricRAGStore
-from rubric_system.self_improve import OutcomeTracker, LearningIntegrator, SelfEditor
+from rubric_system.self_improve import OutcomeTracker, LearningIntegrator, SelfEditor, RegressionSuite
 
 # Ensure API key is available
 import os
@@ -6225,6 +6225,29 @@ class RubricLoop:
             if signals:
                 self._log(f"[Loop3] Detected {len(signals)} outcome signals from git")
 
+            # --- Regression suite: auto-grow ---
+            # Append best-scoring task results so future patches are validated against them.
+            try:
+                suite = RegressionSuite(verbose=self.verbose)
+                cs_for_suite = [
+                    {"criterion_id": cs["criterion_id"], "percentage": cs["percentage"]}
+                    for cs in record.scores
+                ]
+                added = suite.add_entry(
+                    task=result.rubric.task,
+                    rubric_id=rubric_id,
+                    criterion_scores=cs_for_suite,
+                    overall_score=result.final_percentage,
+                )
+                if added:
+                    self._log(
+                        f"[RegressionSuite] Entry added/updated "
+                        f"(score: {result.final_percentage:.1%}, "
+                        f"{len(cs_for_suite)} criteria)"
+                    )
+            except Exception as _rs_e:
+                self._log(f"[RegressionSuite] Auto-grow failed (non-fatal): {_rs_e}")
+
         except Exception as e:
             self._log(f"[Loop3] Post-run hook error (non-fatal): {e}")
 
@@ -6242,6 +6265,12 @@ class RubricLoop:
             )
         except Exception as e:
             self._log(f"[FeedbackLearning] Reflection failed (non-fatal): {e}")
+
+        # --- Regression suite: post-apply monitoring ---
+        # Compare recent mean score against the regression suite baseline.
+        # If mean drops >2pp, auto-revert the last self-edit.
+        if self.enable_self_improve:
+            self._check_post_apply_regression()
 
         # Auto self-improvement: propose and apply code edits when enough data
         if self._should_auto_improve():
@@ -6363,6 +6392,54 @@ class RubricLoop:
                     self._log(f"  - {p.target_function}: {p.rationale[:80]}")
         except Exception as e:
             self._log(f"[Loop3] Auto self-improvement error (non-fatal): {e}")
+
+    def _check_post_apply_regression(self):
+        """Post-apply monitoring: revert last self-edit if mean score drops >2pp.
+
+        Pulls the N most recent overall scores from the rubric store and compares
+        them against the regression suite baseline mean.  If the drop exceeds 2pp,
+        the last self-edit commit is reverted via git.
+        """
+        try:
+            suite = RegressionSuite(verbose=self.verbose)
+            if not suite.entries:
+                return  # nothing to compare against yet
+
+            import sqlite3
+            with sqlite3.connect(self.rubric_store.db_path) as conn:
+                rows = conn.execute(
+                    "SELECT overall_score FROM scored_rubrics "
+                    "ORDER BY created_at DESC LIMIT 5"
+                ).fetchall()
+            if not rows:
+                return
+
+            recent_scores = [r[0] for r in rows]
+            regressed, delta = suite.mean_score_regression(recent_scores, threshold_pp=0.02)
+
+            if regressed:
+                self._log(
+                    f"[RegressionSuite] Mean score regression detected: "
+                    f"{delta:.1%} drop (baseline mean from {len(suite.entries)} entries). "
+                    f"Auto-reverting last self-edit..."
+                )
+                editor = SelfEditor(
+                    store=self.rubric_store,
+                    feedback_store=self.feedback_store,
+                    verbose=self.verbose,
+                )
+                reverted = editor.revert_last_edit()
+                if reverted:
+                    self._log("[RegressionSuite] Last self-edit reverted successfully")
+                else:
+                    self._log("[RegressionSuite] Revert skipped (last commit was not a self-edit)")
+            else:
+                self._log(
+                    f"[RegressionSuite] Post-apply check passed "
+                    f"(delta: {delta:+.1%} vs baseline)"
+                )
+        except Exception as e:
+            self._log(f"[RegressionSuite] Post-apply monitoring failed (non-fatal): {e}")
 
     def self_improve(self, dry_run: bool = True, max_edits: int = 3) -> list:
         """Run the self-improvement cycle: analyze learnings and propose/apply source edits.

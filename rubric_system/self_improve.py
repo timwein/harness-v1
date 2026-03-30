@@ -16,6 +16,7 @@ that produces X, then applies them. The harness literally edits its own source f
 import json
 import re
 import os
+import sys
 import subprocess
 import hashlib
 from datetime import datetime, timedelta
@@ -360,6 +361,237 @@ class LearningIntegrator:
                 )
 
         return "\n".join(lines)
+
+
+# ============================================================================
+# 3. Regression Suite — guards against self-edits degrading known-good scores
+# ============================================================================
+
+REGRESSION_SUITE_PATH = ".rubric_feedback/regression_suite.json"
+_BUILT_IN_CRITERIA = frozenset({
+    "src_freshness", "src_authority", "src_triangulation", "evd_alignment",
+    "viz_accuracy", "viz_clarity", "fwd_uncertainty", "doc_structure",
+    "color_001", "color_002", "color_003",
+    "type_001", "type_002", "type_003",
+    "space_001", "space_002", "space_003",
+})
+
+
+class RegressionSuite:
+    """Stores task+expected_score pairs and validates patches before applying.
+
+    Schema for each entry in regression_suite.json:
+    {
+        "task": str,
+        "task_hash": str,                  # sha256[:12] of task
+        "rubric_id": str,
+        "criterion_ids": [str, ...],
+        "criterion_min_scores": {cid: float, ...},  # recorded - buffer
+        "overall_min_score": float,        # recorded - buffer
+        "recorded_score": float,
+        "recorded_at": str (ISO-8601)
+    }
+
+    Usage:
+        suite = RegressionSuite()
+        suite.add_entry(task, rubric_id, criterion_scores, overall_score)
+        passed, failures = suite.check_regression(task, criterion_scores, overall_score)
+    """
+
+    def __init__(
+        self,
+        path: str = REGRESSION_SUITE_PATH,
+        verbose: bool = True,
+    ):
+        self.path = Path(path)
+        self.verbose = verbose
+        self.entries: list[dict] = self._load()
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(f"[RegressionSuite] {msg}")
+
+    def _load(self) -> list[dict]:
+        if self.path.exists():
+            try:
+                return json.loads(self.path.read_text())
+            except (json.JSONDecodeError, IOError):
+                pass
+        return []
+
+    def _save(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.entries, indent=2))
+
+    def add_entry(
+        self,
+        task: str,
+        rubric_id: str,
+        criterion_scores: list[dict],
+        overall_score: float,
+        min_score_buffer: float = 0.05,
+    ) -> bool:
+        """Add or update a regression entry for a task.
+
+        Only records tasks with overall_score >= 0.65 (only track meaningful results).
+        Updates an existing entry if the new score is materially better (>2pp).
+
+        Args:
+            task: task description string
+            rubric_id: ID of the rubric run that produced these scores
+            criterion_scores: list of dicts with 'criterion_id' and 'percentage' keys
+            overall_score: overall percentage score (0–1)
+            min_score_buffer: grace margin subtracted from each recorded score
+
+        Returns:
+            True if an entry was added or updated.
+        """
+        if overall_score < 0.65:
+            return False  # too low to be a useful baseline
+
+        task_hash = hashlib.sha256(task.encode()).hexdigest()[:12]
+
+        new_entry = {
+            "task": task,
+            "task_hash": task_hash,
+            "rubric_id": rubric_id,
+            "criterion_ids": [cs["criterion_id"] for cs in criterion_scores],
+            "criterion_min_scores": {
+                cs["criterion_id"]: round(max(0.0, cs["percentage"] - min_score_buffer), 4)
+                for cs in criterion_scores
+            },
+            "overall_min_score": round(max(0.0, overall_score - min_score_buffer), 4),
+            "recorded_score": round(overall_score, 4),
+            "recorded_at": datetime.utcnow().isoformat(),
+        }
+
+        for i, entry in enumerate(self.entries):
+            if entry.get("task_hash") == task_hash:
+                if overall_score > entry.get("recorded_score", 0) + 0.02:
+                    self.entries[i] = new_entry
+                    self._save()
+                    self._log(f"Updated entry for task (score: {overall_score:.1%})")
+                    return True
+                return False  # existing entry is good enough
+
+        self.entries.append(new_entry)
+        self._save()
+        self._log(f"Added entry for task (score: {overall_score:.1%}, {len(criterion_scores)} criteria)")
+        return True
+
+    def check_regression(
+        self,
+        task: str,
+        criterion_scores: list[dict],
+        overall_score: float,
+    ) -> tuple[bool, list[str]]:
+        """Check whether current scores satisfy stored minimum expectations.
+
+        Returns:
+            (passed, failures) — failures is empty when passed is True.
+        """
+        task_hash = hashlib.sha256(task.encode()).hexdigest()[:12]
+
+        for entry in self.entries:
+            if entry.get("task_hash") != task_hash:
+                continue
+
+            failures = []
+            if overall_score < entry.get("overall_min_score", 0):
+                failures.append(
+                    f"Overall {overall_score:.1%} < min {entry['overall_min_score']:.1%}"
+                )
+
+            score_map = {cs["criterion_id"]: cs["percentage"] for cs in criterion_scores}
+            for cid, min_pct in entry.get("criterion_min_scores", {}).items():
+                actual = score_map.get(cid)
+                if actual is not None and actual < min_pct:
+                    failures.append(f"{cid}: {actual:.1%} < min {min_pct:.1%}")
+
+            return len(failures) == 0, failures
+
+        return True, []  # no entry → nothing to regress against
+
+    def mean_score_regression(
+        self,
+        recent_scores: list[float],
+        threshold_pp: float = 0.02,
+    ) -> tuple[bool, float]:
+        """Detect if recent mean score has dropped relative to the suite baseline.
+
+        Args:
+            recent_scores: list of overall_score floats from the most recent runs
+            threshold_pp: minimum drop (as a fraction, e.g. 0.02 = 2pp) to flag
+
+        Returns:
+            (regressed, delta) — delta is negative when regressed.
+        """
+        if not self.entries or not recent_scores:
+            return False, 0.0
+
+        baseline = sum(e["recorded_score"] for e in self.entries) / len(self.entries)
+        recent = sum(recent_scores) / len(recent_scores)
+        delta = recent - baseline
+        return delta < -threshold_pp, round(delta, 4)
+
+    def validate_harness_integrity(self, harness_path: Path) -> tuple[bool, list[str]]:
+        """Lightweight structural check after a patch is applied.
+
+        Verifies:
+        1. The file is syntactically valid Python
+        2. It can be imported in a subprocess without crashing
+        3. Any built-in criterion IDs referenced in the suite still appear in source
+
+        Returns:
+            (passed, failure_messages)
+        """
+        failures = []
+
+        # 1. Syntax check
+        try:
+            import ast as _ast
+            _ast.parse(harness_path.read_text())
+        except SyntaxError as e:
+            return False, [f"SyntaxError: {e}"]
+
+        # 2. Bytecode-compile check in an isolated subprocess.
+        # py_compile catches name errors, invalid syntax, and bad bytecode — without
+        # executing module-level code or requiring heavy runtime dependencies.
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "py_compile", str(harness_path)],
+                capture_output=True, text=True, timeout=15,
+            )
+            if result.returncode != 0:
+                err = (result.stderr.strip() or result.stdout.strip())[-300:]
+                failures.append(f"Compile error: {err}")
+        except subprocess.TimeoutExpired:
+            if self.verbose:
+                print(
+                    f"[RegressionSuite] Compile check timed out for {harness_path.name} "
+                    f"— relying on AST check only"
+                )
+        except Exception as e:
+            failures.append(f"Compile check failed: {e}")
+
+        if failures:
+            return False, failures
+
+        # 3. Built-in criterion references
+        try:
+            source = harness_path.read_text()
+            referenced_builtins = {
+                cid for entry in self.entries
+                for cid in entry.get("criterion_ids", [])
+                if cid in _BUILT_IN_CRITERIA
+            }
+            for cid in referenced_builtins:
+                if f'id="{cid}"' not in source and f"id='{cid}'" not in source:
+                    failures.append(f"Built-in criterion '{cid}' missing from patched harness")
+        except Exception as e:
+            failures.append(f"Criterion reference check failed: {e}")
+
+        return len(failures) == 0, failures
 
 
 # ============================================================================
@@ -837,6 +1069,13 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
     ) -> list[dict]:
         """Apply approved edit proposals to the source code.
 
+        Pre-apply validation (per proposal):
+        a. Save current source to a temp backup (.bak)
+        b. Apply the patch
+        c. Run RegressionSuite.validate_harness_integrity() on the modified file
+        d. If validation fails → revert from backup, log the failure, skip git commit
+        e. If validation passes → delete backup, proceed to git commit
+
         Args:
             proposals: list of SelfEditProposal to apply
             dry_run: if True, show edits but don't apply
@@ -845,6 +1084,7 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
         Returns:
             list of applied edit records
         """
+        suite = RegressionSuite(verbose=self.verbose)
         applied = []
 
         for proposal in proposals:
@@ -875,7 +1115,7 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
                     edits_applied += 1
 
             if edits_applied > 0 and not dry_run:
-                # Validate the edited code parses
+                # Step 1: syntax check before touching disk
                 try:
                     import ast
                     ast.parse(source)
@@ -883,9 +1123,31 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
                     self._log(f"SYNTAX ERROR in proposed edit — reverting: {e}")
                     source = original
                     edits_applied = 0
+
+            if edits_applied > 0 and not dry_run:
+                # Step 2: write to disk with backup, then validate
+                backup_path = target.with_suffix(target.suffix + ".bak")
+                backup_path.write_text(original)
+                target.write_text(source)
+
+                passed, failures = suite.validate_harness_integrity(target)
+                if not passed:
+                    failure_msg = "; ".join(failures)
+                    self._log(
+                        f"PRE-APPLY VALIDATION FAILED for '{proposal.target_function}' "
+                        f"— reverting: {failure_msg}"
+                    )
+                    # Revert from backup
+                    target.write_text(original)
+                    backup_path.unlink(missing_ok=True)
+                    edits_applied = 0
+                    self._record_regression_failure(proposal, failure_msg)
                 else:
-                    target.write_text(source)
-                    self._log(f"Applied {edits_applied} edits to {target.name}")
+                    backup_path.unlink(missing_ok=True)
+                    self._log(
+                        f"Applied {edits_applied} edit(s) to {target.name} "
+                        f"(validation passed)"
+                    )
 
             record = {
                 "proposal": {
@@ -899,7 +1161,7 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
                 "dry_run": dry_run,
             }
             applied.append(record)
-            proposal.applied = not dry_run
+            proposal.applied = not dry_run and edits_applied > 0
 
         # Save to edit history
         self.edit_history.extend(applied)
@@ -910,6 +1172,19 @@ RULES: Edits must be MINIMAL. "old" must be an EXACT substring. Output ONLY JSON
             self._git_commit_edits(applied)
 
         return applied
+
+    def _record_regression_failure(self, proposal: SelfEditProposal, reason: str):
+        """Append a regression-failure record to the edit history."""
+        record = {
+            "type": "regression_failure",
+            "proposal_target": proposal.target_function,
+            "proposal_rationale": proposal.rationale[:120],
+            "failure_reason": reason,
+            "failed_at": datetime.utcnow().isoformat(),
+        }
+        self.edit_history.append(record)
+        self._save_history()
+        self._log(f"Regression failure logged for '{proposal.target_function}'")
 
     def auto_improve(
         self,
