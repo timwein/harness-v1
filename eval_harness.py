@@ -10,7 +10,7 @@ Both outputs are then scored against the SAME rubric (the sample rubric for
 that domain) using an isolated scorer, producing directly comparable numbers.
 
 Usage:
-    python3 eval_harness.py                              # all 10 tasks, max 5 iters
+    python3 eval_harness.py                              # all 10 tasks, unlimited iters
     python3 eval_harness.py --tasks cold_outreach_email,csv_parser
     python3 eval_harness.py --max-iter 3
     python3 eval_harness.py --output results/my_run.json
@@ -740,7 +740,7 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=DEFAULT_MAX_ITER,
         dest="max_iter",
-        help=f"Max harness iterations per task (default: {DEFAULT_MAX_ITER})",
+        help=f"Max harness iterations per task (0 = unlimited, default: {DEFAULT_MAX_ITER})",
     )
     p.add_argument(
         "--output",

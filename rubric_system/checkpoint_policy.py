@@ -45,7 +45,8 @@ from rubric_system.models import CriterionScore, Iteration
 # Single source of truth for the default iteration limit.
 # eval_harness.py and rubric_harness.py both import this so the CLI default
 # and the policy default stay in sync automatically.
-DEFAULT_MAX_ITERATIONS: int = 5
+# 0 = unlimited (run until pass threshold or convergence).
+DEFAULT_MAX_ITERATIONS: int = 0
 
 
 class CheckpointType(Enum):
