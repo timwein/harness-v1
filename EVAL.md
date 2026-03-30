@@ -4,6 +4,14 @@ The rubric harness is a generation-verification loop that generates task-specifi
 
 ---
 
+## Methodology Note: Rubric Generation Upgrade (Run 5+)
+
+> **Starting from Run 5, the rubric generation pipeline was upgraded.** Rubrics are now generated using multi-pass hierarchical generation with adversarial coverage audits and expert panel simulation. This produces more comprehensive rubrics that are significantly harder to score against — criteria are broader in scope, more discriminating, and less forgiving of partial compliance.
+>
+> **Scores and deltas from Run 5 onward are not directly comparable to Run 4 and earlier.** Lower baselines and smaller deltas in later runs may reflect harder rubrics rather than a regression in harness performance. Treat each run's scores as internally consistent but cross-run comparisons as approximate.
+
+---
+
 ## Run 7 Results
 
 Run 7 completed all 10 tasks with 0 errors — the first fully clean run since Run 3. Used the same resilient eval wrapper as Run 6.
@@ -93,9 +101,11 @@ Rubrics are regenerated from scratch each run, so baselines differ across runs.
 |---|---|---|---|---|---|
 | Run 3 | 10 | 54.7% | 73.3% | +18.5pp | Initial eval |
 | Run 4 | 9 | 46.9% | 72.9% | +26.0pp | Added learning features |
-| Run 5 | — | — | — | — | Abandoned (API timeouts) |
-| Run 6 | 6 | 52.8% | 72.5% | +19.7pp | Resilient wrapper, 2 errors |
+| Run 5 | — | — | — | — | Abandoned (API timeouts); **rubric pipeline upgraded** |
+| Run 6 | 6 | 52.8% | 72.5% | +19.7pp | Resilient wrapper, 2 errors; **harder rubrics (Run 5+ methodology)** |
 | Run 7 | 10 | 46.4% | 58.4% | +11.9pp | First clean 10/10 run since Run 3 |
+
+> **Cross-run scores are not directly comparable after Run 4.** The rubric generation upgrade introduced in Run 5 (multi-pass hierarchical generation, adversarial coverage audits, expert panel simulation) produces harder rubrics that compress scores and deltas. See the [Methodology Note](#methodology-note-rubric-generation-upgrade-run-5) above.
 
 Runs 3-6 showed harness scores consistently in the 72–73% range. Run 7 broke this pattern with a 58.4% harness average, pulled down by a severe billing_schema regression (-26.7pp). Excluding that outlier, Run 7's harness average is 62.5% — still below prior runs, suggesting rubric quality variance remains the dominant factor in harness performance. Run 4's +26.0pp remains the best mean delta.
 
