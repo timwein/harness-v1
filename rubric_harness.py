@@ -2061,10 +2061,15 @@ CALIBRATION:
                 elif key == "violations":
                     flat_crit["violations"] = val
                 elif key == "violation_details":
-                    # Extract violation names for ScoringEngine
-                    if not flat_crit.get("violations"):
+                    # Extract violation names for ScoringEngine — only violations
+                    # that were actually PRESENT (not "not found in content" / ABSENT).
+                    # Guard uses "in" check because empty list [] is falsy.
+                    if "violations" not in flat_crit:
                         flat_crit["violations"] = [
-                            vd.get("violation", "") for vd in val if isinstance(vd, dict)
+                            vd.get("violation", "")
+                            for vd in val
+                            if isinstance(vd, dict)
+                            and "not found" not in vd.get("evidence", "").lower()
                         ]
                 elif key.startswith("_"):
                     flat_crit[key] = val
