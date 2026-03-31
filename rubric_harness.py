@@ -2596,7 +2596,50 @@ Produce content that earns high scores on every rubric criterion."""
         )
         # Response may include web_search_tool_result blocks; extract only text
         text_parts = [block.text for block in response.content if hasattr(block, "text")]
-        return "\n".join(text_parts)
+        raw = "\n".join(text_parts)
+        return self._strip_preamble(raw)
+
+    @staticmethod
+    def _strip_preamble(text: str) -> str:
+        """Remove meta-commentary preamble that the model sometimes emits.
+
+        The system prompt instructs "no meta-commentary", but the model
+        occasionally prefixes content with reasoning like "Based on the
+        feedback, I'll..." or "Now I'll apply the specific fixes...".
+        This pollutes the output and causes re-scoring failures.
+
+        Strategy: detect paragraphs that start with meta-commentary signals
+        and strip them.  A paragraph boundary is a blank line (``\\n\\n``).
+        """
+        import re
+
+        preamble_starters = re.compile(
+            r"^(?:"
+            r"(?:Now\s+)?(?:I'?\u2019?ll|Let\s+me|I\s+will)\s+"
+            r"|Based\s+on\s+"
+            r"|Looking\s+at\s+"
+            r"|However,?\s+since\s+"
+            r"|I\s+need\s+to\s+"
+            r")",
+            re.IGNORECASE,
+        )
+
+        stripped = text.lstrip()
+        for _ in range(5):  # strip up to 5 preamble paragraphs
+            if not preamble_starters.match(stripped):
+                break
+            # Consume everything up to the next blank line (paragraph boundary)
+            para_end = re.search(r"\n\s*\n", stripped)
+            if para_end:
+                stripped = stripped[para_end.end():].lstrip()
+            else:
+                break  # no paragraph boundary — don't strip everything
+
+        # Safety: if stripping removed almost everything, return original.
+        # Use 10-char absolute minimum so short-but-real content is kept.
+        if len(stripped) < 10:
+            return text.lstrip()
+        return stripped
 
 
 class ScoringEngine:
