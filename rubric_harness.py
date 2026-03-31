@@ -2364,6 +2364,29 @@ For each trade-off pair found, recommend exactly one resolution:
 
 Return only JSON — no prose outside the JSON block."""
 
+    # Known tension patterns — keyword-based fallback when the LLM misses common conflicts.
+    # Each tuple: (side_a_keywords, side_b_keywords, gating_side, priority_note)
+    KNOWN_TENSIONS = [
+        (
+            {"accuracy", "correctness", "factual", "precise", "no errors", "technically correct"},
+            {"accessibility", "approachable", "simple", "beginner", "jargon-free", "easy to understand", "youth", "16-year-old"},
+            "accuracy",
+            "Factual accuracy is a GATING requirement — accessibility must never come at the cost of correctness. Simplify language, not facts.",
+        ),
+        (
+            {"completeness", "comprehensive", "thorough", "depth", "nuance", "detail"},
+            {"concision", "brevity", "concise", "short", "brief", "word limit", "word count", "length"},
+            "completeness",
+            "Completeness of required content is GATING — concision means eliminating filler, not omitting required elements.",
+        ),
+        (
+            {"specificity", "precision", "concrete", "quantitative", "exact", "measurable"},
+            {"generalizability", "breadth", "broad", "overview", "high-level"},
+            "specificity",
+            "Specificity is GATING when a criterion requires it — prefer concrete details over vague generalities.",
+        ),
+    ]
+
     def __init__(self, model: str = "claude-sonnet-4-20250514", verbose: bool = True):
         if Anthropic is None:
             raise ImportError("anthropic package required: pip install anthropic")
@@ -2538,7 +2561,51 @@ If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
             f"{len(new_criteria)} criteria remain (was {len(rubric.criteria)}), "
             f"{new_total}pts total (was {rubric.total_points}pts)."
         )
+
+        # Validate against known tension patterns the LLM may have missed.
+        detected_pairs = {
+            frozenset((t.get("criterion_a"), t.get("criterion_b")))
+            for t in tradeoffs
+        }
+        extra_blocks = self._validate_known_tensions(refined_rubric, detected_pairs)
+        if extra_blocks:
+            tradeoff_context_blocks.extend(extra_blocks)
+            self._log(f"Known-tension validator added {len(extra_blocks)} hard priority rule(s)")
+
         return refined_rubric, resolution_messages, tradeoff_context_blocks
+
+    def _validate_known_tensions(
+        self, rubric: "Rubric", detected_pairs: set
+    ) -> list[str]:
+        """Keyword-based fallback: catches common tensions the LLM missed."""
+        extra_blocks: list[str] = []
+        criteria = rubric.criteria
+
+        for idx_a in range(len(criteria)):
+            for idx_b in range(idx_a + 1, len(criteria)):
+                ca, cb = criteria[idx_a], criteria[idx_b]
+                pair_key = frozenset((ca.id, cb.id))
+                if pair_key in detected_pairs:
+                    continue
+
+                text_a = f"{ca.description} {ca.pass_condition} {ca.category}".lower()
+                text_b = f"{cb.description} {cb.pass_condition} {cb.category}".lower()
+
+                for kw_side_a, kw_side_b, _gating, note in self.KNOWN_TENSIONS:
+                    a_matches_a = any(kw in text_a for kw in kw_side_a)
+                    b_matches_b = any(kw in text_b for kw in kw_side_b)
+                    a_matches_b = any(kw in text_a for kw in kw_side_b)
+                    b_matches_a = any(kw in text_b for kw in kw_side_a)
+
+                    if (a_matches_a and b_matches_b) or (a_matches_b and b_matches_a):
+                        extra_blocks.append(
+                            f"HARD PRIORITY: When '{ca.id}' and '{cb.id}' are in tension — {note}"
+                        )
+                        detected_pairs.add(pair_key)
+                        self._log(f"  [known-tension] {ca.id} ↔ {cb.id}: {note[:60]}…")
+                        break
+
+        return extra_blocks
 
 
 class GenerationAgent:
@@ -3007,6 +3074,34 @@ def format_rubric_for_generation(rubric: Rubric) -> str:
                 lines.append(f"   ✓ RESEARCH: {basis}")
 
     return "\n".join(lines)
+
+
+def pareto_best_iteration(history: list) -> "Iteration":
+    """Select the best iteration using a Pareto-aware adjusted score.
+
+    Penalises iterations with zero-score criteria and high cross-criteria
+    variance so that a balanced 78% beats an unbalanced 80% that has a
+    criterion stuck at 0%.
+
+    adjusted = percentage - 0.05 * num_zero_criteria - 0.02 * stddev(criterion_pcts)
+    """
+    if not history:
+        raise ValueError("pareto_best_iteration called with empty history")
+    if len(history) == 1:
+        return history[0]
+
+    def _adjusted(it):
+        pcts = [cs.percentage for cs in it.criterion_scores]
+        num_zeros = sum(1 for p in pcts if p < 0.01)
+        if pcts:
+            mean_p = sum(pcts) / len(pcts)
+            variance = sum((p - mean_p) ** 2 for p in pcts) / len(pcts)
+            stddev = variance ** 0.5
+        else:
+            stddev = 0.0
+        return it.percentage - 0.05 * num_zeros - 0.02 * stddev
+
+    return max(history, key=_adjusted)
 
 
 def format_history_for_generation(history: list[Iteration]) -> str:
@@ -6215,7 +6310,7 @@ Respond with a JSON object:
         # 2. Detect regressions and do content comparison (LLM call)
         regressions = []
         if history and len(history) >= 2:
-            best_iter = max(history, key=lambda h: h.percentage)
+            best_iter = pareto_best_iteration(history)
             current_iter_obj = history[-1]
 
             if best_iter.number != current_iter_obj.number:
@@ -7251,6 +7346,8 @@ class RubricLoop:
         context: str = None,
         structured_feedback: str = "",
         tradeoff_context: Optional[List[str]] = None,
+        hard_constraints: Optional[List[str]] = None,
+        rollback_to: Optional[int] = None,
     ) -> str:
         """Generate content optimized for rubric scores, with feedback injection.
 
@@ -7266,9 +7363,22 @@ class RubricLoop:
         )
 
         if history:
-            # Edit mode: improve the most recent draft, using best as a learning signal
-            current = history[-1]
-            best = max(history, key=lambda h: h.percentage)
+            # Edit mode: improve the most recent draft, using best as a learning signal.
+            # If rollback is active, edit from the rollback target instead of latest.
+            if rollback_to is not None:
+                rollback_iter = next((h for h in history if h.number == rollback_to), None)
+                if rollback_iter:
+                    current = rollback_iter
+                    self._log(
+                        f"  [Rollback] Editing from iter {rollback_to} "
+                        f"({rollback_iter.percentage:.0%}) instead of latest "
+                        f"({history[-1].percentage:.0%})"
+                    )
+                else:
+                    current = history[-1]
+            else:
+                current = history[-1]
+            best = pareto_best_iteration(history)
             # Resolve content from disk if it was offloaded to save context
             current_content = self._resolve_attempt(current.attempt)
 
@@ -7369,10 +7479,26 @@ class RubricLoop:
         # Inject trade-off priority notes as generation context (not baked into
         # the rubric descriptions).  These notes come from TradeoffDetector and
         # tell the generator which criterion wins when two are in tension.
+        # Hard priorities (from known-tension patterns) get a stronger header.
         if tradeoff_context:
-            prompt += "\n\nCRITERIA PRIORITY NOTES (apply when criteria are in tension):\n"
-            for note in tradeoff_context:
-                prompt += f"  - {note}\n"
+            hard_notes = [n for n in tradeoff_context if n.startswith("HARD PRIORITY:")]
+            soft_notes = [n for n in tradeoff_context if not n.startswith("HARD PRIORITY:")]
+            if hard_notes:
+                prompt += "\n\nNON-NEGOTIABLE PRIORITY RULES (violating these is a scoring failure):\n"
+                for note in hard_notes:
+                    prompt += f"  - {note.replace('HARD PRIORITY: ', '')}\n"
+            if soft_notes:
+                prompt += "\n\nCRITERIA PRIORITY NOTES (apply when criteria are in tension):\n"
+                for note in soft_notes:
+                    prompt += f"  - {note}\n"
+
+        # Inject hard constraints — criteria that scored 0% for 2+ consecutive
+        # iterations get escalated from soft rubric criteria to explicit generation
+        # requirements the output MUST satisfy.
+        if hard_constraints:
+            prompt += "\n\nHARD REQUIREMENTS (binary gates — output MUST satisfy these or it scores 0%):\n"
+            for hc in hard_constraints:
+                prompt += f"  ▸ {hc}\n"
 
         # Inject structured feedback from the FeedbackAgent (iteration 2+)
         # This is the rich, actionable diagnostic that tells the generator
@@ -7562,6 +7688,9 @@ class RubricLoop:
         compute_planner = ComputePlanner()
 
         i = len(history)  # Resume continues from the last completed iteration
+        _hard_constraints: List[str] = []  # escalated 0%-criteria pass conditions
+        _prev_zero_criteria: set = set()   # criterion IDs that scored <1% last iteration
+        _rollback_to: Optional[int] = None  # iteration number to rollback to on next generation
         while self.max_iterations == 0 or i < self.max_iterations:
             i += 1
 
@@ -7602,6 +7731,8 @@ class RubricLoop:
                     context=context if context else None,
                     structured_feedback=last_feedback_text,
                     tradeoff_context=tradeoff_context,
+                    hard_constraints=_hard_constraints if _hard_constraints else None,
+                    rollback_to=_rollback_to,
                 )
 
             # Track verification iteration
@@ -7684,9 +7815,29 @@ class RubricLoop:
             if eval_result["regression"]:
                 consecutive_regressions = eval_result["consecutive_regressions"]
                 regression_note = eval_result["regression_note"]
+                # Rollback gating: if >2 criteria regressed by >5pp vs the pareto-best,
+                # don't continue editing from this worse draft — rollback to the best.
+                if len(history) >= 2:
+                    best_for_gate = pareto_best_iteration(history[:-1])
+                    best_scores = {cs.criterion_id: cs.percentage for cs in best_for_gate.criterion_scores}
+                    curr_scores = {cs.criterion_id: cs.percentage for cs in criterion_scores}
+                    regressed_criteria = [
+                        cid for cid, bpct in best_scores.items()
+                        if curr_scores.get(cid, bpct) < bpct - 0.05
+                    ]
+                    if len(regressed_criteria) > 2:
+                        _rollback_to = best_for_gate.number
+                        self._log(
+                            f"  [Rollback] {len(regressed_criteria)} criteria regressed >5pp "
+                            f"({', '.join(regressed_criteria[:4])}) — "
+                            f"next iteration will edit from iter {_rollback_to} instead"
+                        )
+                    else:
+                        _rollback_to = None
             else:
                 consecutive_regressions = 0
                 regression_note = ""
+                _rollback_to = None
 
             if eval_result["passed"]:
                 self.tracker.complete()
@@ -7765,7 +7916,7 @@ class RubricLoop:
                         )
                     if action == "stop":
                         self.tracker.complete()
-                        _cp_best = max(history, key=lambda h: h.percentage) if history else None
+                        _cp_best = pareto_best_iteration(history) if history else None
                         _cp_result = LoopResult(
                             success=False,
                             output=content,
@@ -7787,7 +7938,7 @@ class RubricLoop:
             # Resolve best iteration content for regression comparison
             _best_content_for_feedback = None
             if len(history) >= 2:
-                _best_iter_for_fb = max(history, key=lambda h: h.percentage)
+                _best_iter_for_fb = pareto_best_iteration(history)
                 if _best_iter_for_fb.number != history[-1].number:
                     _best_content_for_feedback = self._resolve_attempt(_best_iter_for_fb.attempt)
 
@@ -7847,9 +7998,31 @@ class RubricLoop:
                 self._log(f"  [Feedback] Generation failed (non-fatal): {e}")
                 last_feedback_text = ""
 
+            # Zero-score criterion escalation: if a criterion scored <1% for 2
+            # consecutive iterations, promote its pass_condition to a hard constraint
+            # so the generation prompt explicitly enforces it next iteration.
+            current_zero_criteria = {
+                cs.criterion_id for cs in criterion_scores if cs.percentage < 0.01
+            }
+            if i >= 2 and _prev_zero_criteria:
+                persistent_zeros = current_zero_criteria & _prev_zero_criteria
+                existing_ids = {hc.split("]")[0].lstrip("[") for hc in _hard_constraints if hc.startswith("[")}
+                for crit_id in persistent_zeros:
+                    if crit_id not in existing_ids:
+                        for c in rubric.criteria:
+                            if c.id == crit_id:
+                                constraint = f"[{crit_id}] {c.pass_condition}"
+                                _hard_constraints.append(constraint)
+                                self._log(
+                                    f"  [Escalate] {crit_id} scored <1% for 2 consecutive iters — "
+                                    f"promoted to hard constraint"
+                                )
+                                break
+            _prev_zero_criteria = current_zero_criteria
+
         # Return the best-scoring iteration's output. History is preserved in full for
         # the learning loop — regressions are visible there without polluting the output.
-        best = max(history, key=lambda h: h.percentage)
+        best = pareto_best_iteration(history)
         last = history[-1]
         limit_msg = f"Max iterations ({self.max_iterations}) reached" if self.max_iterations > 0 else "Loop ended"
         self._log(

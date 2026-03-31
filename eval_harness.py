@@ -63,6 +63,11 @@ HARNESS_EST_OUTPUT_PER_ITER = 1_500
 
 ALL_TASK_KEYS: List[str] = list(SAMPLE_TASKS.keys())
 
+# Retry / timeout configuration for eval resilience
+DEFAULT_TASK_TIMEOUT = 600   # seconds per task (baseline + harness combined)
+MAX_TASK_RETRIES = 2         # retry count on timeout or API error
+RETRY_BASE_DELAY = 5         # seconds; doubles each retry (exponential backoff)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Data classes
@@ -623,6 +628,7 @@ async def run_eval(
     resume: bool,
     model: str,
     verbose: bool,
+    task_timeout: int = DEFAULT_TASK_TIMEOUT,
 ) -> Dict[str, TaskEvalResult]:
     client = anthropic.Anthropic(timeout=httpx.Timeout(600.0, connect=30.0))
 
@@ -707,48 +713,73 @@ async def run_eval(
             )
             task_results[task_key] = existing
 
-        try:
-            if do_base:
-                existing.baseline = await generate_baseline(
-                    client=client,
-                    scorer=scorer,
-                    rubric=rubric,
-                    model=model,
-                    verbose=verbose,
-                )
-                save_results(task_results, output_path)
+        retries_left = MAX_TASK_RETRIES
+        while True:
+            try:
+                async with asyncio.timeout(task_timeout):
+                    if do_base:
+                        existing.baseline = await generate_baseline(
+                            client=client,
+                            scorer=scorer,
+                            rubric=rubric,
+                            model=model,
+                            verbose=verbose,
+                        )
+                        save_results(task_results, output_path)
 
-            if do_harn:
-                existing.harness = await run_harness(
-                    scorer=scorer,
-                    rubric=rubric,
-                    max_iter=max_iter,
-                    model=model,
-                    verbose=verbose,
-                )
-                save_results(task_results, output_path)
+                    if do_harn:
+                        existing.harness = await run_harness(
+                            scorer=scorer,
+                            rubric=rubric,
+                            max_iter=max_iter,
+                            model=model,
+                            verbose=verbose,
+                        )
+                        save_results(task_results, output_path)
 
-            # In harness-only mode with existing baseline: re-score the stored
-            # baseline output against the same rubric for a fair comparison.
-            if harness_only and existing.baseline and existing.harness:
-                print(f"  [harness-only] re-scoring stored baseline output…")
-                total, max_total, cr_list = await score_against_rubric(
-                    scorer, existing.baseline.output, rubric
-                )
-                pct = total / max_total if max_total > 0 else 0.0
-                existing.baseline.score = total
-                existing.baseline.max_score = max_total
-                existing.baseline.percentage = pct
-                existing.baseline.criterion_results = cr_list
-                save_results(task_results, output_path)
+                    # In harness-only mode with existing baseline: re-score the stored
+                    # baseline output against the same rubric for a fair comparison.
+                    if harness_only and existing.baseline and existing.harness:
+                        print(f"  [harness-only] re-scoring stored baseline output…")
+                        total, max_total, cr_list = await score_against_rubric(
+                            scorer, existing.baseline.output, rubric
+                        )
+                        pct = total / max_total if max_total > 0 else 0.0
+                        existing.baseline.score = total
+                        existing.baseline.max_score = max_total
+                        existing.baseline.percentage = pct
+                        existing.baseline.criterion_results = cr_list
+                        save_results(task_results, output_path)
 
-            delta_str = f"{existing.delta:+.1%}" if existing.delta is not None else "N/A"
-            print(f"  → delta: {delta_str}")
+                delta_str = f"{existing.delta:+.1%}" if existing.delta is not None else "N/A"
+                print(f"  → delta: {delta_str}")
+                break  # success — exit retry loop
 
-        except Exception as exc:
-            print(f"  [ERROR] {task_key}: {exc}")
-            existing.error = str(exc)
-            save_results(task_results, output_path)
+            except (TimeoutError, asyncio.TimeoutError) as exc:
+                if retries_left > 0:
+                    delay = RETRY_BASE_DELAY * (2 ** (MAX_TASK_RETRIES - retries_left))
+                    print(f"  [TIMEOUT] {task_key}: timed out after {task_timeout}s — "
+                          f"retrying in {delay}s ({retries_left} retries left)")
+                    retries_left -= 1
+                    await asyncio.sleep(delay)
+                else:
+                    print(f"  [ERROR] {task_key}: timed out after {task_timeout}s (no retries left)")
+                    existing.error = f"timeout after {task_timeout}s: {exc}"
+                    save_results(task_results, output_path)
+                    break
+
+            except Exception as exc:
+                if retries_left > 0:
+                    delay = RETRY_BASE_DELAY * (2 ** (MAX_TASK_RETRIES - retries_left))
+                    print(f"  [ERROR] {task_key}: {exc} — "
+                          f"retrying in {delay}s ({retries_left} retries left)")
+                    retries_left -= 1
+                    await asyncio.sleep(delay)
+                else:
+                    print(f"  [ERROR] {task_key}: {exc} (no retries left)")
+                    existing.error = str(exc)
+                    save_results(task_results, output_path)
+                    break
 
     return task_results
 
@@ -918,6 +949,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Suppress per-step progress output.",
     )
+    p.add_argument(
+        "--task-timeout",
+        type=int,
+        default=DEFAULT_TASK_TIMEOUT,
+        dest="task_timeout",
+        help=f"Per-task timeout in seconds (default: {DEFAULT_TASK_TIMEOUT}). "
+             "Covers both baseline + harness phases combined.",
+    )
     return p.parse_args()
 
 
@@ -959,6 +998,7 @@ async def main() -> None:
         resume=args.resume,
         model=args.model,
         verbose=verbose,
+        task_timeout=args.task_timeout,
     )
 
     # Write full results JSON (task_results already saved incrementally; this adds summary)
