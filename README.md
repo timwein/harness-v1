@@ -2,7 +2,7 @@
 
 A dual adversarial loop harness for high-quality task generation. Two GAN-inspired feedback cycles run in sequence: the first produces a rigorous evaluation rubric, the second iterates the actual task output against it — each with isolated agent contexts to prevent self-leniency.
 
-**Eval results (Run 4, 9 tasks):** baseline 46.9% → harness 72.9%, mean lift **+26.0pp**. See [EVAL.md](EVAL.md).
+**Eval results (Run 8: 10 complete tasks):** baseline 44.4% → harness 65%, mean lift **+20.6pp**. See [EVAL.md](EVAL.md).
 
 ## Architecture
 
