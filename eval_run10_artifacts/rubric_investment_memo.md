@@ -1,0 +1,151 @@
+# Rubric: investment_memo
+
+**Task:** Draft a 1-page investment memo on a hypothetical Series A company in the defense drone space
+
+**Domain:** investment_memo
+**Total Points:** 44
+**Pass Threshold:** 85%
+**Criteria Count:** 5
+**Generated:** 2026-03-31 05:56:54 UTC
+
+---
+
+## 1. memo_structure
+
+**Category:** format
+**Description:** Follows standard 1-page memo format with all required sections
+
+**Pass Condition:** Sections: Company Overview, Market Opportunity, Product/Technology, Team, Traction, Deal Terms, Key Risks, Recommendation. Fits on one page (~500-700 words).
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 10
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `section_coverage` | 35% | All required sections present | % of required sections (overview, market, product, team, traction, terms, risks, rec) |
+| `page_constraint` | 30% | Fits on one page (500-700 words) | 1.0 if 500-700 words, 0.7 if 700-850, 0.3 if 400-500, 0.0 if >900 |
+| `scannable_format` | 35% | Headers, bullets within sections, dense but readable | 1.0 if scannable with clear visual hierarchy, 0.0 if wall of text |
+
+### Pass Examples
+
+- 8 sections, 650 words, each section 2-4 bullet points
+
+### Fail Examples
+
+- 3-page narrative essay, or 200-word skim
+
+---
+
+## 2. memo_market
+
+**Category:** analysis
+**Description:** Market opportunity is sized and specific to defense drones, not generic TAM
+
+**Pass Condition:** SAM/SOM, not just TAM. Specific to defense drone segment. Cites or constructs credible numbers. Identifies tailwinds (DoD budget trends, Ukraine lessons, NDAA provisions).
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 10
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `market_specificity` | 35% | Defense drone SAM, not generic 'drone market' | 1.0 if defense-specific SAM/SOM, 0.5 if TAM only, 0.0 if generic |
+| `credible_sizing` | 30% | Numbers are plausible with cited or constructed basis | 1.0 if sourced/constructed, 0.5 if asserted, 0.0 if absent |
+| `tailwind_identification` | 35% | Specific policy/geopolitical tailwinds cited | % of relevant tailwinds identified (DoD budget, NDAA, Ukraine, Replicator) |
+
+### Pass Examples
+
+- 'Defense sUAS SAM: $8B by 2028 (up from $3B), driven by DoD Replicator initiative and FY26 NDAA line items'
+
+### Fail Examples
+
+- 'The global drone market is expected to reach $50B by 2030'
+
+---
+
+## 3. memo_thesis
+
+**Category:** conviction
+**Description:** Investment thesis is crisp — clear 'why this company, why now'
+
+**Pass Condition:** 2-3 sentence thesis that answers: What's the insight? Why is this team positioned? What's the timing catalyst? Must be specific enough that it couldn't apply to any defense startup.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 10
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `insight_clarity` | 40% | Core insight is specific and non-obvious | 1.0 if specific insight, 0.5 if generic but directionally right, 0.0 if boilerplate |
+| `team_match` | 30% | Why this team specifically is positioned to win | 1.0 if specific team-market fit, 0.5 if generic team praise, 0.0 if absent |
+| `timing_catalyst` | 30% | Clear 'why now' with specific catalyst | 1.0 if specific timing argument, 0.5 if vague, 0.0 if absent |
+
+### Pass Examples
+
+- 'DoD is shifting from $50M primes-built systems to $500K attritable drones — [Company] has the only NDAA-compliant autonomy stack that integrates with existing C2 systems, built by ex-Anduril engineers who shipped the first production Altius system.'
+
+### Fail Examples
+
+- 'Defense is a big market and drones are the future.'
+
+---
+
+## 4. memo_risks
+
+**Category:** diligence
+**Description:** Key risks are honest, specific, and include mitigants
+
+**Pass Condition:** 3-5 real risks (not strawmen). At least one each: market risk, execution risk, regulatory/ITAR risk. Each has a mitigant or monitoring plan.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 8
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `risk_quality` | 40% | Risks are real and specific, not generic | % of risks that are specific to this company/market |
+| `risk_coverage` | 30% | Market, execution, and regulatory/ITAR risks all addressed | 1.0 if all 3 categories, 0.5 if 2, 0.0 if 1 |
+| `mitigants` | 30% | Each risk has a plausible mitigant or monitoring plan | % of risks with stated mitigants |
+
+### Pass Examples
+
+- 'ITAR compliance burden limits sales velocity — mitigant: CTO has existing DSP-5/DSP-73 experience from Lockheed tenure'
+
+### Fail Examples
+
+- 'Risk: competition. Risk: market might not grow.'
+
+---
+
+## 5. memo_deal_terms
+
+**Category:** practicality
+**Description:** Deal terms are realistic and internally consistent
+
+**Pass Condition:** Pre-money valuation, round size, lead investor type, and use of funds. Values are stage-appropriate (Series A defense: $15-40M pre). Use of funds is specific (hiring, ITAR facility, production line).
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 6
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `completeness` | 40% | Valuation, round size, ownership target stated | % of deal terms present |
+| `stage_appropriateness` | 30% | Values are realistic for Series A defense startup | 1.0 if realistic, 0.5 if slightly off, 0.0 if unrealistic |
+| `use_of_funds` | 30% | Specific allocation of capital | 1.0 if specific breakdown, 0.5 if vague, 0.0 if absent |
+
+### Pass Examples
+
+- '$20M Series A at $60M pre. Use: 40% eng/autonomy, 25% ITAR facility, 20% BD, 15% ops'
+
+### Fail Examples
+
+- 'Raising a Series A at a good valuation'
+
+---

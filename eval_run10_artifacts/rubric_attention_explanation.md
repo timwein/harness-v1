@@ -1,0 +1,123 @@
+# Rubric: explanation
+
+**Task:** Explain transformer attention mechanisms to a smart 16-year-old
+
+**Domain:** explanation
+**Total Points:** 36
+**Pass Threshold:** 80%
+**Criteria Count:** 4
+**Generated:** 2026-03-31 05:56:43 UTC
+
+---
+
+## 1. expl_accuracy
+
+**Category:** correctness
+**Description:** Technical content is correct — no simplification-induced errors
+
+**Pass Condition:** Query/Key/Value framework explained correctly. Dot product similarity is accurate. Softmax described correctly. Multi-head attention's purpose is right.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 12
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `qkv_correctness` | 35% | Q/K/V roles explained accurately | 1.0 if correct mechanism, 0.5 if metaphor-only, 0.0 if wrong |
+| `attention_math` | 35% | Dot product + softmax pipeline correct | 1.0 if mechanism right, 0.5 if hand-wavy but directionally correct, 0.0 if wrong |
+| `multihead_purpose` | 30% | Why multiple heads matter | 1.0 if explains different relationship types, 0.5 if mentions it, 0.0 if absent |
+
+### Pass Examples
+
+- 'Each word asks a question (query), advertises what it knows (key), and shares details (value)'
+
+### Fail Examples
+
+- 'Attention is when the model focuses on important words' — no mechanism
+
+---
+
+## 2. expl_accessibility
+
+**Category:** audience_fit
+**Description:** A smart 16-year-old actually understands it after reading
+
+**Pass Condition:** No unexplained jargon. Uses analogies from their world. Builds from familiar concepts (search, recommendation) to new ones. Math level: algebra ok, linear algebra explained if used.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 10
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `jargon_handling` | 30% | All technical terms explained or avoided | 1.0 if all explained, 0.5 if most, 0.0 if jargon-heavy |
+| `analogy_quality` | 35% | Uses relatable analogies (social media, school, etc.) | 1.0 if memorable analogy that maps correctly, 0.5 if generic, 0.0 if none |
+| `progressive_complexity` | 35% | Builds from simple to complex | 1.0 if clear scaffold, 0.5 if some structure, 0.0 if jumps to hard parts |
+
+### Pass Examples
+
+- Starts with 'imagine searching for a video on YouTube' → builds to Q/K/V
+
+### Fail Examples
+
+- 'Attention computes softmax(QK^T/√d_k)V' with no unpacking
+
+---
+
+## 3. expl_engagement
+
+**Category:** communication
+**Description:** Explanation is engaging — a 16-year-old would actually read to the end
+
+**Pass Condition:** Conversational tone. Not condescending. Includes a 'whoa' moment. Under 600 words. Has a hook in the first sentence.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 8
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `hook` | 30% | First sentence creates curiosity | 1.0 if compelling hook, 0.5 if adequate, 0.0 if textbook opening |
+| `tone` | 35% | Conversational, not textbook or condescending | 1.0 if natural, 0.5 if slightly formal, 0.0 if textbook/patronizing |
+| `concision` | 35% | Under 600 words, no padding | 1.0 if ≤600, 0.7 if ≤800, 0.0 if >1000 |
+
+### Pass Examples
+
+- 'You know how autocomplete seems to read your mind? Here's the trick...'
+
+### Fail Examples
+
+- 'Attention mechanisms are a fundamental component of transformer architectures...'
+
+---
+
+## 4. expl_completeness
+
+**Category:** coverage
+**Description:** Covers the essential pieces without going too deep
+
+**Pass Condition:** Covers: why attention exists (context problem), how it works (Q/K/V), why it matters (parallel processing, long-range dependencies). Doesn't require covering positional encoding, layer norm, etc.
+
+**Scoring Method:** `weighted_components`
+**Max Points:** 6
+
+### Sub-Attributes
+
+| Sub-ID | Weight | Description | Measurement |
+|--------|--------|-------------|-------------|
+| `motivation` | 35% | Explains why attention was invented (the problem it solves) | 1.0 if clear problem statement, 0.5 if implied, 0.0 if jumps to mechanism |
+| `mechanism` | 35% | How attention works at an intuitive level | 1.0 if clear mechanism, 0.0 if vague |
+| `significance` | 30% | Why it matters / what it enabled | 1.0 if connects to real impact, 0.5 if mentioned, 0.0 if absent |
+
+### Pass Examples
+
+- Problem (RNNs forget) → Mechanism (Q/K/V attention) → Impact (ChatGPT, translation)
+
+### Fail Examples
+
+- Deep dive into multi-head attention math with no motivation
+
+---
