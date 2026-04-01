@@ -295,13 +295,14 @@ async def run_harness(
     max_iter: int,
     model: str,
     verbose: bool,
-    generate_rubrics: bool = False,
+    generate_rubrics: bool = True,
 ) -> RunResult:
-    """Full rubric loop run. Uses the loop's own scores directly.
+    """Full rubric loop run with fresh rubric generation.
 
-    When generate_rubrics=False (default), uses the sample rubric as-is.
-    When generate_rubrics=True, runs the full generation pipeline with
-    research, negotiation, tradeoff detection, and quality gate.
+    Always generates a fresh rubric via the full pipeline (research,
+    negotiation, tradeoff detection, quality gate) unless generate_rubrics
+    is explicitly set to False. The sample rubric is passed as a seed hint
+    to ground the generation, not used as-is.
     """
     task_prompt = rubric.task
 
@@ -326,7 +327,7 @@ async def run_harness(
     t0 = time.monotonic()
     loop_result = await loop.run(
         task=task_prompt,
-        rubric=rubric if not generate_rubrics else None,
+        rubric=None if generate_rubrics else rubric,
         generate_rubric=generate_rubrics,
     )
     harness_secs = time.monotonic() - t0
@@ -642,7 +643,7 @@ async def run_eval(
     resume: bool,
     model: str,
     verbose: bool,
-    generate_rubrics: bool = False,
+    generate_rubrics: bool = True,
 ) -> Dict[str, TaskEvalResult]:
     client = anthropic.Anthropic(timeout=httpx.Timeout(600.0, connect=30.0))
 
@@ -940,12 +941,12 @@ def parse_args() -> argparse.Namespace:
         help="Suppress per-step progress output.",
     )
     p.add_argument(
-        "--generate-rubrics",
+        "--skip-rubric-gen",
         action="store_true",
-        dest="generate_rubrics",
-        help="Generate rubrics from scratch instead of using sample rubrics. "
-             "Enables negotiation, quality gate, and tradeoff detection. "
-             "Significantly increases cost and time.",
+        dest="skip_rubric_gen",
+        help="Skip rubric generation and use sample rubrics as-is. "
+             "By default, the eval generates fresh rubrics via the full pipeline "
+             "(research, negotiation, quality gate, tradeoff detection).",
     )
     return p.parse_args()
 
@@ -988,7 +989,7 @@ async def main() -> None:
         resume=args.resume,
         model=args.model,
         verbose=verbose,
-        generate_rubrics=args.generate_rubrics,
+        generate_rubrics=not args.skip_rubric_gen,
     )
 
     # Write full results JSON (task_results already saved incrementally; this adds summary)
