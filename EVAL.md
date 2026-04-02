@@ -12,6 +12,97 @@ The rubric harness is a generation-verification loop that generates task-specifi
 
 ---
 
+## Run 12 Results
+
+Run 12 is the first eval where every task generates a fresh rubric via the full pipeline (research, multi-pass generation, negotiation, tradeoff detection, quality gate). No sample rubrics used. All 10 scoring fixes from the Run 10 debug analysis are active. 22 of 25 tasks scored (2 had 0% harness output from generation failures, 1 rate-limit error retried successfully but cold_outreach_email and investment_memo failed to produce harness output).
+
+| Task | Description | Baseline | Harness | Delta | Iters |
+|---|---|---|---|---|---|
+| api_rate_limiter | Implement a distributed rate limiter with sliding window | 59.8% | 86.5% | +26.7pp | 2 |
+| rust_concurrent_cache | Implement a thread-safe LRU cache in Rust with TTL expiration | 55.7% | 78.8% | +23.1pp | 6 |
+| debugging_walkthrough | Write a debugging walkthrough for a memory leak in a Node.js service | 75.6% | 95.6% | +20.0pp | 1 |
+| data_pipeline_dag | Design an Airflow DAG for an ETL pipeline with SLA monitoring | 50.8% | 68.7% | +17.9pp | 7 |
+| agi_counterargument | Write a counterargument to the claim 'AGI will arrive before 2030' | 59.3% | 76.9% | +17.5pp | 6 |
+| board_deck_narrative | Write the narrative section of a Series B board deck | 69.6% | 86.0% | +16.4pp | 2 |
+| negotiation_playbook | Create a negotiation playbook for an enterprise SaaS deal | 65.1% | 77.9% | +12.8pp | 4 |
+| sql_ltv_query | Create a SQL query to find the top 10 customers by lifetime value | 79.4% | 92.1% | +12.7pp | 1 |
+| comp_analysis_memo | Write a competitive analysis memo for a fintech startup | 67.8% | 80.0% | +12.2pp | 4 |
+| startup_naming | Generate 5 names for a startup that does AI-powered contract review | 50.0% | 62.0% | +12.0pp | 4 |
+| csv_parser | Generate a Python function that parses messy CSV data | 62.5% | 68.7% | +6.2pp | 4 |
+| system_design_doc | Write a system design doc for a real-time notifications service | 70.5% | 75.5% | +5.0pp | 4 |
+| bash_backup | Write a bash script that backs up a PostgreSQL database to S3 | 84.0% | 86.8% | +2.8pp | 3 |
+| attention_explanation | Explain transformer attention mechanisms to a smart 16-year-old | 77.6% | 79.3% | +1.7pp | 4 |
+| exec_summary | Summarize a 2,000-word technical blog post into a 3-bullet executive summary | 53.6% | 54.0% | +0.4pp | 4 |
+| terraform_multi_env | Write Terraform modules for a multi-environment AWS deployment | 79.5% | 74.8% | -4.6pp | 7 |
+| legal_contract_redline | Redline a vendor SaaS agreement from the buyer's perspective | 74.8% | 69.7% | -5.1pp | 2 |
+| ml_experiment_report | Write an ML experiment report comparing fine-tuning approaches | 46.6% | 40.9% | -5.7pp | 5 |
+| graphql_schema_federation | Design a federated GraphQL schema for a multi-service e-commerce platform | 58.1% | 52.0% | -6.1pp | 3 |
+| incident_postmortem | Write a blameless postmortem for a 4-hour payment processing outage | 90.7% | 82.8% | -7.9pp | 2 |
+| regulatory_gap_analysis | Perform a GDPR gap analysis for a US SaaS company expanding to the EU | 73.3% | 64.6% | -8.7pp | 4 |
+| security_threat_model | Create a STRIDE threat model for a healthcare API handling PHI | 90.9% | 74.8% | -16.1pp | 3 |
+| cold_outreach_email | Write a cold outreach email to a Series A founder pitching angel investment | 63.5% | — | — | — |
+| investment_memo | Draft a 1-page investment memo on a Series A defense drone startup | 70.4% | — | — | — |
+| billing_schema | Design a JSON schema for a multi-tenant SaaS billing system | — | — | ERROR | — |
+| **MEAN (22 scored)** | | **68.0%** | **74.0%** | **+6.1pp** | **3.6** |
+
+### Run 12 Observations
+
+- **First fresh-rubric-generation eval** — Every task generated its own rubric via research, multi-pass generation, negotiation, quality gate, and tradeoff detection. No sample rubrics used.
+- **Higher baselines (68.0% vs 64.7% in Run 11)** — Generated rubrics produced higher baseline scores, suggesting they may be better calibrated for the task but also leaving less room for improvement.
+- **More regressions (7/22 vs 3/25)** — Fresh rubrics introduced criteria conflicts the harness couldn't resolve. security_threat_model (-16.1pp) and regulatory_gap_analysis (-8.7pp) both regressed, likely due to rubric criteria that conflicted or were too strict.
+- **sql_ltv_query recovered (+12.7pp)** — The perennial regression task finally showed strong improvement with a fresh rubric, confirming the old sample rubric was the bottleneck.
+- **2 harness failures** — cold_outreach_email and investment_memo generated rubrics but the harness produced 0% output, indicating a generation pipeline issue with certain rubric structures.
+- **Fresh rubrics need tuning** — The +6.1pp delta vs +19.7pp in Run 11 (same fixes, sample rubrics) shows the generation pipeline produces rubrics that are harder to improve against. The quality gate and tradeoff detection need further calibration for generated rubrics.
+
+---
+
+## Run 11 Results
+
+Run 11 applied 10 scoring/rubric fixes from the Run 10 debug analysis. Used sample rubrics (not generated). All 25 tasks completed with 0 errors after retrying 4 rate-limited tasks.
+
+**Fixes applied:** (1) Removed 1.0 prohibition — full 0-1.0 scale, (2) Fixed violation filtering bug in _flatten_scores, (3) Penalty sum capping at 1.3x, (4) --generate-rubrics flag, (5) Preserve threshold 75%→90%, (6) Re-scoring with shared scorer, (7) Deterministic bash/SQL verifiers, (8) Learning persistence, (9) Quality gate warnings, (10) Postamble stripping.
+
+| Task | Description | Baseline | Harness | Delta | Iters |
+|---|---|---|---|---|---|
+| billing_schema | Design a JSON schema for a multi-tenant SaaS billing system | 21.1% | 100.0% | +78.9pp | 1 |
+| cold_outreach_email | Write a cold outreach email to a Series A founder pitching angel investment | 31.8% | 94.1% | +62.2pp | 1 |
+| rust_concurrent_cache | Implement a thread-safe LRU cache in Rust with TTL expiration | 56.7% | 99.3% | +42.6pp | 3 |
+| ml_experiment_report | Write an ML experiment report comparing fine-tuning approaches | 57.7% | 96.5% | +38.8pp | 1 |
+| exec_summary | Summarize a 2,000-word technical blog post into a 3-bullet executive summary | 46.3% | 78.3% | +32.0pp | 3 |
+| negotiation_playbook | Create a negotiation playbook for an enterprise SaaS deal | 67.4% | 98.3% | +30.9pp | 1 |
+| csv_parser | Generate a Python function that parses messy CSV data | 62.9% | 90.9% | +28.0pp | 1 |
+| agi_counterargument | Write a counterargument to the claim 'AGI will arrive before 2030' | 58.9% | 85.8% | +26.9pp | 3 |
+| security_threat_model | Create a STRIDE threat model for a healthcare API handling PHI | 75.4% | 100.0% | +24.6pp | 1 |
+| regulatory_gap_analysis | Perform a GDPR gap analysis for a US SaaS company expanding to the EU | 72.1% | 96.8% | +24.7pp | 1 |
+| debugging_walkthrough | Write a debugging walkthrough for a memory leak in a Node.js service | 75.2% | 99.2% | +23.9pp | 1 |
+| graphql_schema_federation | Design a federated GraphQL schema for a multi-service e-commerce platform | 64.3% | 84.1% | +19.8pp | 2 |
+| system_design_doc | Write a system design doc for a real-time notifications service | 58.2% | 77.8% | +19.6pp | 3 |
+| investment_memo | Draft a 1-page investment memo on a Series A defense drone startup | 73.1% | 92.0% | +19.0pp | 2 |
+| legal_contract_redline | Redline a vendor SaaS agreement from the buyer's perspective | 73.5% | 90.4% | +16.9pp | 1 |
+| startup_naming | Generate 5 names for a startup that does AI-powered contract review | 50.0% | 64.6% | +14.6pp | 4 |
+| bash_backup | Write a bash script that backs up a PostgreSQL database to S3 | 82.6% | 94.5% | +11.9pp | 1 |
+| incident_postmortem | Write a blameless postmortem for a 4-hour payment processing outage | 86.8% | 97.1% | +10.3pp | 1 |
+| sql_ltv_query | Create a SQL query to find the top 10 customers by lifetime value | 79.4% | 88.8% | +9.4pp | 1 |
+| comp_analysis_memo | Write a competitive analysis memo for a fintech startup | 65.5% | 74.5% | +9.0pp | 4 |
+| api_rate_limiter | Implement a distributed rate limiter with sliding window | 60.5% | 69.5% | +9.0pp | 3 |
+| terraform_multi_env | Write Terraform modules for a multi-environment AWS deployment | 86.2% | 87.5% | +1.3pp | 1 |
+| attention_explanation | Explain transformer attention mechanisms to a smart 16-year-old | 77.6% | 76.9% | -0.7pp | 5 |
+| data_pipeline_dag | Design an Airflow DAG for an ETL pipeline with SLA monitoring | 56.7% | 55.9% | -0.8pp | 3 |
+| board_deck_narrative | Write the narrative section of a Series B board deck | 76.6% | 15.4% | -61.2pp | 3 |
+| **MEAN (25 tasks)** | | **64.7%** | **84.3%** | **+19.7pp** | **2.0** |
+
+### Run 11 Observations
+
+- **Massive improvement from scoring fixes** — Mean harness score jumped from 68.2% (Run 10) to 84.3%, and mean delta from +14.7pp to +19.7pp. The 10 fixes had dramatic impact.
+- **billing_schema: +78.9pp** — The violation filtering fix (Fix 2) completely resolved the perma-zero penalty bug. Score went from 21.1% to 100.0% in a single iteration.
+- **cold_outreach_email: +62.2pp** — Previously stuck at +6.0pp (Run 10). The penalty filtering fix and raised preserve threshold unlocked this task.
+- **Three 100% scores** — billing_schema, security_threat_model scored perfect 100%. This likely reflects the 1.0 scale unlock (Fix 1) allowing sub-attributes to reach full marks.
+- **Fast convergence (avg 2.0 iters)** — 13 tasks converged in a single iteration, suggesting the fixes made first-attempt scoring much more accurate.
+- **board_deck_narrative: -61.2pp** — Severe regression where the harness output scored 15.4%. The re-scoring step (Fix 6) may have produced a very different score than the in-loop scorer, or the output genuinely degraded. Needs investigation.
+- **22/25 improved, 3 regressed** — attention_explanation (-0.7pp) and data_pipeline_dag (-0.8pp) are near-neutral. Only board_deck_narrative is a true regression.
+
+---
+
 ## Run 10 Results
 
 Run 10 is the first eval on the expanded 25-task suite (up from 10). All 25 tasks completed with 0 errors. Tasks were run in parallel (25 concurrent processes); 7 initially hit 429 rate limits and were retried successfully.
@@ -200,10 +291,12 @@ Rubrics are regenerated from scratch each run, so baselines differ across runs.
 | Run 7 | 10 | 46.4% | 64.1% | +17.7pp | First clean 10/10 run since Run 3 |
 | Run 8 | 10 | 44.4% | 65.0% | +20.6pp | Preamble-stripping fix; **10/10 positive deltas, best post-Run 5 mean delta** |
 | Run 10 | 25 | 53.5% | 68.2% | +14.7pp | First 25-task eval; 24/25 improved; parallel execution |
+| Run 11 | 25 | 64.7% | 84.3% | +19.7pp | **10 scoring fixes; sample rubrics; 22/25 improved; best harness avg** |
+| Run 12 | 22 | 68.0% | 74.0% | +6.1pp | First fresh-rubric-gen eval; 15/22 improved; harder generated rubrics |
 
 > **Cross-run scores are not directly comparable after Run 4.** The rubric generation upgrade introduced in Run 5 (multi-pass hierarchical generation, adversarial coverage audits, expert panel simulation) produces harder rubrics that compress scores and deltas. See the [Methodology Note](#methodology-note-rubric-generation-upgrade-run-5) above.
 
-Run 10 is the first eval on the expanded 25-task suite. The +14.7pp mean delta across 25 diverse tasks (vs +20.6pp on 10 tasks in Run 8) suggests the harness generalizes well to new domains, with the slightly lower delta likely reflecting the broader task mix rather than a regression. The 15 new tasks averaged +13.5pp, comparable to the original 10 tasks (+16.2pp).
+**Run 11** is the best-performing run to date, with 84.3% mean harness score and +19.7pp delta across all 25 tasks. The 10 scoring fixes (1.0 scale, violation filtering, penalty capping, preserve threshold, deterministic verifiers, etc.) dramatically improved both scoring accuracy and the harness's ability to iterate. **Run 12** introduced fresh rubric generation for every task, which produced harder, more comprehensive rubrics (higher baselines at 68.0%) but the harness struggled more (+6.1pp delta, 7 regressions). The rubric generation pipeline needs further calibration to produce rubrics the harness can effectively improve against.
 
 ---
 
