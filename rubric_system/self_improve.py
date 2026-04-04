@@ -378,7 +378,7 @@ class LearningIntegrator:
 # 3. Regression Suite — guards against self-edits degrading known-good scores
 # ============================================================================
 
-REGRESSION_SUITE_PATH = ".rubric_feedback/regression_suite.json"
+REGRESSION_SUITE_PATH = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "regression_suite.json")
 _BUILT_IN_CRITERIA = frozenset({
     "src_freshness", "src_authority", "src_triangulation", "evd_alignment",
     "viz_accuracy", "viz_clarity", "fwd_uncertainty", "doc_structure",
@@ -698,7 +698,7 @@ class SelfEditor:
         harness_path: str = None,
         model: str = "claude-sonnet-4-20250514",
         verbose: bool = True,
-        edit_history_path: str = ".rubric_feedback/self_edits.json",
+        edit_history_path: str = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "self_edits.json"),
     ):
         if Anthropic is None:
             raise ImportError("anthropic package required")

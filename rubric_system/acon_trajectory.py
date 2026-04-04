@@ -209,7 +209,7 @@ class PairedResultRecorder:
 
     def __init__(self, storage_dir: Optional[str] = None):
         if storage_dir is None:
-            storage_dir = ".rubric_data/acon"
+            storage_dir = str(Path.home() / ".auto-verifier-data" / "acon")
         self.storage_dir = Path(storage_dir)
         self.results_file = self.storage_dir / "acon_paired_results.json"
         self.guidelines_dir = self.storage_dir / "acon_guidelines"

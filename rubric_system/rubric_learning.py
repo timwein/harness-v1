@@ -30,7 +30,7 @@ from rubric_system.models import ScoredRubricRecord, CriterionStats
 class RubricStore:
     """SQLite-based storage for rubric history."""
     
-    def __init__(self, db_path: str = ".rubric_data/rubrics.db"):
+    def __init__(self, db_path: str = str(Path.home() / ".auto-verifier-data" / "rubrics.db")):
         self.db_path = Path(db_path).expanduser()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()

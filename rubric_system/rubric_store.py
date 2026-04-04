@@ -25,8 +25,8 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 
 
-DEFAULT_STORE_PATH = ".rubric_data/rag_rubrics.jsonl"
-DEFAULT_CRITERIA_STORE_PATH = ".rubric_data/rag_criteria.jsonl"
+DEFAULT_STORE_PATH = str(Path.home() / ".auto-verifier-data" / "rag_rubrics.jsonl")
+DEFAULT_CRITERIA_STORE_PATH = str(Path.home() / ".auto-verifier-data" / "rag_criteria.jsonl")
 
 # Quality gate thresholds for seed selection
 _MIN_DISCRIMINATIVE_POWER = 0.05   # criteria that never moved score are not useful
@@ -68,8 +68,8 @@ class RubricStore:
                  criteria_path: str = DEFAULT_CRITERIA_STORE_PATH):
         self.store_path = Path(store_path).expanduser()
         self.store_path.parent.mkdir(parents=True, exist_ok=True)
-        self.criteria_path = Path(criteria_path)
-        # criteria_path is in the same dir as store_path — no extra mkdir needed
+        self.criteria_path = Path(criteria_path).expanduser()
+        self.criteria_path.parent.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Write — whole rubric

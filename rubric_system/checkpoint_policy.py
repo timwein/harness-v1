@@ -125,7 +125,7 @@ class CheckpointPolicy:
     Learns from outcomes to become more/less aggressive about checkpointing.
     """
 
-    def __init__(self, history_path: str = ".rubric_feedback/checkpoint_history.json"):
+    def __init__(self, history_path: str = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "checkpoint_history.json")):
         self.history_path = Path(history_path)
         self.outcomes: list[CheckpointOutcome] = []
         self._load_history()

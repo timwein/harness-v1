@@ -74,7 +74,7 @@ class FeedbackStore:
             _index.json  # Fast lookup index
     """
 
-    def __init__(self, feedback_dir: str = ".rubric_feedback"):
+    def __init__(self, feedback_dir: str = str(Path.home() / ".auto-verifier-data" / "rubric_feedback")):
         self.feedback_dir = Path(feedback_dir)
         self._ensure_dirs()
         self._index: dict[str, list[str]] = {}  # type -> [ids]

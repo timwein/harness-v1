@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-VELOCITY_LOG_PATH = ".rubric_feedback/improvement_velocity.json"
+VELOCITY_LOG_PATH = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "improvement_velocity.json")
 
 
 @dataclass
@@ -142,7 +142,7 @@ class ImprovementVelocityTracker:
 
 
 def backfill_score_delta(
-    edit_history_path: str = ".rubric_feedback/self_edits.json",
+    edit_history_path: str = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "self_edits.json"),
     rubric_store=None,
 ):
     """Backfill score_delta on edit history entries that lack it.

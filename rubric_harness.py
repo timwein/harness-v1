@@ -6913,7 +6913,7 @@ class RubricLoop:
         auto_improve_min_uses: int = 5,
         auto_improve_max_edits: int = 3,
         lean_mode: bool = False,
-        iterations_dir: str = ".rubric_iterations",
+        iterations_dir: str = str(Path.home() / ".auto-verifier-data" / "rubric_iterations"),
         use_deterministic: bool = True,
         enable_tradeoff_detection: bool = True,
         enable_quality_gate: bool = True,

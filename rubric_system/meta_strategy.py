@@ -14,8 +14,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-META_STRATEGY_PATH = ".rubric_feedback/meta_strategy.json"
-META_STRATEGY_OUTCOMES_PATH = ".rubric_feedback/meta_strategy_outcomes.json"
+META_STRATEGY_PATH = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "meta_strategy.json")
+META_STRATEGY_OUTCOMES_PATH = str(Path.home() / ".auto-verifier-data" / "rubric_feedback" / "meta_strategy_outcomes.json")
 
 
 # ---------------------------------------------------------------------------
