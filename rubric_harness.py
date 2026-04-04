@@ -2545,8 +2545,8 @@ If no genuine trade-offs exist, return: {{"tradeoffs": []}}"""
                 # note instead so the rubric criteria remain clean.  The note is
                 # injected into the generation agent's prompt as a separate block.
                 tradeoff_context_blocks.append(
-                    f"PRIORITY NOTE: When '{primary}' and '{secondary}' are in tension, "
-                    f"prioritize '{primary}'. {note}"
+                    f"DO NOT sacrifice '{primary}' for '{secondary}'. "
+                    f"When these conflict, '{primary}' wins unconditionally. {note}"
                 )
                 msg = f"[prioritize] {primary} > {secondary}: {explanation[:80]}"
                 resolution_messages.append(msg)
@@ -3010,19 +3010,13 @@ def format_criteria_for_measurement(criteria: list[Criterion]) -> str:
 # Generation Prompt with Granular Feedback
 # ============================================================================
 
-GENERATION_PROMPT = """Create content for this task, optimizing for the rubric scores.
+GENERATION_PROMPT = """Complete the following task to the best of your ability.
 
 TASK: {task}
-
-RUBRIC CRITERIA (optimize for these):
-{rubric_summary}
 
 {history_section}
 
 {focus_section}
-
-For each criterion, aim for the PASS patterns and avoid FAIL patterns.
-Pay special attention to sub-attributes with low scores - these are your biggest point opportunities.
 
 Output complete, high-quality content."""
 
@@ -3039,9 +3033,6 @@ Focus improvements ONLY on these weak criteria:
 {improvement_targets_list}
 
 Make surgical, targeted improvements. Do NOT rewrite from scratch.
-
-RUBRIC CRITERIA:
-{rubric_summary}
 
 CURRENT DRAFT (score: {current_score}):
 --- BEGIN CONTENT ---
@@ -7692,8 +7683,6 @@ class RubricLoop:
         Iteration 1: generate from scratch.
         Iterations 2+: edit the best prior attempt, preserving passing sections.
         """
-        rubric_summary = format_rubric_for_generation(rubric)
-
         # Inject learned feedback into generation prompt
         criteria_ids = [c.id for c in rubric.criteria]
         feedback_section = self.feedback_injector.format_for_generation_prompt(
@@ -7773,7 +7762,6 @@ class RubricLoop:
             _weak = [cs.criterion_id for cs in current.criterion_scores if cs.percentage < 0.90]
             prompt = EDIT_PROMPT.format(
                 task=rubric.task,
-                rubric_summary=rubric_summary,
                 current_score=f"{current.percentage:.0%}",
                 current_content=current_content,
                 regression_section=regression_section,
@@ -7792,7 +7780,6 @@ class RubricLoop:
                 focus_section = (focus_section + f"\n\n⚠ REGRESSION WARNING: {regression_note}").strip()
             prompt = GENERATION_PROMPT.format(
                 task=rubric.task,
-                rubric_summary=rubric_summary,
                 history_section=history_section,
                 focus_section=focus_section,
             )
@@ -7801,11 +7788,11 @@ class RubricLoop:
         if feedback_section:
             prompt += "\n" + feedback_section
 
-        # Inject trade-off priority notes as generation context (not baked into
-        # the rubric descriptions).  These notes come from TradeoffDetector and
-        # tell the generator which criterion wins when two are in tension.
+        # Inject trade-off constraints as hard rules (not baked into the rubric
+        # descriptions).  These come from TradeoffDetector and are NON-NEGOTIABLE:
+        # the generator must not trade away the higher-priority criterion.
         if tradeoff_context:
-            prompt += "\n\nCRITERIA PRIORITY NOTES (apply when criteria are in tension):\n"
+            prompt += "\n\nHARD PRIORITY RULES (NON-NEGOTIABLE — enforce before all other considerations):\n"
             for note in tradeoff_context:
                 prompt += f"  - {note}\n"
 
