@@ -243,9 +243,27 @@ async def generate_baseline(
     model: str,
     verbose: bool,
 ) -> RunResult:
-    """Single-shot generation with no rubric context, then score."""
-    task_prompt = rubric.task
+    """Single-shot generation with no rubric context, then score.
 
+    When the caller will supply a different rubric for scoring later
+    (e.g. a generated rubric), use generate_baseline_output() instead
+    and score separately via score_baseline().
+    """
+    result = await generate_baseline_output(client, model, rubric.task, verbose)
+    return await score_baseline(scorer, result, rubric, verbose)
+
+
+async def generate_baseline_output(
+    client: anthropic.Anthropic,
+    model: str,
+    task_prompt: str,
+    verbose: bool,
+) -> RunResult:
+    """Generate baseline output (single-shot Claude) without scoring.
+
+    Returns a RunResult with score/percentage fields zeroed out — call
+    score_baseline() afterwards once the scoring rubric is available.
+    """
     if verbose:
         print(f"  [baseline] generating…")
 
@@ -264,10 +282,31 @@ async def generate_baseline(
 
     if verbose:
         print(f"  [baseline] {len(output)} chars | {input_tok} in / {output_tok} out | {gen_secs:.1f}s")
+
+    return RunResult(
+        output=output,
+        score=0.0,
+        max_score=0,
+        percentage=0.0,
+        criterion_results=[],
+        wall_seconds=gen_secs,
+        input_tokens=input_tok,
+        output_tokens=output_tok,
+    )
+
+
+async def score_baseline(
+    scorer: RubricLoop,
+    baseline: RunResult,
+    rubric: Rubric,
+    verbose: bool,
+) -> RunResult:
+    """Score an already-generated baseline output against a rubric."""
+    if verbose:
         print(f"  [baseline] scoring…")
 
     t1 = time.monotonic()
-    total, max_total, cr_list = await score_against_rubric(scorer, output, rubric)
+    total, max_total, cr_list = await score_against_rubric(scorer, baseline.output, rubric)
     score_secs = time.monotonic() - t1
     pct = total / max_total if max_total > 0 else 0.0
 
@@ -275,14 +314,14 @@ async def generate_baseline(
         print(f"  [baseline] {total:.1f}/{max_total} ({pct:.1%}) | scoring {score_secs:.1f}s")
 
     return RunResult(
-        output=output,
+        output=baseline.output,
         score=total,
         max_score=max_total,
         percentage=pct,
         criterion_results=cr_list,
-        wall_seconds=gen_secs + score_secs,
-        input_tokens=input_tok,
-        output_tokens=output_tok,
+        wall_seconds=baseline.wall_seconds + score_secs,
+        input_tokens=baseline.input_tokens,
+        output_tokens=baseline.output_tokens,
     )
 
 
@@ -746,15 +785,25 @@ async def run_eval(
             task_results[task_key] = existing
 
         try:
-            if do_base:
-                existing.baseline = await generate_baseline(
-                    client=client,
-                    scorer=scorer,
-                    rubric=rubric,
-                    model=model,
-                    verbose=verbose,
+            if do_base and generate_rubrics and do_harn:
+                # When generating fresh rubrics: generate baseline output now,
+                # but defer scoring until the harness produces the generated
+                # rubric so both are scored against the same criteria.
+                baseline_pending = await generate_baseline_output(
+                    client=client, model=model,
+                    task_prompt=rubric.task, verbose=verbose,
                 )
                 save_results(task_results, output_path)
+            elif do_base:
+                # Sample-rubric mode or baseline-only: score immediately.
+                existing.baseline = await generate_baseline(
+                    client=client, scorer=scorer,
+                    rubric=rubric, model=model, verbose=verbose,
+                )
+                baseline_pending = None
+                save_results(task_results, output_path)
+            else:
+                baseline_pending = None
 
             if do_harn:
                 existing.harness, harness_rubric = await run_harness(
@@ -767,35 +816,21 @@ async def run_eval(
                 )
                 save_results(task_results, output_path)
 
-                # When generating fresh rubrics, the baseline was scored against
-                # the sample rubric but the harness against the generated one.
-                # Re-score the baseline against the generated rubric so deltas
-                # are apples-to-apples.
-                if generate_rubrics and existing.baseline and harness_rubric is not rubric:
-                    print(f"  [rescore] re-scoring baseline against generated rubric for fair comparison…")
-                    total, max_total, cr_list = await score_against_rubric(
-                        scorer, existing.baseline.output, harness_rubric
+                # Score the pending baseline against the generated rubric.
+                if baseline_pending is not None:
+                    existing.baseline = await score_baseline(
+                        scorer, baseline_pending, harness_rubric, verbose,
                     )
-                    pct = total / max_total if max_total > 0 else 0.0
-                    existing.baseline.score = total
-                    existing.baseline.max_score = max_total
-                    existing.baseline.percentage = pct
-                    existing.baseline.criterion_results = cr_list
                     save_results(task_results, output_path)
-
-            # In harness-only mode with existing baseline: re-score the stored
-            # baseline output against the same rubric for a fair comparison.
-            elif harness_only and existing.baseline and existing.harness:
-                print(f"  [harness-only] re-scoring stored baseline output…")
-                total, max_total, cr_list = await score_against_rubric(
-                    scorer, existing.baseline.output, rubric
-                )
-                pct = total / max_total if max_total > 0 else 0.0
-                existing.baseline.score = total
-                existing.baseline.max_score = max_total
-                existing.baseline.percentage = pct
-                existing.baseline.criterion_results = cr_list
-                save_results(task_results, output_path)
+                elif existing.baseline and harness_rubric is not rubric:
+                    # Resume / harness-only path: baseline was scored against a
+                    # different rubric in a prior run — re-score it against the
+                    # rubric the harness actually used.
+                    print(f"  [rescore] re-scoring baseline against generated rubric…")
+                    existing.baseline = await score_baseline(
+                        scorer, existing.baseline, harness_rubric, verbose,
+                    )
+                    save_results(task_results, output_path)
 
             delta_str = f"{existing.delta:+.1%}" if existing.delta is not None else "N/A"
             print(f"  → delta: {delta_str}")
