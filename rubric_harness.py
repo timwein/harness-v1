@@ -49,6 +49,14 @@ from rubric_system.reference_pairs import (
     render_pair_block,
     task_hash as _pair_task_hash,
 )
+from rubric_system.consistency import (
+    RubricConsistencyValidator,
+    ConsistencyResult,
+    apply_consistency_outcome,
+    CONSISTENCY_THRESHOLD_DEFAULT,
+    MIN_PAIRS_DEFAULT,
+    MAX_RETRIES_DEFAULT,
+)
 from rubric_system.scoring_engine import compute_dimension_scores
 
 try:
@@ -7866,6 +7874,137 @@ class RubricLoop:
             self.checkpoint_policy.record_outcome(checkpoint, "continue")
             return "continue", ""
 
+    async def _resolve_held_out_pairs(
+        self,
+        task: str,
+        generator_client,
+        generator_model: str,
+        exclude: Optional[list[ReferencePair]] = None,
+        desired: int = MIN_PAIRS_DEFAULT,
+    ) -> list[ReferencePair]:
+        """Resolve a held-out pair pool for the Phase 3 consistency filter.
+
+        Mines from RubricStore first, then tops up with synthetic pairs when short.
+        Pairs matching an ``exclude`` entry (by preferred+rejected text) are skipped
+        so the filter isn't evaluating the same pairs that shaped the rubric.
+        """
+        exclude_set = set()
+        if exclude:
+            exclude_set = {(p.preferred, p.rejected) for p in exclude}
+
+        async def _synthetic_fn(task_text: str) -> str:
+            prompt = SYNTHETIC_PAIR_PROMPT.format(task=task_text)
+            try:
+                resp = generator_client.messages.create(
+                    model=generator_model,
+                    max_tokens=4000,
+                    system="You synthesize contrastive response pairs for rubric validation. Output strict JSON only.",
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return resp.content[0].text if resp.content else ""
+            except Exception:
+                return ""
+
+        store_db_path = None
+        learner_store = getattr(self, "rubric_store", None) or getattr(self, "store", None)
+        if learner_store is not None and hasattr(learner_store, "db_path"):
+            store_db_path = Path(learner_store.db_path)
+
+        resolver = ReferencePairResolver(
+            store_db_path=store_db_path,
+            attempt_fn=None,
+            score_fn=None,
+            synthetic_fn=_synthetic_fn,
+            min_desired=desired,
+            max_pairs=desired,
+        )
+        pool = await resolver.resolve(task, caller_pairs=None)
+
+        # Top up with a fresh synthetic call if short and exclude pruned us further.
+        pool = [p for p in pool if (p.preferred, p.rejected) not in exclude_set]
+        if len(pool) < desired:
+            raw = await _synthetic_fn(task)
+            if raw:
+                from rubric_system.reference_pairs import parse_synthetic_pairs, task_hash as _th
+                extras = parse_synthetic_pairs(raw, _th(task))
+                for e in extras:
+                    if (e.preferred, e.rejected) in exclude_set:
+                        continue
+                    pool.append(e)
+                    if len(pool) >= desired:
+                        break
+        return pool[:desired]
+
+    async def _apply_consistency_filter(
+        self,
+        rubric: Rubric,
+        task: str,
+        generator,
+        context: str,
+        initial_pairs: list[ReferencePair],
+    ) -> Rubric:
+        """Run Phase 3's consistency filter with bounded retry.
+
+        Flow:
+          1. Resolve up to 5 held-out pairs (store + synthetic fallback).
+          2. Score preferred vs rejected via ``self.score_content``.
+          3. If hit_rate < threshold, feed misranked pairs back into generation
+             (up to ``MAX_RETRIES_DEFAULT`` retries).
+          4. On final failure, mark ``failed_accepted`` and proceed.
+        """
+        threshold = getattr(self, "consistency_threshold", CONSISTENCY_THRESHOLD_DEFAULT)
+
+        held_out = await self._resolve_held_out_pairs(
+            task=task,
+            generator_client=generator.client,
+            generator_model=self.model,
+            exclude=initial_pairs,
+            desired=MIN_PAIRS_DEFAULT,
+        )
+
+        async def _score_fn(r: Rubric, response: str) -> tuple[float, dict[str, float]]:
+            total, _max, criterion_scores, _crit = await self.score_content(response, r)
+            per_crit = {cs.criterion_id: cs.points_earned for cs in criterion_scores}
+            return total, per_crit
+
+        validator = RubricConsistencyValidator(
+            score_fn=_score_fn,
+            threshold=threshold,
+            min_pairs=MIN_PAIRS_DEFAULT,
+        )
+
+        attempt = 0
+        result: Optional[ConsistencyResult] = None
+        while attempt <= MAX_RETRIES_DEFAULT:
+            per_criterion = attempt > 0  # collect deltas only on retry to save tokens
+            result = await validator.validate(rubric, held_out, per_criterion=per_criterion)
+            self._log(
+                f"[Phase3] Consistency check: status={result.status} "
+                f"hit_rate={result.hit_rate:.2f} n_pairs={result.n_pairs} attempt={attempt}"
+            )
+            if result.status in ("passed", "insufficient_pairs", "skipped", "errored"):
+                break
+            # status == "failed" → retry or accept
+            if attempt >= MAX_RETRIES_DEFAULT:
+                result.status = "failed_accepted"
+                self._log("[Phase3] Max retries reached — accepting rubric as low-confidence")
+                break
+
+            failing = [held_out[p.pair_index] for p in result.per_pair if not p.ranked_correctly]
+            retry_pairs = (failing + list(initial_pairs))[:3]
+            self._log(f"[Phase3] Regenerating rubric with {len(retry_pairs)} contrast pair(s) (retry {attempt + 1})")
+            try:
+                rubric = generator.generate(task, context=context, reference_pairs=retry_pairs)
+            except Exception as e:
+                self._log(f"[Phase3] Retry generation failed ({e}); accepting prior rubric as low-confidence")
+                result.status = "failed_accepted"
+                break
+            attempt += 1
+
+        if result is not None:
+            apply_consistency_outcome(rubric, result)
+        return rubric
+
     async def _resolve_reference_pairs(
         self,
         task: str,
@@ -8011,6 +8150,11 @@ class RubricLoop:
                     "[Phase1] Generator did not emit discriminators despite reference pairs — "
                     "continuing, but rubric will be flagged low-confidence."
                 )
+
+            # Stash the generator + resolved pairs so downstream phases can access them.
+            self._phase_generator = generator
+            self._phase_resolved_pairs = resolved_pairs
+            self._phase_context = context
         else:
             # Legacy path: registry matching
             rubric, matched_name, confidence = resolve_rubric(task)
@@ -8021,6 +8165,22 @@ class RubricLoop:
         # Skip on resume — the rubric was already negotiated and saved in the prior run.
         if not _resuming:
             rubric = self._negotiate_rubric(rubric, task)
+
+        # Phase 3: preference-label consistency filter — between negotiation and QG.
+        # Off by default (opt-in via --phase3) because it spends ~10 scoring calls.
+        if (not _resuming
+                and getattr(self, "enable_phase3", False)
+                and getattr(self, "_phase_generator", None) is not None):
+            try:
+                rubric = await self._apply_consistency_filter(
+                    rubric=rubric,
+                    task=task,
+                    generator=self._phase_generator,
+                    context=self._phase_context,
+                    initial_pairs=self._phase_resolved_pairs or [],
+                )
+            except Exception as e:
+                self._log(f"[Phase3] Consistency filter errored (non-fatal): {e}")
 
         # Trade-off detection: resolve inversely correlated criteria before the loop
         # starts so that feedback never ping-pongs between opposing objectives.
@@ -8928,8 +9088,8 @@ async def main():
     parser.add_argument("--reference-pairs", metavar="FILE",
                         help="Path to a JSON file with reference pairs. Format: "
                              "[{\"preferred\": \"...\", \"rejected\": \"...\"}, ...]")
-    parser.add_argument("--no-phase3", action="store_true",
-                        help="Disable Phase 3 (preference-label consistency filter)")
+    parser.add_argument("--phase3", action="store_true",
+                        help="Enable Phase 3 (preference-label consistency filter, ~10 extra scoring calls)")
     parser.add_argument("--consistency-threshold", type=float, default=0.8,
                         help="Minimum hit_rate required for the Phase 3 consistency filter (default 0.8)")
     parser.add_argument("--no-phase2", action="store_true",
@@ -9042,7 +9202,7 @@ async def main():
             caller_pairs = None
 
     # Propagate Phase-level flags onto the loop instance (consumed inside run()).
-    loop.enable_phase3 = not args.no_phase3
+    loop.enable_phase3 = args.phase3
     loop.consistency_threshold = args.consistency_threshold
     loop.enable_phase2 = not args.no_phase2
     loop.enable_implicit_aggregator = args.enable_implicit
