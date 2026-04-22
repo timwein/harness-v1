@@ -16,3 +16,6 @@ feedback_learnings/
 .claude/worktrees/
 harness-v1/
 rubric_system.zip
+eval_openrubrics.log
+eval_results_openrubrics.json
+eval_results_openrubrics.md

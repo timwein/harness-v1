@@ -364,11 +364,19 @@ async def run_harness(
         iterations_dir=".eval_iterations",
     )
 
+    # OpenRubrics alignment phases (see openrubrics-alignment-plan.md)
+    loop.enable_phase3 = True            # preference-label consistency filter
+    loop.consistency_threshold = 0.8
+    loop.enable_phase2 = True            # tier coverage gate
+    loop.enable_implicit_aggregator = False
+    loop.collect_dataset = False
+
     t0 = time.monotonic()
     loop_result = await loop.run(
         task=task_prompt,
         rubric=None if generate_rubrics else rubric,
         generate_rubric=generate_rubrics,
+        enable_phase1=True,
     )
     harness_secs = time.monotonic() - t0
 
