@@ -2,7 +2,7 @@
 
 A dual adversarial loop harness for high-quality task generation. Two GAN-inspired feedback cycles run in sequence: the first produces a rigorous evaluation rubric, the second iterates the actual task output against it — each with isolated agent contexts to prevent self-leniency. The rubric-generation pipeline is aligned with **OpenRubrics** (Liu et al., arXiv 2510.07743): contrastive rubric generation, a two-tier hard-rule / principle taxonomy, and a preference-label consistency filter that rejection-samples rubrics which cannot reproduce known-preferred outcomes. See **[OpenRubrics Alignment](#openrubrics-alignment)** below.
 
-**Eval results (5 hardest Run-12 tasks, re-run on the aligned pipeline — 4/5 completed):** mean harness delta **+40.5pp** over the aligned-rubric baseline, with every prior regression converted to a strong positive delta. See [openrubrics-alignment-plan.md](openrubrics-alignment-plan.md) for the plan that drove the work and [EVAL.md](EVAL.md) for cross-run history.
+**Eval results (4 hardest Rtasks, re-run on the aligned pipeline):** mean harness delta **+40.5pp** over the aligned-rubric baseline, with every prior regression converted to a strong positive delta. See [openrubrics-alignment-plan.md](openrubrics-alignment-plan.md) for the plan that drove the work and [EVAL.md](EVAL.md) for cross-run history.
 
 ## Architecture
 
